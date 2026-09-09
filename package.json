@@ -2,5 +2,5 @@
  "name":"lifeos","version":"4.0.0","private":true,
  "description":"Local-first personal operating system, no runtime dependencies",
  "scripts":{"start":"node scripts/serve.cjs","lint":"node scripts/check.cjs","test":"node --test tests/*.test.cjs","build":"node scripts/build.cjs"},
- "engines":{"node":"24.x"}
+ "engines": { "node": "24.x" }
 }
