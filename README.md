@@ -4,7 +4,7 @@ A local-first personal operating system using HTML, CSS and JavaScript, with Foc
 
 ## Install dependencies
 
-Recommended: Node.js 24.x (tested with 24.15.0), with bundled npm. The package supports Node.js 20 or newer. Open a terminal in this folder and run:
+Recommended: Node.js 24.x (tested with 24.15.0), with bundled npm. The package is pinned to Node.js 24.x to prevent automatic major-version upgrades. Open a terminal in this folder and run:
 
 ```sh
 npm ci
@@ -67,3 +67,15 @@ Local accounts are not server-backed authentication. Data is not encrypted or sy
 - QA.md: application QA notes.
 
 Timer durations use timestamps and survive refresh. System clock changes can affect timing. Notifications cannot wake a sleeping computer. Attachments are subject to browser storage limits. There is no cloud sync, external calendar integration or collaboration backend.
+
+## September 10 clarity update
+
+- Goal-first dashboard with recorded momentum, completion and destination date.
+- Monthly income/expenses, custom percentage allocations, remaining amounts and planned-payment forecast.
+- Money checklist; marking an item complete does not create a financial transaction.
+- Habit weekly completion counts and goal/habit-focused mobile navigation.
+- Daily work summary at the configured time, delivered in-app while running; no background push service.
+- Vector brand mark in brand-mark.svg and identity notes in BRAND.md.
+- vercel.json sets the build output to dist.
+
+Verification: 24 Node tests, production build, and isolated browser checks for allocations, expenses, forecast, persistence and Arabic/mobile layouts. Existing PNG installation icons remain as compatibility fallbacks; the new SVG is used in-app and by supporting browsers.

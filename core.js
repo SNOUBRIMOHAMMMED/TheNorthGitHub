@@ -10,6 +10,20 @@
   const midnight=value=>{const d=new Date(value);d.setHours(0,0,0,0);return +d;};
   const week=(value=Date.now(),start=1)=>{const d=new Date(midnight(value));d.setDate(d.getDate()-(d.getDay()-start+7)%7);return +d;};
   const num=(v,min=0,max=Infinity)=>Number.isFinite(Number(v))?Math.max(min,Math.min(max,Number(v))):min;
+  function dailyReport(d,now=Date.now()){
+    const from=midnight(now),end=new Date(from);end.setDate(end.getDate()+1);const sessions=reportSessions(d,now);
+    const group=(items,key)=>items.map(item=>({id:item.id,title:item.name||item.title,duration:duration(sessions,from,+end,s=>s[key]===item.id)})).filter(x=>x.duration>0);
+    return {total:duration(sessions,from,+end),goals:group(d.goals,'goalId'),tasks:group(d.tasks,'taskId')};
+  }
+  function allocateBudget(cents,budget){
+    if(!Number.isSafeInteger(cents)||cents<0||!Array.isArray(budget))throw Error('invalidBudget');
+    const names=new Set();let total=0;
+    const rows=budget.map(b=>{const name=String(b.name||'').trim(),percent=Number(b.percent),units=Math.round(percent*100);if(!name||names.has(name)||!Number.isFinite(percent)||percent<0||percent>100||Math.abs(percent*100-units)>1e-6)throw Error('invalidBudget');names.add(name);total+=units;const exact=cents*units/10000;return {name,percent,cents:Math.floor(exact),fraction:exact-Math.floor(exact)};});
+    if(total>10000)throw Error('invalidBudget');
+    let remainder=Math.round(cents*total/10000)-rows.reduce((n,b)=>n+b.cents,0);
+    for(const b of [...rows].sort((a,b)=>b.fraction-a.fraction)){if(remainder--<=0)break;b.cents++;}
+    return rows.map(({name,percent,cents})=>({name,percent,cents}));
+  }
   function migrate(source){
     const d=clone(source);if(!d||!d.profile||!Array.isArray(d.goals)||!Array.isArray(d.tasks))throw Error('invalidData');
     for(const key of ['projects','sessions','notes','events','habits','inbox','finances','health','learning','notifications'])if(!Array.isArray(d[key]))d[key]=[];
@@ -87,5 +101,5 @@
  function completeTask(d,id,done){const newId=()=>globalThis.crypto?.randomUUID?.()||Date.now().toString(36)+Math.random().toString(36).slice(2);const t=d.tasks.find(t=>t.id===id);if(!t)return;const next=done??!t.done;if(next===!!t.done)return;t.done=next;t.status=next?'done':'todo';t.completedDate=next?day():'';const g=d.goals.find(g=>g.id===t.goalId);if(g){if(next){t.appliedMomentum=Math.min(100-g.momentum,Number(t.impact||0));t.appliedProgress=Math.min(100-g.progress,Number(t.progressImpact||0));g.momentum+=t.appliedMomentum;g.progress+=t.appliedProgress;}else{g.momentum=Math.max(0,g.momentum-(t.appliedMomentum??t.impact??0));g.progress=Math.max(0,g.progress-(t.appliedProgress??t.progressImpact??0));}let h=g.history.find(h=>h.date===day());if(h)h.value=g.momentum;else g.history.push({date:day(),value:g.momentum});}
   if(next&&t.recurring&&t.recurring!=='none'&&!d.tasks.some(x=>x.recurringFrom===t.id)){const date=new Date((t.date||day())+'T12:00:00');if(t.recurring==='monthly'){const wanted=date.getDate();date.setDate(1);date.setMonth(date.getMonth()+1);date.setDate(Math.min(wanted,new Date(date.getFullYear(),date.getMonth()+1,0).getDate()));}else date.setDate(date.getDate()+(t.recurring==='weekly'?7:1));d.tasks.push({...t,id:newId(),done:false,status:'todo',date:day(+date),completedDate:'',recurringFrom:t.id,appliedMomentum:0,appliedProgress:0,subtasks:t.subtasks.map(s=>({...s,done:false}))});}}
 
-  return {completeTask,VERSION,ACCOUNT_KEY,SESSION_KEY,defaults,categories,id,day,midnight,week,num,migrate,validateImport,store,createSession,transition,reconcile,elapsed,phaseElapsed,manual,duration,reportSessions};
+  return {completeTask,VERSION,ACCOUNT_KEY,SESSION_KEY,defaults,categories,allocateBudget,dailyReport,id,day,midnight,week,num,migrate,validateImport,store,createSession,transition,reconcile,elapsed,phaseElapsed,manual,duration,reportSessions};
 });
