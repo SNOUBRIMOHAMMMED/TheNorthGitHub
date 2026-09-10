@@ -8,6 +8,8 @@ for (const f of [
   "index.html",
   "styles.css",
   "executive.css",
+  "landing.css",
+  "north-workspace.jpg",
   "core.js",
   "app.js",
   "workspace.js",

@@ -9,6 +9,7 @@ const mime = {
   ".css": "text/css; charset=utf-8",
   ".webmanifest": "application/manifest+json",
   ".png": "image/png",
+  ".jpg": "image/jpeg",
   ".svg": "image/svg+xml",
 };
 http
