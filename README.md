@@ -1,81 +1,34 @@
-# Life OS
+# THE NORTH / الشمال — النسخة المدمجة
 
-A local-first personal operating system using HTML, CSS and JavaScript, with Focus, Time Tracking, Pomodoro and Arabic RTL / English LTR support.
+الشعار والترويسة مدمجان مباشرة باستخدام HTML وCSS وSVG. لا تحتاج ملف NorthHeader.tsx ولا React ولا Tailwind.
 
-## Install dependencies
+## التشغيل
 
-Recommended: Node.js 24.x (tested with 24.15.0), with bundled npm. The package is pinned to Node.js 24.x to prevent automatic major-version upgrades. Open a terminal in this folder and run:
-
-```sh
+Node.js 24.x
 npm ci
-```
-
-There are no external dependencies. The lock file records this package structure.
-
-## Environment configuration
-
-No API keys, secrets or required environment variables are needed. PORT is optional and defaults to 4173. Copy .env.example to .env if desired, set PORT, and use:
-
-```sh
-node --env-file=.env scripts/serve.cjs
-```
-
-npm start reads shell variables but does not automatically load .env. Real environment files must not be committed.
-
-## Start locally
-
-```sh
 npm start
-```
 
-Open http://127.0.0.1:4173. Create a local account or use an account already stored at this exact browser origin. Stop with Ctrl+C.
+افتح http://127.0.0.1:4173. يمكن اختيار منفذ آخر باستخدام PORT.
 
-## Production build
-
-```sh
-npm run build
-```
-
-This validates the source and copies all production assets to dist/. Deploy the contents of dist/ to a static HTTPS host for PWA support. No backend deployment is required. The included server is intended for local development. Generated build output is intentionally excluded from this export.
-
-## Verification
-
-```sh
 npm run lint
 npm test
 npm run build
-```
 
-Checks cover JavaScript syntax, HTML IDs, required assets, manifest validity and Node built-in tests. No TypeScript compilation is used.
+Vercel: npm run build ثم Output Directory = dist. يوجد vercel.json بهذه الإعدادات.
 
-## Database setup and data
+## الملفات التي تغيّرت عن النسخة المبسّطة
 
-No database installation or SQL migrations are needed. Browser localStorage stores accounts and application data under lifeos_v11_accounts and lifeos_v11_session. core.js applies additive schemaVersion 4 upgrades while retaining legacy fields.
+- brand-mark.svg: شعار N وسهم الشمال الأبيض والبرتقالي.
+- index.html: ترويسة ثنائية اللغة واسم الموقع وروابط ملفات الإصدار الجديد.
+- executive.css: أبعاد الشعار والترويسة الداكنة والتجاوب.
+- app.js وworkspace.js: الاسم الظاهر في النصوص فقط؛ لم تتغير مفاتيح البيانات.
+- manifest.webmanifest: اسم التطبيق وألوان شاشة التثبيت.
+- sw.js: تحديث نسخة الملفات المخزنة للعمل دون اتصال.
+- icon-180.png وicon-192.png وicon-512.png: أيقونات بنفس الشعار.
+- BRAND.md: مواصفات الهوية.
 
-Local accounts are not server-backed authentication. Data is not encrypted or synchronized across devices. Existing browser data is not included in this source export. Use the application's export/import feature to transfer it. Changing protocol, hostname, port or browser changes the storage origin. Do not upload personal data backups.
+احتفظ بجميع ملفات المشروع وارفعها مع مجلدي scripts وtests في مساريهما. لا ترفع ZIP كملف مشروع؛ فك ضغطه وارفع محتوياته.
 
-## Structure
+نجح البناء و24 اختبارًا. روجعت صفحة البداية والشريط الجانبي وعرض الهاتف، دون تجاوز أفقي في صفحة البداية المختبرة.
 
-- app.js, index.html, styles.css: original application and retained features.
-- core.js: data model, storage, migrations, timer states and reports.
-- workspace.js: workspace pages, forms, search and autosave.
-- executive.css: design tokens, themes, responsive styles and RTL.
-- sw.js, manifest.webmanifest, icon-*.png: offline/PWA assets.
-- scripts/: local server, validation and production build.
-- tests/: timer, data and legacy compatibility tests with fictional fixtures.
-- README.ar.md: original Arabic documentation and architecture limitations.
-- QA.md: application QA notes.
-
-Timer durations use timestamps and survive refresh. System clock changes can affect timing. Notifications cannot wake a sleeping computer. Attachments are subject to browser storage limits. There is no cloud sync, external calendar integration or collaboration backend.
-
-## September 10 clarity update
-
-- Goal-first dashboard with recorded momentum, completion and destination date.
-- Monthly income/expenses, custom percentage allocations, remaining amounts and planned-payment forecast.
-- Money checklist; marking an item complete does not create a financial transaction.
-- Habit weekly completion counts and goal/habit-focused mobile navigation.
-- Daily work summary at the configured time, delivered in-app while running; no background push service.
-- Vector brand mark in brand-mark.svg and identity notes in BRAND.md.
-- vercel.json sets the build output to dist.
-
-Verification: 24 Node tests, production build, and isolated browser checks for allocations, expenses, forecast, persistence and Arabic/mobile layouts. Existing PNG installation icons remain as compatibility fallbacks; the new SVG is used in-app and by supporting browsers.
+الخط الكوفي غير مضمّن؛ سيستخدم المتصفح الخطوط المتاحة وفق ترتيب البدائل. تغيير عنوان الموقع لا ينقل بيانات المتصفح تلقائيًا؛ استخدم تصدير واستيراد بيانات التطبيق عند الحاجة.

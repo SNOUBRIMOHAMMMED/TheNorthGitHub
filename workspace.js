@@ -280,7 +280,7 @@
       )
       .join("");
     $("#lxTopbar").innerHTML =
-      `<div class="lx-breadcrumb">Life OS <span>/</span> ${name(route)}</div><div class="lx-top-actions"><button class="lx-btn lx-menu-button" data-action="menu">${icon("tasks")}${L("Explore", "الأقسام")}</button>${btn(icon("inbox") + L("Search", "بحث"), "command", 'aria-label="' + L("Search, Control K", "بحث، Control K") + '"')}${btn("+ " + L("Quick add", "إضافة سريعة"), "quick", "", true)}${btn(ar() ? "EN" : "ع", "language")}${btn(icon("account"), "navigate", 'data-to="account" aria-label="' + name("account") + '"')}</div>`;
+      `<div class="lx-breadcrumb">THE NORTH <span>/</span> ${name(route)}</div><div class="lx-top-actions"><button class="lx-btn lx-menu-button" data-action="menu">${icon("tasks")}${L("Explore", "الأقسام")}</button>${btn(icon("inbox") + L("Search", "بحث"), "command", 'aria-label="' + L("Search, Control K", "بحث، Control K") + '"')}${btn("+ " + L("Quick add", "إضافة سريعة"), "quick", "", true)}${btn(ar() ? "EN" : "ع", "language")}${btn(icon("account"), "navigate", 'data-to="account" aria-label="' + name("account") + '"')}</div>`;
     $("#lxCommand").setAttribute(
       "aria-label",
       L("Global search", "البحث الشامل"),
@@ -334,7 +334,7 @@
     lastTick = "";
   }
   function heading(title, sub, actions = "") {
-    return `<div class="lx-page-head"><div><div class="lx-eyebrow">LIFE OS / ${name(route)}</div><h1 tabindex="-1">${title}</h1><p>${sub}</p></div><div class="lx-actions">${actions}</div></div>`;
+    return `<div class="lx-page-head"><div><div class="lx-eyebrow">THE NORTH / ${name(route)}</div><h1 tabindex="-1">${title}</h1><p>${sub}</p></div><div class="lx-actions">${actions}</div></div>`;
   }
   function totals(d) {
     const all = C.reportSessions(d),

@@ -1,18 +1,18 @@
 /* Offline shell only. Never intercept external traffic or clear other apps' caches. */
-const CACHE = "lifeos-v4-20260910-refactor1";
+const CACHE = "lifeos-v4-20260910-north2";
 const ASSETS = [
   "./",
   "index.html",
   "styles.css",
-  "styles.css?v=refactor1",
+  "styles.css?v=north2",
   "executive.css",
-  "executive.css?v=refactor1",
+  "executive.css?v=north2",
   "core.js",
-  "core.js?v=refactor1",
+  "core.js?v=north2",
   "app.js",
-  "app.js?v=refactor1",
+  "app.js?v=north2",
   "workspace.js",
-  "workspace.js?v=refactor1",
+  "workspace.js?v=north2",
   "manifest.webmanifest",
   "brand-mark.svg",
   "icon-180.png",

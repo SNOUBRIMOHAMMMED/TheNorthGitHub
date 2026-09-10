@@ -1,10 +1,10 @@
 {
-  "name": "LifeOS \u2014 Executive Personal Operating System",
-  "short_name": "LifeOS",
+  "name": "THE NORTH / الشمال",
+  "short_name": "THE NORTH",
   "start_url": "./",
   "display": "standalone",
-  "background_color": "#f4f5f3",
-  "theme_color": "#355e49",
+  "background_color": "#0D0D0D",
+  "theme_color": "#0D0D0D",
   "icons": [
     {
       "src": "icon-192.png",
