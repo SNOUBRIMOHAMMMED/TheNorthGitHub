@@ -7,170 +7,86 @@
   <meta name="description" content="THE NORTH — personal execution system"/>
   <link rel="manifest" href="manifest.webmanifest"/>
   <link rel="apple-touch-icon" href="icon-180.png"/>
-  <link rel="stylesheet" href="styles.css?v=north2"/>
-  <link rel="stylesheet" href="executive.css?v=north2"/>
+  <link rel="stylesheet" href="styles.css?v=landing1"/>
+  <link rel="stylesheet" href="executive.css?v=landing1"/>
+  <link rel="stylesheet" href="landing.css?v=landing1"/>
   <link rel="icon" type="image/svg+xml" href="brand-mark.svg"/><title>THE NORTH / الشمال</title>
 </head>
 <body>
 
   <!-- PUBLIC LANDING PAGE -->
-  <section id="landingScreen" class="landing-screen">
-    <header class="landing-nav">
-      <a class="brand landing-brand" href="#" id="landingLogo"><span class="brand-mark" aria-hidden="true"></span><span class="north-name" dir="ltr"><strong>THE NORTH</strong><span lang="ar" dir="rtl">الشمال</span></span></a>
-      <div class="landing-nav-actions">
-        <button id="landingLangBtn" class="landing-link">العربية</button>
-        <button class="landing-link" data-go-login data-i18n="signIn">Sign in</button>
-        <button class="btn primary" data-go-signup data-i18n="startNow">Start now</button>
+  <section id="landingScreen" class="landing-screen north-landing">
+    <a class="nl-skip" href="#north-main" data-i18n="nlSkip">Skip to content</a>
+    <header class="nl-header">
+      <div class="nl-shell nl-nav">
+        <a class="nl-brand" href="#" id="landingLogo" aria-label="THE NORTH / الشمال">
+          <img src="brand-mark.svg" width="44" height="44" alt=""/>
+          <span dir="ltr"><strong>THE NORTH</strong><small lang="ar" dir="rtl">الشمال</small></span>
+        </a>
+        <nav class="nl-links" aria-label="Product">
+          <a href="#howItWorks" data-i18n="nlProduct">The system</a>
+          <a href="#north-principles" data-i18n="nlApproach">The approach</a>
+          <a href="#north-questions" data-i18n="nlQuestions">Questions</a>
+        </nav>
+        <div class="nl-nav-actions">
+          <button id="landingLangBtn" class="nl-language">العربية</button>
+          <button class="nl-login" data-go-login data-i18n="signIn">Sign in</button>
+          <button class="nl-button nl-button-small" data-go-signup data-i18n="nlStart">Get started</button>
+        </div>
       </div>
     </header>
-
-    <main>
-      <section class="landing-hero">
-        <div class="hero-glow hero-glow-a"></div>
-        <div class="hero-glow hero-glow-b"></div>
-        <div class="landing-container hero-grid">
-          <div class="hero-copy">
-            <div class="hero-pill" data-i18n="heroPill">YOUR PERSONAL EXECUTION SYSTEM</div>
-            <h1 data-i18n="landingHeadline">See your life moving forward.</h1>
-            <p data-i18n="landingSub">Turn yearly goals into six-month, three-month, monthly, weekly and daily actions — then watch every goal rise in one clear momentum dashboard.</p>
-            <div class="hero-actions">
-              <button class="btn primary hero-cta" data-go-signup data-i18n="buildMyLifeOS">Start with THE NORTH</button>
-              <button class="btn hero-secondary" data-scroll-how data-i18n="seeHow">See how it works</button>
-            </div>
-            <div class="hero-trust">
-              <span>✓ <b data-i18n="startsEmpty">Starts completely empty</b></span>
-              <span>✓ <b data-i18n="bilingual">Arabic + English</b></span>
-              <span>✓ <b data-i18n="mobileReady">Built for phone and desktop</b></span>
-            </div>
-          </div>
-
-          <div class="hero-product">
-            <div class="product-window">
-              <div class="product-top">
-                <div class="product-dots"><i></i><i></i><i></i></div>
-                <div class="product-logo"><span class="brand-mark mini" aria-hidden="true"></span><span class="north-name" dir="ltr"><strong>THE NORTH</strong><span lang="ar" dir="rtl">الشمال</span></span></div>
-                <div class="product-avatar">M</div>
-              </div>
-              <div class="product-body">
-                <div class="mock-sidebar">
-                  <i class="active"></i><i></i><i></i><i></i><i></i>
-                </div>
-                <div class="mock-main">
-                  <div class="mock-greeting"><span></span><b></b></div>
-                  <div class="mock-signals">
-                    <div class="mock-signal green"><b></b><span></span><span></span></div>
-                    <div class="mock-signal red"><b></b><span></span><span></span></div>
-                  </div>
-                  <div class="mock-market">
-                    <div class="mock-market-title"><span></span><i></i></div>
-                    <svg viewBox="0 0 680 250" preserveAspectRatio="none" aria-hidden="true">
-                      <g opacity=".16" stroke="#7f89a7">
-                        <line x1="0" y1="50" x2="680" y2="50"/><line x1="0" y1="100" x2="680" y2="100"/>
-                        <line x1="0" y1="150" x2="680" y2="150"/><line x1="0" y1="200" x2="680" y2="200"/>
-                      </g>
-                      <line x1="0" y1="115" x2="680" y2="115" stroke="#afb5c4" stroke-dasharray="8 8"/>
-                      <path d="M5 230 C65 222,85 210,125 203 S190 170,235 178 S315 120,360 136 S435 87,500 94 S595 42,675 55" fill="none" stroke="#3677ff" stroke-width="7" stroke-linecap="round"/>
-                      <path d="M5 230 C80 228,120 217,165 221 S250 190,310 180 S405 146,470 151 S565 109,675 92" fill="none" stroke="#20a66a" stroke-width="7" stroke-linecap="round"/>
-                      <path d="M5 230 C90 225,140 210,185 215 S265 205,320 210 S415 187,475 196 S565 173,675 177" fill="none" stroke="#ef5350" stroke-width="7" stroke-linecap="round"/>
-                    </svg>
-                    <div class="mock-legend"><span><i class="blue"></i>English</span><span><i class="green"></i>Business</span><span><i class="red"></i>Reading</span></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="floating-card float-good"><span>↗</span><div><b data-i18n="goalMoving">Goal moving</b><small>+10 momentum</small></div></div>
-            <div class="floating-card float-risk"><span>!</span><div><b data-i18n="needsAttention">Needs attention</b><small data-i18n="belowTrackShort">Below on-track level</small></div></div>
-          </div>
-        </div>
-      </section>
-
-      <section class="landing-section light-section" id="howItWorks">
-        <div class="landing-container">
-          <div class="landing-section-head">
-            <span class="kicker" data-i18n="oneSystem">ONE SYSTEM</span>
-            <h2 data-i18n="fromGoalToToday">From the big goal to what you do today.</h2>
-            <p data-i18n="fromGoalToTodaySub">THE NORTH keeps the chain visible, so today's task always has a reason.</p>
-          </div>
-          <div class="goal-chain">
-            <div class="chain-card"><span>01</span><b data-i18n="yearGoal">Big goal</b><small data-i18n="yearGoalSub">Your destination</small></div>
-            <div class="chain-arrow">→</div>
-            <div class="chain-card"><span>02</span><b data-i18n="sixMonths">6 months</b><small data-i18n="milestone">Milestone</small></div>
-            <div class="chain-arrow">→</div>
-            <div class="chain-card"><span>03</span><b data-i18n="threeMonths">3 months</b><small data-i18n="milestone">Milestone</small></div>
-            <div class="chain-arrow">→</div>
-            <div class="chain-card"><span>04</span><b data-i18n="thisMonth">This month</b><small data-i18n="monthlyOutcome">Outcome</small></div>
-            <div class="chain-arrow">→</div>
-            <div class="chain-card"><span>05</span><b data-i18n="thisWeek">This week</b><small data-i18n="weeklyOutcome">Outcome</small></div>
-            <div class="chain-arrow">→</div>
-            <div class="chain-card featured"><span>06</span><b data-i18n="today">Today</b><small data-i18n="dailyAction">Action</small></div>
-          </div>
-        </div>
-      </section>
-
-      <section class="landing-section dark-section">
-        <div class="landing-container feature-grid">
-          <div class="feature-copy">
-            <span class="kicker light-kicker" data-i18n="marketMindset">MOMENTUM, NOT A TO-DO LIST</span>
-            <h2 data-i18n="allGoalsOneChart">All your goals. One market-style chart.</h2>
-            <p data-i18n="allGoalsOneChartSub">Each goal gets its own color and line. Complete meaningful work and the line rises. Neglect it and momentum falls. The on-track line tells you what needs attention immediately.</p>
-            <ul class="feature-list">
-              <li><i class="blue"></i><span data-i18n="featureLine1">Every new goal starts at zero.</span></li>
-              <li><i class="green"></i><span data-i18n="featureLine2">One colored line for every goal.</span></li>
-              <li><i class="red"></i><span data-i18n="featureLine3">Risk becomes visible before you forget the goal.</span></li>
-            </ul>
-          </div>
-          <div class="feature-market-card">
-            <div class="feature-market-head"><b data-i18n="momentumDashboard">Momentum dashboard</b><span>7D</span></div>
-            <div class="feature-market-chart">
-              <svg viewBox="0 0 720 310" preserveAspectRatio="none">
-                <g stroke="#2c354e">
-                  <line x1="0" y1="60" x2="720" y2="60"/><line x1="0" y1="120" x2="720" y2="120"/>
-                  <line x1="0" y1="180" x2="720" y2="180"/><line x1="0" y1="240" x2="720" y2="240"/>
-                </g>
-                <line x1="0" y1="135" x2="720" y2="135" stroke="#e4e7ef" stroke-dasharray="10 8" opacity=".55"/>
-                <path class="halo" d="M0 282 C85 265,125 250,180 230 S290 172,350 183 S450 122,520 129 S620 72,720 61"/>
-                <path class="blue-path" d="M0 282 C85 265,125 250,180 230 S290 172,350 183 S450 122,520 129 S620 72,720 61"/>
-                <path class="halo" d="M0 282 C100 280,150 265,210 270 S310 240,385 226 S510 192,585 168 S660 126,720 119"/>
-                <path class="green-path" d="M0 282 C100 280,150 265,210 270 S310 240,385 226 S510 192,585 168 S660 126,720 119"/>
-                <path class="halo" d="M0 282 C100 270,160 258,220 264 S335 253,390 262 S500 230,560 244 S660 224,720 230"/>
-                <path class="red-path" d="M0 282 C100 270,160 258,220 264 S335 253,390 262 S500 230,560 244 S660 224,720 230"/>
-              </svg>
-            </div>
-            <div class="feature-market-legend"><span><i class="blue"></i>English <b>78</b></span><span><i class="green"></i>Business <b>65</b></span><span><i class="red"></i>Reading <b>42</b></span></div>
-          </div>
-        </div>
-      </section>
-
-      <section class="landing-section light-section">
-        <div class="landing-container">
-          <div class="landing-section-head">
-            <span class="kicker" data-i18n="clarityFirst">CLARITY FIRST</span>
-            <h2 data-i18n="openKnow">Open THE NORTH and know what matters in seconds.</h2>
-          </div>
-          <div class="benefit-grid">
-            <article class="benefit-card"><div class="benefit-icon green-bg">↗</div><h3 data-i18n="seeMomentum">See momentum</h3><p data-i18n="seeMomentumSub">Know which goal is strongest, improving, flat or at risk.</p></article>
-            <article class="benefit-card"><div class="benefit-icon red-bg">!</div><h3 data-i18n="smartSignals">Smart signals</h3><p data-i18n="smartSignalsSub">Dismissible in-app alerts highlight what is going well and what needs action.</p></article>
-            <article class="benefit-card"><div class="benefit-icon blue-bg">✓</div><h3 data-i18n="nextMove">Know the next move</h3><p data-i18n="nextMoveSub">Your daily actions stay connected to the goal they are supposed to move.</p></article>
-            <article class="benefit-card"><div class="benefit-icon violet-bg">◎</div><h3 data-i18n="yourSystem">Make it yours</h3><p data-i18n="yourSystemSub">Profile, Arabic or English, custom on-track level and your own goals from a blank start.</p></article>
-          </div>
-        </div>
-      </section>
-
-      <section class="landing-cta-section">
-        <div class="landing-container cta-box">
+    <main id="north-main" tabindex="-1">
+      <section class="nl-hero nl-shell">
+        <div class="nl-hero-copy">
           <div>
-            <span class="kicker light-kicker" data-i18n="startZero">START FROM ZERO</span>
-            <h2 data-i18n="readyBuild">Ready to build a life you can see moving?</h2>
-            <p data-i18n="readyBuildSub">Create your account, define the first goal and let your daily actions build the line.</p>
+            <p class="nl-eyebrow"><span></span><span data-i18n="nlEyebrow">A PERSONAL OPERATING SYSTEM FOR FOUNDERS</span></p>
+            <h1><span data-i18n="nlHero1">A clear direction.</span><br/><span class="nl-soft-text" data-i18n="nlHero2">A deliberate day.</span></h1>
           </div>
-          <button class="btn primary hero-cta" data-go-signup data-i18n="startNowFree">Start now</button>
+          <div class="nl-hero-aside">
+            <p class="nl-lead" data-i18n="nlIntro">Keep your goals in sight, give your priorities focused time, and see what moved forward. One workspace for the person behind the business.</p>
+            <div class="nl-actions"><button class="nl-button" data-go-signup><span data-i18n="nlCreate">Create your workspace</span><span aria-hidden="true">↗</span></button><button class="nl-text-button" data-scroll-how data-i18n="nlExplore">Explore the system</button></div>
+            <p class="nl-micro" data-i18n="nlTrust">Arabic & English. Desktop & mobile. Your own pace.</p>
+          </div>
+        </div>
+        <figure class="nl-preview">
+          <div class="nl-preview-bar"><span class="nl-preview-brand"><img src="brand-mark.svg" width="24" height="24" alt=""/>THE NORTH</span><span class="nl-sample"><i></i><span data-i18n="nlSample">ILLUSTRATIVE WORKSPACE · SAMPLE DATA</span></span><span class="nl-preview-dot" aria-hidden="true">M</span></div>
+          <div class="nl-preview-body">
+            <aside class="nl-preview-menu" aria-hidden="true"><span class="nl-menu-active" data-i18n="nlToday">Today</span><span data-i18n="nlGoals">Goals</span><span data-i18n="nlFocus">Focus</span><span data-i18n="nlHabits">Habits</span><span data-i18n="nlMoney">Finances</span><span class="nl-menu-bottom">N / 01</span></aside>
+            <div class="nl-preview-content">
+              <div class="nl-preview-title"><div><p class="nl-eyebrow" data-i18n="nlDirection">YOUR DIRECTION, AT A GLANCE</p><h2 data-i18n="nlPreviewTitle">Move the work that matters.</h2></div><span class="nl-chip" data-i18n="nlThisWeek">This week</span></div>
+              <div class="nl-goal-cards">
+                <article class="nl-goal-card"><div class="nl-card-label"><span data-i18n="nlLaunch">Launch the next product</span><span aria-hidden="true">↗</span></div><div class="nl-goal-number">68<small>%</small></div><svg viewBox="0 0 260 66" aria-hidden="true"><path class="nl-gridline" d="M0 62H260M0 32H260"/><path class="nl-chart-main" d="M0 58 26 56 52 48 78 50 104 35 130 38 156 29 182 30 208 17 234 20 260 8"/></svg><div class="nl-goal-foot"><span data-i18n="nlProgress">Goal progress</span><b data-i18n="nlRemain32">32% remaining</b></div></article>
+                <article class="nl-goal-card"><div class="nl-card-label"><span data-i18n="nlOperations">Build a stronger operation</span><span aria-hidden="true">↗</span></div><div class="nl-goal-number">42<small>%</small></div><svg viewBox="0 0 260 66" aria-hidden="true"><path class="nl-gridline" d="M0 62H260M0 32H260"/><path class="nl-chart-secondary" d="M0 61 26 59 52 60 78 51 104 48 130 50 156 39 182 40 208 31 234 34 260 25"/></svg><div class="nl-goal-foot"><span data-i18n="nlProgress">Goal progress</span><b data-i18n="nlRemain58">58% remaining</b></div></article>
+                <article class="nl-focus-card"><p class="nl-eyebrow" data-i18n="nlDeepWork">DEEP WORK</p><h3 data-i18n="nlStrategy">Product strategy</h3><p class="nl-clock" dir="ltr">00:47:32</p><div class="nl-focus-status"><i></i><span data-i18n="nlSession">Focus session</span></div><p class="nl-focus-note" data-i18n="nlEveryMinute">Every minute linked to a meaningful goal.</p></article>
+              </div>
+              <div class="nl-preview-bottom"><div><span data-i18n="nlPriorities">TODAY’S PRIORITIES</span><p><i aria-hidden="true">✓</i><span data-i18n="nlProposal">Review the launch proposal</span></p><p><i aria-hidden="true">○</i><span data-i18n="nlInterviews">Prepare customer interviews</span></p></div><div class="nl-time-total"><span data-i18n="nlTracked">FOCUS TIME TODAY</span><strong dir="ltr">3h 24m <small>/ 6h</small></strong><div class="nl-meter"><i></i></div></div></div>
+            </div>
+          </div>
+          <figcaption><span data-i18n="nlPreviewCaption">Goals, focused work and daily priorities — in one view.</span><span aria-hidden="true">01 / THE OVERVIEW</span></figcaption>
+        </figure>
+        <div class="nl-foundation"><span data-i18n="nlBuiltFor">BUILT AROUND HOW YOU WORK</span><p data-i18n="nlFoundation">Direction → Focus → Execution → Review</p></div>
+      </section>
+      <section class="nl-section nl-shell" id="howItWorks">
+        <div class="nl-section-heading"><div><p class="nl-eyebrow" data-i18n="nlSystemLabel">01 / YOUR PERSONAL SYSTEM</p><h2 data-i18n="nlSystemTitle">Less switching. More perspective.</h2></div><p data-i18n="nlSystemSub">Connect the long-term goal to the work on your calendar today. Then measure the effort behind your progress.</p></div>
+        <div class="nl-feature-grid">
+          <article class="nl-feature"><span class="nl-feature-index">01</span><h3 data-i18n="nlGoalsTitle">Keep the destination visible.</h3><p data-i18n="nlGoalsBody">See your goals, their momentum and the distance left to go. Choose your next task with the bigger picture in view.</p><div class="nl-feature-detail"><span data-i18n="nlGoalDetail">Goals · Projects · Daily priorities</span><span aria-hidden="true">↗</span></div></article>
+          <article class="nl-feature"><span class="nl-feature-index">02</span><h3 data-i18n="nlFocusTitle">Give important work its time.</h3><p data-i18n="nlFocusBody">Use a stopwatch, countdown or Pomodoro session. Track actual focus time against your task, project and goal.</p><div class="nl-feature-detail"><span data-i18n="nlFocusDetail">Focus · Breaks · Time reports</span><span aria-hidden="true">↗</span></div></article>
+          <article class="nl-feature"><span class="nl-feature-index">03</span><h3 data-i18n="nlLifeTitle">Build a rhythm you can sustain.</h3><p data-i18n="nlLifeBody">Review your habits, plan your week and give your income a clear purpose. Keep the essentials close without crowding your day.</p><div class="nl-feature-detail"><span data-i18n="nlLifeDetail">Habits · Planning · Finances</span><span aria-hidden="true">↗</span></div></article>
         </div>
       </section>
+      <section class="nl-editorial" id="north-principles"><div class="nl-shell nl-editorial-grid">
+        <figure class="nl-photo"><img src="north-workspace.jpg" width="1536" height="1024" loading="lazy" decoding="async" alt=""/><figcaption data-i18n="nlPhotoCaption">Space for deliberate work.</figcaption></figure>
+        <div class="nl-editorial-copy"><p class="nl-eyebrow" data-i18n="nlApproachLabel">02 / A MORE DELIBERATE WAY TO WORK</p><h2 data-i18n="nlApproachTitle">Your business has a strategy. Your day deserves one too.</h2><p data-i18n="nlApproachBody">A full calendar can hide an unclear direction. THE NORTH brings your attention back to what you chose to build, and the next action that will move it forward.</p><div class="nl-principle"><span>01</span><p data-i18n="nlPrinciple1">Choose the outcome before the task.</p></div><div class="nl-principle"><span>02</span><p data-i18n="nlPrinciple2">Protect the time you need to execute.</p></div><div class="nl-principle"><span>03</span><p data-i18n="nlPrinciple3">Review the work. Adjust the direction.</p></div></div>
+      </div></section>
+      <section class="nl-section nl-shell nl-faq" id="north-questions"><div><p class="nl-eyebrow" data-i18n="nlFaqLabel">03 / BEFORE YOU BEGIN</p><h2 data-i18n="nlFaqTitle">A few clear answers.</h2></div><div class="nl-faq-list">
+        <details><summary data-i18n="nlQ1">Who is THE NORTH for?</summary><p data-i18n="nlA1">Founders, entrepreneurs and professionals who want to connect their goals with daily execution. This is your personal workspace, not a shared team management platform.</p></details>
+        <details><summary data-i18n="nlQ2">Where is my data stored?</summary><p data-i18n="nlA2">The current version saves your workspace in this browser. Export backups regularly. Moving to another browser or device requires exporting and importing your data; automatic cloud sync is not included.</p></details>
+        <details><summary data-i18n="nlQ3">Can I use it in Arabic and on my phone?</summary><p data-i18n="nlA3">Yes. Switch between Arabic and English, with right-to-left layouts for Arabic and responsive navigation for mobile, tablet and desktop.</p></details>
+        <details><summary data-i18n="nlQ4">How does focus tracking work?</summary><p data-i18n="nlA4">Choose a task or goal, start your session, pause when needed and save when finished. Your reports count recorded focus time and exclude breaks and pauses. Active sessions are recovered after refresh.</p></details>
+      </div></section>
+      <section class="nl-final nl-shell"><div class="nl-final-inner"><img src="brand-mark.svg" width="64" height="64" alt=""/><p class="nl-eyebrow" data-i18n="nlClosingLabel">FIND YOUR NORTH.</p><h2 data-i18n="nlClosingTitle">Make your next move count.</h2><p data-i18n="nlClosingBody">Start with one goal. Give it focused time. Build from there.</p><button class="nl-button" data-go-signup><span data-i18n="nlCreate">Create your workspace</span><span aria-hidden="true">↗</span></button></div></section>
     </main>
-
-    <footer class="landing-footer">
-      <div class="landing-container"><div class="brand"><span class="brand-mark" aria-hidden="true"></span><span class="north-name" dir="ltr"><strong>THE NORTH</strong><span lang="ar" dir="rtl">الشمال</span></span></div><span>© 2026 THE NORTH</span></div>
-    </footer>
+    <footer class="nl-footer nl-shell"><a class="nl-brand" href="#north-main"><img src="brand-mark.svg" width="36" height="36" alt=""/><span dir="ltr"><strong>THE NORTH</strong><small lang="ar" dir="rtl">الشمال</small></span></a><span data-i18n="nlFooter">A clearer direction. A more intentional life.</span><small>© 2026 THE NORTH</small></footer>
   </section>
 
   <!-- AUTH -->
@@ -530,8 +446,8 @@
 
   <div id="toast" class="toast"></div>
 
-  <script src="core.js?v=north2"></script>
-  <script src="app.js?v=north2"></script>
-  <script src="workspace.js?v=north2"></script>
+  <script src="core.js?v=landing1"></script>
+  <script src="app.js?v=landing1"></script>
+  <script src="workspace.js?v=landing1"></script>
 </body>
 </html>
