@@ -271,8 +271,10 @@
     setInterval(tick, 500);
   }
   function chrome(d) {
-    $(".side-nav").innerHTML =
-      `<div class="lx-nav-group">${L("WORKSPACE", "مساحة العمل")}</div>${["home", "today", "focus", "tasks", "projects", "goals", "calendar"].map(navItem).join("")}<div class="lx-nav-group">${L("GROWTH & CONTROL", "التطور والتحكم")}</div>${["planning", "habits", "analytics", "notes", "inbox", "finances", "health", "learning"].map(navItem).join("")}<div class="lx-nav-group">${L("SIGNALS", "الإشارات")}</div>${["dashboard", "planner", "notifications"].map(navItem).join("")}`;
+    const primary = ["home", "goals", "tasks", "focus", "analytics"];
+    const secondary = Object.keys(labels).filter(k => !primary.includes(k) && k !== "account");
+    $(".side-nav").innerHTML = primary.map(navItem).join("") +
+      `<details class="lx-nav-more" ${secondary.includes(route) ? "open" : ""}><summary>${L("More", "المزيد")}</summary>${secondary.map(navItem).join("")}</details>`;
     $(".bottom-nav").innerHTML = ["home", "goals", "focus", "habits", "account"]
       .map(
         (k) =>
@@ -280,7 +282,7 @@
       )
       .join("");
     $("#lxTopbar").innerHTML =
-      `<div class="lx-breadcrumb">THE NORTH <span>/</span> ${name(route)}</div><div class="lx-top-actions"><button class="lx-btn lx-menu-button" data-action="menu">${icon("tasks")}${L("Explore", "الأقسام")}</button>${btn(icon("inbox") + L("Search", "بحث"), "command", 'aria-label="' + L("Search, Control K", "بحث، Control K") + '"')}${btn("+ " + L("Quick add", "إضافة سريعة"), "quick", "", true)}${btn(ar() ? "EN" : "ع", "language")}${btn(icon("account"), "navigate", 'data-to="account" aria-label="' + name("account") + '"')}</div>`;
+      `<div class="lx-breadcrumb">THE NORTH <span>/</span> ${name(route)}</div><div class="lx-top-actions"><button class="lx-btn lx-menu-button" data-action="menu">${icon("tasks")}${L("Explore", "الأقسام")}</button>${btn(icon("inbox") + L("Search", "بحث"), "command", 'aria-label="' + L("Search, Control K", "بحث، Control K") + '"')}${btn(ar() ? "EN" : "ع", "language")}${btn(icon("account"), "navigate", 'data-to="account" aria-label="' + name("account") + '"')}</div>`;
     $("#lxCommand").setAttribute(
       "aria-label",
       L("Global search", "البحث الشامل"),
@@ -504,73 +506,18 @@
   }
 
   function home(d) {
-    const tt = totals(d),
-      today = C.day(),
-      plan = d.planning["daily:" + today] || {},
-      due = d.tasks
-        .filter((t) => !t.archived && !t.done && (!t.date || t.date <= today))
-        .sort(
-          (a, b) =>
-            ["high", "medium", "low"].indexOf(a.priority) -
-            ["high", "medium", "low"].indexOf(b.priority),
-        );
-    const done = d.tasks.filter(
-      (t) => t.done && t.completedDate === today,
-    ).length;
-    const hdone = d.habits.filter((h) => h.checks?.includes(today)).length;
-    const goalAvg = d.goals.length
-      ? Math.round(d.goals.reduce((n, g) => n + g.progress, 0) / d.goals.length)
-      : 0;
-    return (
-      heading(
-        `${L(new Date().getHours() < 12 ? "Good morning" : "Welcome back", new Date().getHours() < 12 ? "صباح الخير" : "مرحبًا بعودتك")}${L(",", "،")} ${esc(d.profile.name)}.`,
-        L(
-          "A clear direction. A deliberate day.",
-          "اتجاه واضح. ويوم تصنعه بوعي.",
-        ),
-        btn(L("Plan my day", "خطّط ليومي"), "navigate", 'data-to="planning"'),
-      ) +
-      goalBoard(d) +
-      `<div class="lx-home-grid"><section class="lx-card lx-focus-card"><div class="lx-eyebrow">${L("TODAY’S FOCUS", "تركيز اليوم")}</div><h2>${L("Make room for what matters.", "امنح ما يهمك وقتًا حقيقيًا.")}</h2><p>${L("One task. Your full attention. Every minute accounted for.", "مهمة واحدة، وانتباه كامل، وكل دقيقة محسوبة.")}</p>${btn(icon("focus") + L(d.activeSession ? "Resume focus" : "Start focus session", d.activeSession ? "العودة إلى التركيز" : "ابدأ جلسة تركيز"), "navigate", 'data-to="focus"', true)}<div class="lx-top-three">${
-        (plan.priorities || "")
-          .split("\n")
-          .filter(Boolean)
-          .slice(0, 3)
-          .map((p, i) => `<div><span>0${i + 1}</span>${esc(p)}</div>`)
-          .join("") ||
-        due
-          .slice(0, 3)
-          .map((t, i) => `<div><span>0${i + 1}</span>${esc(t.title)}</div>`)
-          .join("") ||
-        `<p>${L("Choose your top three priorities in daily planning.", "حدد أولوياتك الثلاث في التخطيط اليومي.")}</p>`
-      }</div></section><section class="lx-card"><div class="lx-card-head"><h2>${L("Daily deep work", "العمل العميق اليوم")}</h2><span class="lx-badge">${percent(tt.deep, d.settings.dailyHours * 3600000)}%</span></div><div class="lx-big-number">${hrs(tt.deep)}</div><p>${L("of", "من")} ${d.settings.dailyHours} ${L("hours", "ساعات")} · ${hrs(Math.max(0, d.settings.dailyHours * 3600000 - tt.deep))} ${L("remaining", "متبقية")}</p>${progress(percent(tt.deep, d.settings.dailyHours * 3600000))}<div class="lx-mini-stats">${stat(L("Tasks", "المهام"), `${done} / ${done + due.length}`)}${stat(L("Habits", "العادات"), `${hdone} / ${d.habits.length}`)}${stat(L("Goals", "الأهداف"), goalAvg + "%")}</div></section></div><div class="lx-grid-two"><section class="lx-card"><div class="lx-card-head"><h2>${L("Your next actions", "خطواتك التالية")}</h2>${btn("+", "new", 'data-kind="tasks" aria-label="' + L("New task", "مهمة جديدة") + '"')}</div>${
-        due.length
-          ? due
-              .slice(0, 5)
-              .map((t) => taskRow(t, d))
-              .join("")
-          : empty(
-              L(
-                "A little space to think. Add your next action.",
-                "مساحة للتفكير. أضف خطوتك التالية.",
-              ),
-              "tasks",
-            )
-      }</section><section class="lx-card"><div class="lx-card-head"><h2>${L("Today’s schedule", "جدول اليوم")}</h2>${btn(L("Calendar", "التقويم"), "navigate", 'data-to="calendar"')}</div>${schedule(d, today)}</section></div><div class="lx-grid-two"><section class="lx-card"><div class="lx-card-head"><h2>${L("Active projects", "المشاريع النشطة")}</h2>${btn(L("View all", "عرض الكل"), "navigate", 'data-to="projects"')}</div>${
-        d.projects
-          .filter((p) => !p.archived)
-          .slice(0, 3)
-          .map(
-            (p) =>
-              `<button class="lx-list-button" data-route="projects" data-id="${p.id}"><span>${esc(p.name)}</span><span>${hrs(C.duration(tt.all, 0, Infinity, (s) => s.projectId === p.id))}</span></button>`,
-          )
-          .join("") ||
-        empty(
-          L("Build around a meaningful project.", "ابدأ بمشروع يستحق وقتك."),
-          "projects",
-        )
-      }</section><section class="lx-card"><div class="lx-card-head"><h2>${L("This week", "هذا الأسبوع")}</h2>${btn(L("Analytics", "التحليلات"), "navigate", 'data-to="analytics"')}</div>${dayChart(tt.all, d)}<p>${hrs(tt.week)} ${L("total tracked", "إجمالي الوقت المسجل")}</p></section></div>`
-    );
+    const tt = totals(d), today = C.day();
+    const due = d.tasks.filter(t => !t.archived && !t.done && (!t.date || t.date <= today))
+      .sort((a,b) => ["high","medium","low"].indexOf(a.priority) - ["high","medium","low"].indexOf(b.priority));
+    return heading(L("Your next step", "خطوتك القادمة"),
+      L("See the goal. Choose the work. Begin.", "راجع هدفك. اختر عملك. ابدأ.")) + goalBoard(d) +
+      `<section class="lx-card"><div class="lx-card-head"><h2>${L("Focus today", "تركيز اليوم")}</h2><span>${hrs(tt.deep)} / ${d.settings.dailyHours} ${L("hours", "ساعات")}</span></div>
+      ${progress(percent(tt.deep, d.settings.dailyHours * 3600000))}
+      <p>${L("Choose a task on the next screen and give it your attention.", "اختر مهمة في الشاشة التالية وامنحها انتباهك.")}</p>
+      ${btn(L(d.activeSession ? "Resume focus" : "Start focus", d.activeSession ? "استأنف التركيز" : "ابدأ التركيز"), "navigate", 'data-to="focus"', true)}</section>
+      <section class="lx-card"><div class="lx-card-head"><h2>${L("Next priorities", "الأولويات القادمة")}</h2>${btn(L("All tasks", "كل المهام"), "navigate", 'data-to="tasks"')}</div>
+      ${due.slice(0,3).map(t=>`<p>${esc(t.title)}</p>`).join("") || `<p>${L("Add your next action in Tasks.", "أضف خطوتك القادمة في قسم المهام.")}</p>`}</section>
+      <details class="lx-card"><summary>${L("Today’s schedule", "جدول اليوم")}</summary>${schedule(d,today)}</details>`;
   }
   function linkFields(d, obj = {}) {
     return `<div class="lx-fields-three">${select(name("projects"), "projectId", options(d.projects), obj.projectId)}${select(name("goals"), "goalId", options(d.goals), obj.goalId)}${select(name("tasks"), "taskId", options(d.tasks, "title"), obj.taskId)}</div>`;
@@ -596,18 +543,18 @@
             ["pomodoro", L("Pomodoro", "بومودورو")],
           ],
           "stopwatch",
-        )} ${field(L("What will you work on?", "على ماذا ستعمل؟"), "title", "", "text", 'placeholder="' + L("A meaningful piece of work", "عمل يستحق التركيز") + '"')}${linkFields(d)}<div class="lx-fields-two">${select(
+        )} ${field(L("What will you work on?", "على ماذا ستعمل؟"), "title", "", "text", 'placeholder="' + L("A meaningful piece of work", "عمل يستحق التركيز") + '"')}<details class="lx-card"><summary>${L("Link work and set duration", "ربط العمل وتحديد المدة")}</summary>${linkFields(d)}<div class="lx-fields-two">${select(
           L("Time category", "تصنيف الوقت"),
           "categoryId",
           d.categories.map((c) => [c, catName(c)]),
           "Deep Work",
-        )}${field(L("Target minutes · 0 = open ended", "المدة بالدقائق · 0 = بلا حد"), "targetMinutes", 60, "number", 'min="0" max="1440"')}</div><div class="lx-duration-presets">${[30, 45, 60, 90, 120].map((n) => btn(n + " " + L("min", "د"), "preset", `data-minutes="${n}"`)).join("")}</div><div class="lx-info">${L("Pomodoro uses your saved focus and break settings. Time survives refresh and is calculated from real timestamps.", "يستخدم بومودورو مدد التركيز والراحة المحفوظة. الوقت يستمر بعد تحديث الصفحة ويُحسب من الطوابع الزمنية الفعلية.")}</div><button class="lx-btn lx-primary lx-wide" type="submit">${icon("focus")}${L("Start focus", "ابدأ التركيز")}</button></form><aside class="lx-card"><div class="lx-eyebrow">${L("YOUR RHYTHM", "إيقاعك")}</div><h2>${d.settings.focusMinutes} / ${d.settings.shortBreak}</h2><p>${L("Minutes of focus / short break", "دقائق تركيز / راحة قصيرة")}</p><p>${L("Long break every", "راحة طويلة كل")} ${d.settings.cycles} ${L("sessions", "جلسات")} · ${d.settings.longBreak} ${L("minutes", "دقيقة")}</p>${btn(L("Customize Pomodoro", "تخصيص بومودورو"), "navigate", 'data-to="account"')}<hr><h3>${L("Recent sessions", "الجلسات الأخيرة")}</h3>${
+        )}${field(L("Target minutes · 0 = open ended", "المدة بالدقائق · 0 = بلا حد"), "targetMinutes", 60, "number", 'min="0" max="1440"')}</div></details><div class="lx-info">${L("Pomodoro uses your saved focus and break settings. Time survives refresh and is calculated from real timestamps.", "يستخدم بومودورو مدد التركيز والراحة المحفوظة. الوقت يستمر بعد تحديث الصفحة ويُحسب من الطوابع الزمنية الفعلية.")}</div><button class="lx-btn lx-primary lx-wide" type="submit">${icon("focus")}${L("Start focus", "ابدأ التركيز")}</button></form><details class="lx-card"><summary>${L("Pomodoro settings and recent sessions", "إعدادات بومودورو والجلسات الأخيرة")}</summary><div class="lx-eyebrow">${L("YOUR RHYTHM", "إيقاعك")}</div><h2>${d.settings.focusMinutes} / ${d.settings.shortBreak}</h2><p>${L("Minutes of focus / short break", "دقائق تركيز / راحة قصيرة")}</p><p>${L("Long break every", "راحة طويلة كل")} ${d.settings.cycles} ${L("sessions", "جلسات")} · ${d.settings.longBreak} ${L("minutes", "دقيقة")}</p>${btn(L("Customize Pomodoro", "تخصيص بومودورو"), "navigate", 'data-to="account"')}<hr><h3>${L("Recent sessions", "الجلسات الأخيرة")}</h3>${
           d.sessions
             .slice(0, 4)
             .map((s) => sessionRow(s, d))
             .join("") ||
           `<p>${L("Your first focused minute starts here.", "دقيقتك الأولى من التركيز تبدأ هنا.")}</p>`
-        }</aside></div>`
+        }</details></div>`
       );
     const task = d.tasks.find((t) => t.id === a.taskId),
       project = d.projects.find((p) => p.id === a.projectId),
@@ -1635,9 +1582,12 @@
     if (a === "menu")
       modal(
         L("Your workspace", "مساحة عملك"),
-        `<div class="lx-menu-grid">${Object.keys(labels)
-          .map((k) => btn(icon(k) + name(k), "navigate", `data-to="${k}"`))
-          .join("")}</div>`,
+        `<div class="lx-menu-grid">${["home", "goals", "tasks", "focus", "analytics"]
+          .map(k => btn(icon(k) + name(k), "navigate", `data-to="${k}"`)).join("")}</div>
+          <details class="lx-nav-more"><summary>${L("More", "المزيد")}</summary><div class="lx-menu-grid">${Object.keys(labels)
+          .filter(k => !["home", "goals", "tasks", "focus", "analytics", "account"].includes(k))
+          .map(k => btn(icon(k) + name(k), "navigate", `data-to="${k}"`)).join("")}</div></details>
+          ${btn(name("account"), "navigate", 'data-to="account"')}`,
       );
     if (a === "more-sessions") {
       historyLimit += 50;
