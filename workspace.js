@@ -41,7 +41,7 @@
     analytics: ["Analytics", "التحليلات"],
     notes: ["Notes", "الملاحظات"],
     inbox: ["Inbox", "الوارد"],
-    planning: ["Planning & review", "التخطيط والمراجعة"],
+    planning: ["Planning", "التخطيط"],
     finances: ["Finances", "المال"],
     health: ["Health", "الصحة"],
     learning: ["Learning & reading", "التعلم والقراءة"],
@@ -50,6 +50,8 @@
     notifications: ["Signals", "الإشارات"],
     account: ["Settings", "الإعدادات"],
   };
+  const primaryRoutes = ["home", "goals", "tasks", "focus", "analytics", "finances"];
+  const secondaryRoutes = Object.keys(labels).filter(k => !primaryRoutes.includes(k) && k !== "account");
   const name = (k) => (labels[k] ? L(...labels[k]) : k);
   const catName = (k) =>
     ({
@@ -271,8 +273,8 @@
     setInterval(tick, 500);
   }
   function chrome(d) {
-    const primary = ["home", "goals", "tasks", "focus", "analytics"];
-    const secondary = Object.keys(labels).filter(k => !primary.includes(k) && k !== "account");
+    const primary = primaryRoutes;
+    const secondary = secondaryRoutes;
     $(".side-nav").innerHTML = primary.map(navItem).join("") +
       `<details class="lx-nav-more" ${secondary.includes(route) ? "open" : ""}><summary>${L("More", "المزيد")}</summary>${secondary.map(navItem).join("")}</details>`;
     const dockIcon = (k) => {
@@ -544,7 +546,7 @@
             "Choose the work. Set your intention. Begin.",
             "اختر عملك. حدد نيتك. وابدأ.",
           ),
-          btn(L("Add time manually", "إضافة وقت يدوي"), "manual"),
+          btn(L("Add time manually", "إضافة وقت يدوي"), "manual") + btn(L("Pomodoro settings", "إعدادات بومودورو"), "pomodoro-settings"),
         ) +
         `<div class="lx-focus-layout"><form id="lxFocusForm" class="lx-card">${select(
           L("Session type", "نوع الجلسة"),
@@ -560,7 +562,7 @@
           "categoryId",
           d.categories.map((c) => [c, catName(c)]),
           "Deep Work",
-        )}${field(L("Target minutes · 0 = open ended", "المدة بالدقائق · 0 = بلا حد"), "targetMinutes", 60, "number", 'min="0" max="1440"')}</div></details><div class="lx-info">${L("Pomodoro uses your saved focus and break settings. Time survives refresh and is calculated from real timestamps.", "يستخدم بومودورو مدد التركيز والراحة المحفوظة. الوقت يستمر بعد تحديث الصفحة ويُحسب من الطوابع الزمنية الفعلية.")}</div><button class="lx-btn lx-primary lx-wide" type="submit">${icon("focus")}${L("Start focus", "ابدأ التركيز")}</button></form><details class="lx-card"><summary>${L("Pomodoro settings and recent sessions", "إعدادات بومودورو والجلسات الأخيرة")}</summary><div class="lx-eyebrow">${L("YOUR RHYTHM", "إيقاعك")}</div><h2>${d.settings.focusMinutes} / ${d.settings.shortBreak}</h2><p>${L("Minutes of focus / short break", "دقائق تركيز / راحة قصيرة")}</p><p>${L("Long break every", "راحة طويلة كل")} ${d.settings.cycles} ${L("sessions", "جلسات")} · ${d.settings.longBreak} ${L("minutes", "دقيقة")}</p>${btn(L("Customize Pomodoro", "تخصيص بومودورو"), "navigate", 'data-to="account"')}<hr><h3>${L("Recent sessions", "الجلسات الأخيرة")}</h3>${
+        )}${field(L("Target minutes · 0 = open ended", "المدة بالدقائق · 0 = بلا حد"), "targetMinutes", 60, "number", 'min="0" max="1440"')}</div></details><div class="lx-info">${L("Pomodoro uses your saved focus and break settings. Time survives refresh and is calculated from real timestamps.", "يستخدم بومودورو مدد التركيز والراحة المحفوظة. الوقت يستمر بعد تحديث الصفحة ويُحسب من الطوابع الزمنية الفعلية.")}</div><button class="lx-btn lx-primary lx-wide" type="submit">${icon("focus")}${L("Start focus", "ابدأ التركيز")}</button></form><details class="lx-card"><summary>${L("Session rhythm and history", "إيقاع الجلسات وسجلها")}</summary><div class="lx-eyebrow">${L("YOUR RHYTHM", "إيقاعك")}</div><h2>${d.settings.focusMinutes} / ${d.settings.shortBreak}</h2><p>${L("Minutes of focus / short break", "دقائق تركيز / راحة قصيرة")}</p><p>${L("Long break every", "راحة طويلة كل")} ${d.settings.cycles} ${L("sessions", "جلسات")} · ${d.settings.longBreak} ${L("minutes", "دقيقة")}</p><hr><h3>${L("Recent sessions", "الجلسات الأخيرة")}</h3>${
           d.sessions
             .slice(0, 4)
             .map((s) => sessionRow(s, d))
@@ -1405,6 +1407,22 @@
       )}${select(L("Focus quality · 1 to 5", "جودة التركيز · من 1 إلى 5"), "focusScore", [1, 2, 3, 4, 5], 4)}</div><div class="lx-dialog-footer">${btn(L("Back to session", "العودة للجلسة"), "close")}<button type="submit" class="lx-btn lx-primary">${L("Save session", "حفظ الجلسة")}</button></div></form>`,
     );
   }
+  function pomodoroSettings() {
+    const d = db.read();
+    modal(L("Pomodoro settings", "إعدادات بومودورو"), `<form id="lxPomodoroForm"><h3>Pomodoro</h3><div class="lx-fields-two">${field(L("Focus minutes", "دقائق التركيز"), "focusMinutes", d.settings.focusMinutes, "number", 'min="1" max="240" required')}${field(L("Short break minutes", "دقائق الراحة القصيرة"), "shortBreak", d.settings.shortBreak, "number", 'min="1" max="60" required')}${field(L("Long break minutes", "دقائق الراحة الطويلة"), "longBreak", d.settings.longBreak, "number", 'min="1" max="120" required')}${field(L("Sessions before long break", "جلسات قبل الراحة الطويلة"), "cycles", d.settings.cycles, "number", 'min="1" max="12" step="1" required')}</div><div class="lx-fields-two">${[
+      ["autoBreak", L("Auto-start breaks", "بدء الراحة تلقائيًا")],
+      ["autoFocus", L("Auto-start next focus", "بدء التركيز التالي تلقائيًا")],
+      ["sound", L("Completion sound", "صوت الاكتمال")],
+      ["notifications", L("In-app notifications", "تنبيهات داخل التطبيق")],
+    ]
+      .map(
+        ([k, t]) =>
+          `<label class="lx-switch"><input type="checkbox" name="${k}" ${d.settings[k] ? "checked" : ""}>${t}</label>`,
+      )
+      .join(
+        "",
+      )}</div><p class="lx-muted">${L("Changes apply to the next session. Automatic cycles include elapsed time while the device sleeps. Notifications and sound are delivered when the app is awake.", "تطبق التغييرات على الجلسة التالية. الدورات التلقائية تشمل الوقت المنقضي أثناء سكون الجهاز. تصل التنبيهات والأصوات عندما يكون التطبيق نشطًا.")}</p><button class="lx-btn lx-primary" type="submit">${L("Save Pomodoro settings", "حفظ إعدادات بومودورو")}</button></form>`);
+  }
   function settingsPanel(d) {
     let panel = $("#lxSettings");
     if (!panel) {
@@ -1439,23 +1457,11 @@
         [6, L("Saturday", "السبت")],
       ],
       d.settings.weekStart,
-    )}${field(L("Daily deep work (hours)", "العمل العميق اليومي (ساعات)"), "dailyHours", d.settings.dailyHours, "number", 'min="0.5" max="24" step="0.5" required')}${field(L("Weekly deep work (hours)", "العمل العميق الأسبوعي (ساعات)"), "weeklyHours", d.settings.weeklyHours, "number", 'min="1" max="168" step="0.5" required')}${field(L("Daily summary time · in-app", "موعد ملخص اليوم · داخل التطبيق"), "summaryTime", d.settings.summaryTime || "20:00", "time")}${field(L("Currency", "العملة"), "currency", d.settings.currency, "text", 'required minlength="3" maxlength="3"')}</div><h3>Pomodoro</h3><div class="lx-fields-two">${field(L("Focus minutes", "دقائق التركيز"), "focusMinutes", d.settings.focusMinutes, "number", 'min="1" max="240" required')}${field(L("Short break minutes", "دقائق الراحة القصيرة"), "shortBreak", d.settings.shortBreak, "number", 'min="1" max="60" required')}${field(L("Long break minutes", "دقائق الراحة الطويلة"), "longBreak", d.settings.longBreak, "number", 'min="1" max="120" required')}${field(L("Sessions before long break", "جلسات قبل الراحة الطويلة"), "cycles", d.settings.cycles, "number", 'min="1" max="12" step="1" required')}</div><div class="lx-fields-two">${[
-      ["autoBreak", L("Auto-start breaks", "بدء الراحة تلقائيًا")],
-      ["autoFocus", L("Auto-start next focus", "بدء التركيز التالي تلقائيًا")],
-      ["sound", L("Completion sound", "صوت الاكتمال")],
-      ["notifications", L("In-app notifications", "تنبيهات داخل التطبيق")],
-    ]
-      .map(
-        ([k, t]) =>
-          `<label class="lx-switch"><input type="checkbox" name="${k}" ${d.settings[k] ? "checked" : ""}>${t}</label>`,
-      )
-      .join(
-        "",
-      )}</div><p class="lx-muted">${L("Changes apply to the next session. Automatic cycles include elapsed time while the device sleeps. Notifications and sound are delivered when the app is awake.", "تطبق التغييرات على الجلسة التالية. الدورات التلقائية تشمل الوقت المنقضي أثناء سكون الجهاز. تصل التنبيهات والأصوات عندما يكون التطبيق نشطًا.")}</p>${area(L("Time categories · one per line", "تصنيفات الوقت · تصنيف في كل سطر"), "categories", d.categories.join("\n"))}<button class="lx-btn lx-primary" type="submit">${L("Save preferences", "حفظ التفضيلات")}</button></form><hr><p>${L("Local workspace. Your data stays in this browser; no cloud sync or remote account protection. Export regularly. Import preserves your login and saves a recovery copy first.", "مساحة عمل محلية. بياناتك في هذا المتصفح؛ لا توجد مزامنة سحابية أو حماية حساب على خادم. صدّر بياناتك دوريًا. الاستيراد يحفظ بيانات الدخول وينشئ نسخة استعادة أولًا.")}</p>${btn(L("Restore previous import", "استعادة ما قبل الاستيراد"), "restore-import")}`;
+    )}${field(L("Daily deep work (hours)", "العمل العميق اليومي (ساعات)"), "dailyHours", d.settings.dailyHours, "number", 'min="0.5" max="24" step="0.5" required')}${field(L("Weekly deep work (hours)", "العمل العميق الأسبوعي (ساعات)"), "weeklyHours", d.settings.weeklyHours, "number", 'min="1" max="168" step="0.5" required')}${field(L("Daily summary time · in-app", "موعد ملخص اليوم · داخل التطبيق"), "summaryTime", d.settings.summaryTime || "20:00", "time")}${field(L("Currency", "العملة"), "currency", d.settings.currency, "text", 'required minlength="3" maxlength="3"')}</div><details class="lx-card"><summary>${L("Time categories", "تصنيفات الوقت")}</summary>${area(L("Time categories · one per line", "تصنيفات الوقت · تصنيف في كل سطر"), "categories", d.categories.join("\n"))}</details><button class="lx-btn lx-primary" type="submit">${L("Save preferences", "حفظ التفضيلات")}</button></form><details class="lx-card"><summary>${L("Data and recovery", "البيانات والاستعادة")}</summary><p>${L("Local workspace. Your data stays in this browser; no cloud sync or remote account protection. Export regularly. Import preserves your login and saves a recovery copy first.", "مساحة عمل محلية. بياناتك في هذا المتصفح؛ لا توجد مزامنة سحابية أو حماية حساب على خادم. صدّر بياناتك دوريًا. الاستيراد يحفظ بيانات الدخول وينشئ نسخة استعادة أولًا.")}</p>${btn(L("Restore previous import", "استعادة ما قبل الاستيراد"), "restore-import")}</details>`;
   }
-  function command(quick = false) {
+  function command() {
     const dialog = $("#lxCommand");
-    dialog.innerHTML = `<div class="lx-dialog-head"><h2>${quick ? L("Quick add", "إضافة سريعة") : L("Search & commands", "البحث والأوامر")}</h2>${btn("×", "close-command", 'aria-label="' + L("Close", "إغلاق") + '"')}</div><label class="lx-field"><span>${L("Find tasks, projects, goals, notes, events or sessions", "ابحث في المهام والمشاريع والأهداف والملاحظات والأحداث والجلسات")}</span><input id="lxSearch" autocomplete="off" placeholder="${L("Type to search…", "اكتب للبحث…")}"></label><div id="lxSearchResults"></div>`;
+    dialog.innerHTML = `<div class="lx-dialog-head"><h2>${L("Search & commands", "البحث والأوامر")}</h2>${btn("×", "close-command", 'aria-label="' + L("Close", "إغلاق") + '"')}</div><label class="lx-field"><span>${L("Find tasks, projects, goals, notes, events or sessions", "ابحث في المهام والمشاريع والأهداف والملاحظات والأحداث والجلسات")}</span><input id="lxSearch" autocomplete="off" placeholder="${L("Type to search…", "اكتب للبحث…")}"></label><div id="lxSearchResults"></div>`;
     dialog.showModal();
     commandResults("");
     $("#lxSearch").focus();
@@ -1590,14 +1596,13 @@
     if (a === "edit") editor(kind, id);
     if (a === "close") $("#lxDialog").close();
     if (a === "close-command") $("#lxCommand").close();
-    if (a === "command" || a === "quick") command(a === "quick");
+    if (a === "command") command();
     if (a === "menu")
       modal(
         L("Your workspace", "مساحة عملك"),
-        `<div class="lx-menu-grid">${["home", "goals", "tasks", "focus", "analytics"]
+        `<div class="lx-menu-grid">${primaryRoutes
           .map(k => btn(icon(k) + name(k), "navigate", `data-to="${k}"`)).join("")}</div>
-          <details class="lx-nav-more"><summary>${L("More", "المزيد")}</summary><div class="lx-menu-grid">${Object.keys(labels)
-          .filter(k => !["home", "goals", "tasks", "focus", "analytics", "account"].includes(k))
+          <details class="lx-nav-more"><summary>${L("More", "المزيد")}</summary><div class="lx-menu-grid">${secondaryRoutes
           .map(k => btn(icon(k) + name(k), "navigate", `data-to="${k}"`)).join("")}</div></details>
           ${btn(name("account"), "navigate", 'data-to="account"')}`,
       );
@@ -1606,6 +1611,7 @@
       render();
     }
     if (a === "manual") manualDialog();
+    if (a === "pomodoro-settings") pomodoroSettings();
     if (a === "filter") {
       taskFilter = b.dataset.filter;
       render();
@@ -1615,8 +1621,6 @@
       render();
     }
     if (a === "planning-mode") navigate("planning", b.dataset.mode);
-    if (a === "preset")
-      $("#lxFocusForm [name=targetMinutes]").value = b.dataset.minutes;
     if (a === "pomodoro") {
       navigate("focus");
       if ($("#lxFocusForm")) $("#lxFocusForm [name=type]").value = "pomodoro";
@@ -1866,7 +1870,7 @@
           "amount",
           "value",
         ])
-          if (k in data) data[k] = Number(data[k]);
+          if (k in data) if (form.elements[k]) data[k] = Number(data[k]);
         if (!String(data.name || data.title || "").trim()) {
           notice(L("Enter a title.", "أدخل عنوانًا."), true);
           return;
@@ -1995,7 +1999,7 @@
           );
         }
       }
-      if (form.id === "lxSettingsForm") {
+      if (["lxSettingsForm", "lxPomodoroForm"].includes(form.id)) {
         for (const k of [
           "dailyHours",
           "weeklyHours",
@@ -2005,11 +2009,11 @@
           "cycles",
           "weekStart",
         ])
-          data[k] = Number(data[k]);
+          if (form.elements[k]) data[k] = Number(data[k]);
         for (const k of ["autoBreak", "autoFocus", "sound", "notifications"])
-          data[k] = form.elements[k].checked;
+          if (form.elements[k]) data[k] = form.elements[k].checked;
         result = await mutate((d) => {
-          d.categories = [
+          if (typeof data.categories === "string") d.categories = [
             ...new Set([
               ...C.categories,
               ...data.categories
@@ -2022,7 +2026,7 @@
           delete data.categories;
           Object.assign(d.settings, data);
         });
-        if (result) notice(L("Preferences saved", "تم حفظ التفضيلات"));
+        if (result) { if (form.id === "lxPomodoroForm") $("#lxDialog").close(); render(); notice(L("Preferences saved", "تم حفظ التفضيلات")); }
       }
     } catch (err) {
       if (err.message === "fileTooLarge")
