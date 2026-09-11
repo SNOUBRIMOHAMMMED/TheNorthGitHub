@@ -1,0 +1,453 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+  <meta name="theme-color" content="#0D0D0D"/>
+  <meta name="description" content="THE NORTH — personal execution system"/>
+  <link rel="manifest" href="manifest.webmanifest"/>
+  <link rel="apple-touch-icon" href="icon-180.png"/>
+  <link rel="stylesheet" href="styles.css?v=simple2"/>
+  <link rel="stylesheet" href="executive.css?v=simple2"/>
+  <link rel="stylesheet" href="landing.css?v=simple2"/>
+  <link rel="icon" type="image/svg+xml" href="brand-mark.svg"/><title>THE NORTH / الشمال</title>
+</head>
+<body>
+
+  <!-- PUBLIC LANDING PAGE -->
+  <section id="landingScreen" class="landing-screen north-landing">
+    <a class="nl-skip" href="#north-main" data-i18n="nlSkip">Skip to content</a>
+    <header class="nl-header">
+      <div class="nl-shell nl-nav">
+        <a class="nl-brand" href="#" id="landingLogo" aria-label="THE NORTH / الشمال">
+          <img src="brand-mark.svg" width="44" height="44" alt=""/>
+          <span dir="ltr"><strong>THE NORTH</strong><small lang="ar" dir="rtl">الشمال</small></span>
+        </a>
+        <nav class="nl-links" aria-label="Product">
+          <a href="#howItWorks" data-i18n="nlProduct">The system</a>
+          <a href="#north-principles" data-i18n="nlApproach">The approach</a>
+          <a href="#north-questions" data-i18n="nlQuestions">Questions</a>
+        </nav>
+        <div class="nl-nav-actions">
+          <button id="landingLangBtn" class="nl-language">العربية</button>
+          <button class="nl-login" data-go-login data-i18n="signIn">Sign in</button>
+          <button class="nl-button nl-button-small" data-go-signup data-i18n="nlStart">Get started</button>
+        </div>
+      </div>
+    </header>
+    <main id="north-main" tabindex="-1">
+      <section class="nl-hero nl-shell">
+        <div class="nl-hero-copy">
+          <div>
+            <p class="nl-eyebrow"><span></span><span data-i18n="nlEyebrow">A PERSONAL OPERATING SYSTEM FOR FOUNDERS</span></p>
+            <h1><span data-i18n="nlHero1">A clear direction.</span><br/><span class="nl-soft-text" data-i18n="nlHero2">A deliberate day.</span></h1>
+          </div>
+          <div class="nl-hero-aside">
+            <p class="nl-lead" data-i18n="nlIntro">Keep your goals in sight, give your priorities focused time, and see what moved forward. One workspace for the person behind the business.</p>
+            <div class="nl-actions"><button class="nl-button" data-go-signup><span data-i18n="nlCreate">Create your workspace</span><span aria-hidden="true">↗</span></button><button class="nl-text-button" data-scroll-how data-i18n="nlExplore">Explore the system</button></div>
+            <p class="nl-micro" data-i18n="nlTrust">Arabic & English. Desktop & mobile. Your own pace.</p>
+          </div>
+        </div>
+        <figure class="nl-preview">
+          <div class="nl-preview-bar"><span class="nl-preview-brand"><img src="brand-mark.svg" width="24" height="24" alt=""/>THE NORTH</span><span class="nl-sample"><i></i><span data-i18n="nlSample">ILLUSTRATIVE WORKSPACE · SAMPLE DATA</span></span><span class="nl-preview-dot" aria-hidden="true">M</span></div>
+          <div class="nl-preview-body">
+            <aside class="nl-preview-menu" aria-hidden="true"><span class="nl-menu-active" data-i18n="nlToday">Today</span><span data-i18n="nlGoals">Goals</span><span data-i18n="nlFocus">Focus</span><span data-i18n="nlHabits">Habits</span><span data-i18n="nlMoney">Finances</span><span class="nl-menu-bottom">N / 01</span></aside>
+            <div class="nl-preview-content">
+              <div class="nl-preview-title"><div><p class="nl-eyebrow" data-i18n="nlDirection">YOUR DIRECTION, AT A GLANCE</p><h2 data-i18n="nlPreviewTitle">Move the work that matters.</h2></div><span class="nl-chip" data-i18n="nlThisWeek">This week</span></div>
+              <div class="nl-goal-cards">
+                <article class="nl-goal-card"><div class="nl-card-label"><span data-i18n="nlLaunch">Launch the next product</span><span aria-hidden="true">↗</span></div><div class="nl-goal-number">68<small>%</small></div><svg viewBox="0 0 260 66" aria-hidden="true"><path class="nl-gridline" d="M0 62H260M0 32H260"/><path class="nl-chart-main" d="M0 58 26 56 52 48 78 50 104 35 130 38 156 29 182 30 208 17 234 20 260 8"/></svg><div class="nl-goal-foot"><span data-i18n="nlProgress">Goal progress</span><b data-i18n="nlRemain32">32% remaining</b></div></article>
+                <article class="nl-goal-card"><div class="nl-card-label"><span data-i18n="nlOperations">Build a stronger operation</span><span aria-hidden="true">↗</span></div><div class="nl-goal-number">42<small>%</small></div><svg viewBox="0 0 260 66" aria-hidden="true"><path class="nl-gridline" d="M0 62H260M0 32H260"/><path class="nl-chart-secondary" d="M0 61 26 59 52 60 78 51 104 48 130 50 156 39 182 40 208 31 234 34 260 25"/></svg><div class="nl-goal-foot"><span data-i18n="nlProgress">Goal progress</span><b data-i18n="nlRemain58">58% remaining</b></div></article>
+                <article class="nl-focus-card"><p class="nl-eyebrow" data-i18n="nlDeepWork">DEEP WORK</p><h3 data-i18n="nlStrategy">Product strategy</h3><p class="nl-clock" dir="ltr">00:47:32</p><div class="nl-focus-status"><i></i><span data-i18n="nlSession">Focus session</span></div><p class="nl-focus-note" data-i18n="nlEveryMinute">Every minute linked to a meaningful goal.</p></article>
+              </div>
+              <div class="nl-preview-bottom"><div><span data-i18n="nlPriorities">TODAY’S PRIORITIES</span><p><i aria-hidden="true">✓</i><span data-i18n="nlProposal">Review the launch proposal</span></p><p><i aria-hidden="true">○</i><span data-i18n="nlInterviews">Prepare customer interviews</span></p></div><div class="nl-time-total"><span data-i18n="nlTracked">FOCUS TIME TODAY</span><strong dir="ltr">3h 24m <small>/ 6h</small></strong><div class="nl-meter"><i></i></div></div></div>
+            </div>
+          </div>
+          <figcaption><span data-i18n="nlPreviewCaption">Goals, focused work and daily priorities — in one view.</span><span aria-hidden="true">01 / THE OVERVIEW</span></figcaption>
+        </figure>
+        <div class="nl-foundation"><span data-i18n="nlBuiltFor">BUILT AROUND HOW YOU WORK</span><p data-i18n="nlFoundation">Direction → Focus → Execution → Review</p></div>
+      </section>
+      <section class="nl-section nl-shell" id="howItWorks">
+        <div class="nl-section-heading"><div><p class="nl-eyebrow" data-i18n="nlSystemLabel">01 / YOUR PERSONAL SYSTEM</p><h2 data-i18n="nlSystemTitle">Less switching. More perspective.</h2></div><p data-i18n="nlSystemSub">Connect the long-term goal to the work on your calendar today. Then measure the effort behind your progress.</p></div>
+        <div class="nl-feature-grid">
+          <article class="nl-feature"><span class="nl-feature-index">01</span><h3 data-i18n="nlGoalsTitle">Keep the destination visible.</h3><p data-i18n="nlGoalsBody">See your goals, their momentum and the distance left to go. Choose your next task with the bigger picture in view.</p><div class="nl-feature-detail"><span data-i18n="nlGoalDetail">Goals · Projects · Daily priorities</span><span aria-hidden="true">↗</span></div></article>
+          <article class="nl-feature"><span class="nl-feature-index">02</span><h3 data-i18n="nlFocusTitle">Give important work its time.</h3><p data-i18n="nlFocusBody">Use a stopwatch, countdown or Pomodoro session. Track actual focus time against your task, project and goal.</p><div class="nl-feature-detail"><span data-i18n="nlFocusDetail">Focus · Breaks · Time reports</span><span aria-hidden="true">↗</span></div></article>
+          <article class="nl-feature"><span class="nl-feature-index">03</span><h3 data-i18n="nlLifeTitle">Build a rhythm you can sustain.</h3><p data-i18n="nlLifeBody">Review your habits, plan your week and give your income a clear purpose. Keep the essentials close without crowding your day.</p><div class="nl-feature-detail"><span data-i18n="nlLifeDetail">Habits · Planning · Finances</span><span aria-hidden="true">↗</span></div></article>
+        </div>
+      </section>
+      <section class="nl-editorial" id="north-principles"><div class="nl-shell nl-editorial-grid">
+        <figure class="nl-photo"><img src="north-workspace.jpg" width="1536" height="1024" loading="lazy" decoding="async" alt=""/><figcaption data-i18n="nlPhotoCaption">Space for deliberate work.</figcaption></figure>
+        <div class="nl-editorial-copy"><p class="nl-eyebrow" data-i18n="nlApproachLabel">02 / A MORE DELIBERATE WAY TO WORK</p><h2 data-i18n="nlApproachTitle">Your business has a strategy. Your day deserves one too.</h2><p data-i18n="nlApproachBody">A full calendar can hide an unclear direction. THE NORTH brings your attention back to what you chose to build, and the next action that will move it forward.</p><div class="nl-principle"><span>01</span><p data-i18n="nlPrinciple1">Choose the outcome before the task.</p></div><div class="nl-principle"><span>02</span><p data-i18n="nlPrinciple2">Protect the time you need to execute.</p></div><div class="nl-principle"><span>03</span><p data-i18n="nlPrinciple3">Review the work. Adjust the direction.</p></div></div>
+      </div></section>
+      <section class="nl-section nl-shell nl-faq" id="north-questions"><div><p class="nl-eyebrow" data-i18n="nlFaqLabel">03 / BEFORE YOU BEGIN</p><h2 data-i18n="nlFaqTitle">A few clear answers.</h2></div><div class="nl-faq-list">
+        <details><summary data-i18n="nlQ1">Who is THE NORTH for?</summary><p data-i18n="nlA1">Founders, entrepreneurs and professionals who want to connect their goals with daily execution. This is your personal workspace, not a shared team management platform.</p></details>
+        <details><summary data-i18n="nlQ2">Where is my data stored?</summary><p data-i18n="nlA2">The current version saves your workspace in this browser. Export backups regularly. Moving to another browser or device requires exporting and importing your data; automatic cloud sync is not included.</p></details>
+        <details><summary data-i18n="nlQ3">Can I use it in Arabic and on my phone?</summary><p data-i18n="nlA3">Yes. Switch between Arabic and English, with right-to-left layouts for Arabic and responsive navigation for mobile, tablet and desktop.</p></details>
+        <details><summary data-i18n="nlQ4">How does focus tracking work?</summary><p data-i18n="nlA4">Choose a task or goal, start your session, pause when needed and save when finished. Your reports count recorded focus time and exclude breaks and pauses. Active sessions are recovered after refresh.</p></details>
+      </div></section>
+      <section class="nl-final nl-shell"><div class="nl-final-inner"><img src="brand-mark.svg" width="64" height="64" alt=""/><p class="nl-eyebrow" data-i18n="nlClosingLabel">FIND YOUR NORTH.</p><h2 data-i18n="nlClosingTitle">Make your next move count.</h2><p data-i18n="nlClosingBody">Start with one goal. Give it focused time. Build from there.</p><button class="nl-button" data-go-signup><span data-i18n="nlCreate">Create your workspace</span><span aria-hidden="true">↗</span></button></div></section>
+    </main>
+    <footer class="nl-footer nl-shell"><a class="nl-brand" href="#north-main"><img src="brand-mark.svg" width="36" height="36" alt=""/><span dir="ltr"><strong>THE NORTH</strong><small lang="ar" dir="rtl">الشمال</small></span></a><span data-i18n="nlFooter">A clearer direction. A more intentional life.</span><small>© 2026 THE NORTH</small></footer>
+  </section>
+
+  <!-- AUTH -->
+  <section id="authScreen" class="auth-screen hidden">
+    <div class="auth-brandbar">
+      <a class="brand" href="#"><span class="brand-mark" aria-hidden="true"></span><span class="north-name" dir="ltr"><strong>THE NORTH</strong><span lang="ar" dir="rtl">الشمال</span></span></a>
+      <div class="auth-brand-actions"><button id="backToLandingBtn" class="glass-btn" data-i18n="back">← Back</button><button id="authLangBtn" class="glass-btn">العربية</button></div>
+    </div>
+
+    <div class="auth-grid">
+      <div class="auth-visual">
+        <div class="visual-orb orb-a"></div>
+        <div class="visual-orb orb-b"></div>
+        <div class="visual-copy">
+          <div class="kicker" data-i18n="authKicker">YOUR PERSONAL EXECUTION SYSTEM</div>
+          <h1 data-i18n="authHeadline">Turn long-term goals into visible daily momentum.</h1>
+          <p data-i18n="authSub">One clear system for goals, plans, tasks, progress and recovery.</p>
+          <div class="mini-market">
+            <svg viewBox="0 0 580 210" preserveAspectRatio="none">
+              <line x1="0" y1="98" x2="580" y2="98" stroke="rgba(255,255,255,.25)" stroke-dasharray="8 8"/>
+              <path d="M10 176 C90 160,100 145,155 154 S250 102,300 116 S390 73,455 78 S525 35,570 42" fill="none" stroke="#78e08f" stroke-width="6" stroke-linecap="round"/>
+              <path d="M10 190 C80 188,125 177,180 165 S260 171,320 146 S405 136,470 105 S530 112,570 94" fill="none" stroke="#7aa7ff" stroke-width="6" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="auth-points executive-points">
+            <span data-i18n="authPoint1">See every goal in one market-style chart</span>
+            <span data-i18n="authPoint2">Know what needs attention today</span>
+            <span data-i18n="authPoint3">Build momentum from zero</span>
+          </div>
+          <div class="auth-executive-strip">
+            <div><strong>01</strong><span data-i18n="authExec1">Direction before activity</span></div>
+            <div><strong>02</strong><span data-i18n="authExec2">Signals before distraction</span></div>
+            <div><strong>03</strong><span data-i18n="authExec3">Execution before complexity</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="auth-panel">
+        <div class="auth-card">
+          <div class="auth-tabs">
+            <button class="auth-tab active" data-auth-tab="login" data-i18n="signIn">Sign in</button>
+            <button class="auth-tab" data-auth-tab="signup" data-i18n="createAccount">Create account</button>
+          </div>
+
+          <div id="loginPane" class="auth-pane">
+            <div class="auth-title">
+              <h2 data-i18n="welcomeBack">Welcome back</h2>
+              <p data-i18n="loginHint">Sign in to continue to your THE NORTH.</p>
+            </div>
+            <form id="loginForm">
+              <label><span data-i18n="email">Email</span><input id="loginEmail" type="email" autocomplete="email" required placeholder="name@example.com" data-placeholder-en="name@example.com" data-placeholder-ar="name@example.com"/></label>
+              <label><span data-i18n="password">Password</span><input id="loginPassword" type="password" autocomplete="current-password" required minlength="6" placeholder="••••••••"/></label>
+              <button class="btn primary wide" type="submit" data-i18n="signIn">Sign in</button>
+            </form>
+            <div class="auth-note" data-i18n="localAccountNote">Trial account: your data is stored on this browser until cloud sync is connected.</div>
+          </div>
+
+          <div id="signupPane" class="auth-pane hidden">
+            <div class="auth-title">
+              <h2 data-i18n="buildYourSystem">Build your system</h2>
+              <p data-i18n="signupHint">Create your profile first. Your dashboard will start completely empty.</p>
+            </div>
+            <form id="signupForm">
+              <label><span data-i18n="yourName">Your name</span><input id="signupName" required autocomplete="name" placeholder="Mohammed" data-placeholder-en="Your name" data-placeholder-ar="اسمك"/></label>
+              <label><span data-i18n="email">Email</span><input id="signupEmail" type="email" autocomplete="email" required placeholder="name@example.com"/></label>
+              <label><span data-i18n="password">Password</span><input id="signupPassword" type="password" autocomplete="new-password" minlength="6" required placeholder="6+ characters"/></label>
+              <button class="btn primary wide" type="submit" data-i18n="createMyAccount">Create my account</button>
+            </form>
+            <div class="auth-note" data-i18n="localAccountNote">Trial account: your data is stored on this browser until cloud sync is connected.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- APP -->
+  <div id="appScreen" class="app hidden">
+    <aside class="sidebar">
+      <div>
+        <div class="side-brand lifeos-wordmark"><span class="brand-mark lifeos-mark" aria-hidden="true"></span><span class="north-name" dir="ltr"><strong>THE NORTH</strong><span lang="ar" dir="rtl">الشمال</span></span></div>
+        <nav class="side-nav">
+          <button class="nav-item active" data-view="dashboard"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M4 13V5a1 1 0 0 1 1-1h5v9H4Zm10 7v-9h6v8a1 1 0 0 1-1 1h-5ZM4 17h6v3H5a1 1 0 0 1-1-1v-2Zm10-13h5a1 1 0 0 1 1 1v2h-6V4Z"/></svg></span><span data-i18n="dashboard">Dashboard</span></button>
+          <button class="nav-item" data-view="goals"><span class="nav-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/><path d="m16.8 7.2 3.5-3.5"/></svg></span><span data-i18n="goals">Goals</span></button>
+          <button class="nav-item" data-view="today"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="m5 12.5 4 4L19 7"/></svg></span><span data-i18n="today">Today</span></button>
+          <button class="nav-item" data-view="planner"><span class="nav-icon"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M8 3v4M16 3v4M4 10h16"/></svg></span><span data-i18n="planner">Planner</span></button>
+          <button class="nav-item" data-view="notifications"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M18 9a6 6 0 1 0-12 0c0 7-3 7-3 7h18s-3 0-3-7"/><path d="M10 20h4"/></svg></span><span data-i18n="notifications">Notifications</span><b id="sideNotifCount" class="nav-count">0</b></button>
+        </nav>
+      </div>
+      <button class="profile-chip" id="profileBtn">
+        <span id="sideAvatar" class="avatar">M</span>
+        <span class="profile-copy"><strong id="sideName">Mohammed</strong><small data-i18n="accountSettings">Account & settings</small></span>
+        <span>›</span>
+      </button>
+    </aside>
+
+    <div class="app-main">
+      <header class="mobile-header">
+        <div class="side-brand lifeos-wordmark"><span class="brand-mark lifeos-mark" aria-hidden="true"></span><span class="north-name" dir="ltr"><strong>THE NORTH</strong><span lang="ar" dir="rtl">الشمال</span></span></div>
+        <div class="mobile-actions">
+          <button id="mobileLangBtn" class="icon-btn">AR</button>
+          <button id="mobileProfileBtn" class="avatar">M</button>
+        </div>
+      </header>
+
+      <main class="content">
+        <!-- DASHBOARD -->
+        <section class="view active" data-view-panel="dashboard">
+          <div class="page-head">
+            <div class="executive-heading">
+              <div class="executive-overline" data-i18n="commandCenter">EXECUTIVE COMMAND CENTER</div>
+              <div id="greetingLine" class="greeting"></div>
+              <p id="dateLine" class="muted"></p>
+              <p class="executive-subtitle" data-i18n="dashboardSubtitle">Your goals, signals and next decisions — in one view.</p>
+            </div>
+            <div class="head-actions">
+              <button id="langBtn" class="btn ghost">العربية</button>
+              <button class="btn ghost" data-open-notifs>🔔 <span id="topNotifCount">0</span></button>
+              <button class="btn primary" data-add-task><span>＋</span><span data-i18n="addTask">Add task</span></button>
+            </div>
+          </div>
+
+          <div id="emptyOnboarding" class="onboarding hidden">
+            <div class="onboarding-graphic">
+              <div class="zero-ring"><span>0</span><small data-i18n="momentum">Momentum</small></div>
+              <div class="onboarding-lines">
+                <i></i><i></i><i></i>
+              </div>
+            </div>
+            <div class="onboarding-copy">
+              <div class="kicker" data-i18n="startHere">START HERE</div>
+              <h2 data-i18n="emptyHeadline">What do you want to move forward first?</h2>
+              <p data-i18n="emptySub">Create your first big goal. THE NORTH will build its line from zero and connect your daily actions to it.</p>
+              <button class="btn primary large" data-add-goal data-i18n="createFirstGoal">Create my first goal</button>
+            </div>
+          </div>
+
+          <div id="dashboardData" class="hidden">
+            <section class="executive-summary" aria-label="Executive summary">
+              <article class="summary-tile">
+                <span data-i18n="activeGoals">Active goals</span>
+                <strong id="statGoals">0</strong>
+                <small data-i18n="activeGoalsHint">in your system</small>
+              </article>
+              <article class="summary-tile positive">
+                <span data-i18n="onTrackGoals">On track</span>
+                <strong id="statOnTrack">0</strong>
+                <small data-i18n="onTrackGoalsHint">above your line</small>
+              </article>
+              <article class="summary-tile warning">
+                <span data-i18n="atRiskGoals">Needs attention</span>
+                <strong id="statRisk">0</strong>
+                <small data-i18n="atRiskGoalsHint">below your line</small>
+              </article>
+              <article class="summary-tile execution">
+                <span data-i18n="todayExecution">Today's execution</span>
+                <strong id="statToday">0%</strong>
+                <small data-i18n="todayExecutionHint">planned actions completed</small>
+              </article>
+            </section>
+
+            <section class="insights-section">
+              <div class="section-title-row">
+                <div><span class="kicker" data-i18n="todaySignals">TODAY'S SIGNALS</span><h2 data-i18n="whatMatters">What matters right now</h2></div>
+              </div>
+              <div id="insightPopups" class="insight-grid"></div>
+            </section>
+
+            <section class="card market-card executive-market">
+              <div class="card-head">
+                <div>
+                  <div class="market-title-line">
+                    <span class="market-live-dot"></span>
+                    <span class="kicker market-kicker" data-i18n="goalMarket">GOAL MARKET</span>
+                  </div>
+                  <h2 data-i18n="momentumDashboard">Momentum dashboard</h2>
+                  <p class="muted" data-i18n="marketHint">Every goal starts at 0. Complete the right actions to move its line above the on-track level.</p>
+                </div>
+                <div class="segmented">
+                  <button class="range-btn active" data-range="7">7D</button>
+                  <button class="range-btn" data-range="30">30D</button>
+                </div>
+              </div>
+              <div class="chart-stage">
+                <svg id="marketChart" viewBox="0 0 1100 430" preserveAspectRatio="none"></svg>
+              </div>
+              <div id="marketLegend" class="market-legend"></div>
+            </section>
+
+            <div class="dash-columns">
+              <section class="card execution-card">
+                <div class="card-head compact">
+                  <div><span class="kicker" data-i18n="today">TODAY</span><h2 data-i18n="nextActions">Your next actions</h2></div>
+                  <button class="btn ghost small" data-add-task>＋ <span data-i18n="add">Add</span></button>
+                </div>
+                <div id="dashboardTasks" class="task-list"></div>
+              </section>
+
+              <section class="card portfolio-card">
+                <div class="card-head compact">
+                  <div><span class="kicker" data-i18n="goals">GOALS</span><h2 data-i18n="currentPosition">Current position</h2></div>
+                  <button class="btn ghost small" data-add-goal>＋ <span data-i18n="add">Add</span></button>
+                </div>
+                <div id="dashboardGoals" class="goal-list"></div>
+              </section>
+            </div>
+          </div>
+        </section>
+
+        <!-- GOALS -->
+        <section class="view" data-view-panel="goals">
+          <div class="page-head">
+            <div><div class="kicker" data-i18n="goals">GOALS</div><h1 data-i18n="yourGoals">Your goals</h1><p class="muted" data-i18n="goalsHint">Big outcomes, broken down into the next visible horizon.</p></div>
+            <button class="btn primary" data-add-goal>＋ <span data-i18n="newGoal">New goal</span></button>
+          </div>
+          <div id="goalsPage" class="goals-page"></div>
+        </section>
+
+        <!-- TODAY -->
+        <section class="view" data-view-panel="today">
+          <div class="page-head">
+            <div><div class="kicker" data-i18n="today">TODAY</div><h1 data-i18n="executeToday">Execute today</h1><p class="muted" data-i18n="todayHint">Only the actions that move your goals.</p></div>
+            <button class="btn primary" data-add-task>＋ <span data-i18n="addTask">Add task</span></button>
+          </div>
+          <div class="card"><div id="todayPageTasks" class="task-list"></div></div>
+        </section>
+
+        <!-- PLANNER -->
+        <section class="view" data-view-panel="planner">
+          <div class="page-head">
+            <div><div class="kicker" data-i18n="planner">PLANNER</div><h1 data-i18n="planCascade">Goal → six months → three months → month → week</h1><p class="muted" data-i18n="plannerHint">Your daily tasks belong to this chain.</p></div>
+          </div>
+          <div id="plannerPage" class="planner-stack"></div>
+        </section>
+
+        <!-- NOTIFICATIONS -->
+        <section class="view" data-view-panel="notifications">
+          <div class="page-head">
+            <div><div class="kicker" data-i18n="notifications">NOTIFICATIONS</div><h1 data-i18n="goalSignals">Goal signals</h1><p class="muted" data-i18n="notifHint">Progress, risk, recovery and important wins.</p></div>
+            <button id="clearNotifications" class="btn ghost" data-i18n="clearAll">Clear all</button>
+          </div>
+          <div id="notificationsPage" class="notification-stack"></div>
+        </section>
+
+        <!-- ACCOUNT -->
+        <section class="view" data-view-panel="account">
+          <div class="page-head">
+            <div><div class="kicker" data-i18n="account">ACCOUNT</div><h1 data-i18n="profileSettings">Profile & settings</h1><p class="muted" data-i18n="accountHint">Your identity, language and local data.</p></div>
+          </div>
+          <div class="account-grid">
+            <section class="card profile-card">
+              <div class="account-status-line">
+                <span class="status-dot"></span><span data-i18n="privateWorkspace">Private workspace</span>
+              </div>
+              <div class="profile-hero">
+                <label class="avatar-upload">
+                  <span id="accountAvatar" class="avatar xl">M</span>
+                  <input id="avatarInput" type="file" accept="image/*"/>
+                  <b>＋</b>
+                </label>
+                <div><h2 id="accountNameHeading">Mohammed</h2><p id="accountEmailHeading" class="muted"></p></div>
+              </div>
+              <label><span data-i18n="yourName">Your name</span><input id="accountNameInput"/></label>
+              <label><span data-i18n="email">Email</span><input id="accountEmailInput" disabled/></label>
+              <button id="saveProfileBtn" class="btn primary" data-i18n="saveProfile">Save profile</button>
+            </section>
+
+            <section class="card settings-card">
+              <h2 data-i18n="preferences">Preferences</h2>
+              <div class="setting-row"><div><strong data-i18n="language">Language</strong><small data-i18n="languageHint">Switch the entire interface.</small></div><button id="accountLangBtn" class="btn ghost">العربية</button></div>
+              <div class="setting-row"><div><strong data-i18n="onTrackLevel">On-track level</strong><small data-i18n="onTrackHint">The horizontal line your momentum should rise above.</small></div><input id="thresholdInput" class="number-input" type="number" min="10" max="90" value="60"/></div>
+              <div class="setting-row"><div><strong data-i18n="backup">Backup</strong><small data-i18n="backupHint">Export before changing device or clearing browser data.</small></div><div class="inline-actions"><button id="exportBtn" class="btn ghost" data-i18n="export">Export</button><label class="btn ghost file-btn"><span data-i18n="import">Import</span><input id="importInput" type="file" accept="application/json"/></label></div></div>
+              <div class="setting-row danger-row"><div><strong data-i18n="signOut">Sign out</strong><small data-i18n="signOutHint">Your local data stays on this browser.</small></div><button id="logoutBtn" class="btn ghost danger" data-i18n="signOut">Sign out</button></div>
+            </section>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <nav class="bottom-nav instagram-nav">
+      <button class="bottom-item active" data-view="dashboard" aria-label="Dashboard">
+        <svg viewBox="0 0 24 24"><path d="M3 11.2 12 3l9 8.2v9.3a.5.5 0 0 1-.5.5H15v-6H9v6H3.5a.5.5 0 0 1-.5-.5z"/></svg>
+        <small data-i18n="dashboard">Dashboard</small>
+      </button>
+      <button class="bottom-item" data-view="goals" aria-label="Goals">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/><path d="M16.5 7.5 21 3"/></svg>
+        <small data-i18n="goals">Goals</small>
+      </button>
+      <button class="bottom-item" data-view="today" aria-label="Today">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M7.5 12.3 10.6 15.4 16.8 8.9"/></svg>
+        <small data-i18n="today">Today</small>
+      </button>
+      <button class="bottom-item" data-view="planner" aria-label="Planner">
+        <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>
+        <small data-i18n="planner">Planner</small>
+      </button>
+      <button class="bottom-item" data-view="account" aria-label="Account">
+        <span id="bottomAvatar" class="bottom-avatar">M</span>
+        <small data-i18n="account">Account</small>
+      </button>
+    </nav>
+  </div>
+
+  <!-- GOAL MODAL -->
+  <dialog id="goalDialog" class="dialog">
+    <form id="goalForm">
+      <div class="dialog-head">
+        <div><span class="kicker" data-i18n="newGoal">NEW GOAL</span><h2 data-i18n="defineGoal">Define your next destination</h2></div>
+        <button type="button" class="close-dialog icon-btn">✕</button>
+      </div>
+      <div class="form-grid">
+        <label class="full"><span data-i18n="goalName">Goal name</span><input id="goalName" required placeholder="English B2" data-placeholder-en="e.g. English B2" data-placeholder-ar="مثال: الوصول إلى B2 في الإنجليزية"/></label>
+        <label><span data-i18n="deadline">Deadline</span><input id="goalDeadline" type="date"/></label>
+        <label><span data-i18n="category">Category</span>
+          <select id="goalCategory">
+            <option>Learning</option><option>Business</option><option>Health</option><option>Reading</option><option>Finance</option><option>Personal</option>
+          </select>
+        </label>
+        <label class="full"><span data-i18n="whyGoal">Why does this matter?</span><textarea id="goalWhy" rows="3"></textarea></label>
+      </div>
+      <div class="goal-zero-note"><b>0</b><span data-i18n="startsZero">This goal will start at zero momentum and zero progress.</span></div>
+      <div class="divider"></div>
+      <div class="kicker" data-i18n="breakItDown">BREAK IT DOWN</div>
+      <div class="form-grid">
+        <label><span data-i18n="sixMonths">6 months</span><input id="goal6m"/></label>
+        <label><span data-i18n="threeMonths">3 months</span><input id="goal3m"/></label>
+        <label><span data-i18n="thisMonth">This month</span><input id="goalMonth"/></label>
+        <label><span data-i18n="thisWeek">This week</span><input id="goalWeek"/></label>
+      </div>
+      <div class="dialog-actions">
+        <button type="button" class="btn ghost close-dialog" data-i18n="cancel">Cancel</button>
+        <button class="btn primary" type="submit" data-i18n="createGoal">Create goal</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- TASK MODAL -->
+  <dialog id="taskDialog" class="dialog compact-dialog">
+    <form id="taskForm">
+      <div class="dialog-head">
+        <div><span class="kicker" data-i18n="todayAction">TODAY'S ACTION</span><h2 data-i18n="moveGoal">Move a goal today</h2></div>
+        <button type="button" class="close-dialog icon-btn">✕</button>
+      </div>
+      <label><span data-i18n="task">Task</span><input id="taskTitle" required placeholder="Read 30 pages" data-placeholder-en="e.g. Read 30 pages" data-placeholder-ar="مثال: قراءة 30 صفحة"/></label>
+      <label><span data-i18n="linkedGoal">Linked goal</span><select id="taskGoal"></select></label>
+      <div class="form-grid">
+        <label><span data-i18n="momentumImpact">Momentum impact</span>
+          <select id="taskImpact"><option value="5">+5</option><option value="10" selected>+10</option><option value="15">+15</option><option value="20">+20</option></select>
+        </label>
+        <label><span data-i18n="goalProgressImpact">Goal progress</span><input id="taskProgress" type="number" min="0" max="25" step=".5" value="1"/></label>
+      </div>
+      <div class="dialog-actions">
+        <button type="button" class="btn ghost close-dialog" data-i18n="cancel">Cancel</button>
+        <button class="btn primary" type="submit" data-i18n="addTask">Add task</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div id="toast" class="toast"></div>
+
+  <script src="core.js?v=simple2"></script>
+  <script src="app.js?v=simple2"></script>
+  <script src="workspace.js?v=simple2"></script>
+</body>
+</html>
