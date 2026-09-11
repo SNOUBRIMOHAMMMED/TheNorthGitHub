@@ -275,10 +275,24 @@
     const secondary = Object.keys(labels).filter(k => !primary.includes(k) && k !== "account");
     $(".side-nav").innerHTML = primary.map(navItem).join("") +
       `<details class="lx-nav-more" ${secondary.includes(route) ? "open" : ""}><summary>${L("More", "المزيد")}</summary>${secondary.map(navItem).join("")}</details>`;
+    const dockIcon = (k) => {
+      const flat = {
+        home: '<path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1Z"/>',
+        more: '<path d="M5 6h14M5 12h14M5 18h14"/>'
+      };
+      if (flat[k]) return `<svg viewBox="0 0 24 24" aria-hidden="true">${flat[k]}</svg>`;
+      // Local SVG surfaces preserve sharpness, theme contrast and offline support.
+      const body = {
+        goals: '<ellipse cx="16" cy="18" rx="11" ry="12" fill="var(--dock-edge)"/><ellipse cx="15" cy="15" rx="11" ry="12" fill="url(#dock-goals-face)"/><ellipse cx="15" cy="15" rx="7" ry="8" fill="var(--dock-recess)"/><ellipse cx="15" cy="15" rx="3.5" ry="4" fill="var(--dock-light)"/><path d="m15 15 11-11m-5 0h5v5" fill="none" stroke="var(--dock-arrow)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>',
+        focus: '<rect x="12" y="2" width="8" height="4" rx="1.5" fill="var(--dock-edge)"/><path d="M16 5v3m8 1 2-2" stroke="var(--dock-light)" stroke-width="2.5" stroke-linecap="round"/><circle cx="16" cy="19" r="11" fill="var(--dock-edge)"/><circle cx="16" cy="16.5" r="11" fill="url(#dock-focus-face)"/><circle cx="16" cy="16.5" r="7.5" fill="var(--dock-recess)"/><path d="M16 11v6l4 2" stroke="var(--dock-light)" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" fill="none"/><circle cx="16" cy="17" r="1.5" fill="var(--dock-arrow)"/>',
+        habits: '<rect x="5" y="8" width="23" height="22" rx="5" fill="var(--dock-edge)"/><rect x="4" y="5" width="23" height="22" rx="5" fill="url(#dock-habits-face)"/><path d="M5 12h21" stroke="var(--dock-recess)" stroke-width="1.5"/><path d="M10 3v5m11-5v5" stroke="var(--dock-light)" stroke-width="3" stroke-linecap="round"/><path d="m10 18 4 4 7-8" stroke="var(--dock-recess)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>'
+      };
+      return `<svg class="dock-dimensional" viewBox="0 0 32 34" aria-hidden="true"><defs><linearGradient id="dock-${k}-face" x1="0" y1="0" x2="1" y2="1"><stop stop-color="var(--dock-light)"/><stop offset="1" stop-color="var(--dock-face)"/></linearGradient></defs><ellipse cx="16" cy="31" rx="10" ry="2" fill="var(--dock-shadow)"/>${body[k]}</svg>`;
+    };
     const mobileRoutes = ["home", "goals", "focus", "habits"];
     $(".bottom-nav").innerHTML = mobileRoutes.map(k =>
-      `<button class="bottom-item ${route === k ? "active" : ""}" data-route="${k}" aria-label="${name(k)}" ${route === k ? 'aria-current="page"' : ""}>${icon(k)}<small>${k === "habits" ? L("Habits", "العادات") : name(k)}</small></button>`).join("") +
-      `<button class="bottom-item ${!mobileRoutes.includes(route) ? "active" : ""}" data-action="menu" aria-haspopup="dialog" aria-label="${L("More sections", "المزيد من الأقسام")}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 6h14M5 12h14M5 18h14"/></svg><small>${L("More", "المزيد")}</small></button>`;
+      `<button class="bottom-item ${route === k ? "active" : ""}" data-route="${k}" aria-label="${name(k)}" ${route === k ? 'aria-current="page"' : ""}>${dockIcon(k)}<small>${k === "habits" ? L("Habits", "العادات") : name(k)}</small></button>`).join("") +
+      `<button class="bottom-item ${!mobileRoutes.includes(route) ? "active" : ""}" data-action="menu" aria-haspopup="dialog" aria-label="${L("More sections", "المزيد من الأقسام")}">${dockIcon("more")}<small>${L("More", "المزيد")}</small></button>`;
     $("#lxTopbar").innerHTML =
       `<div class="lx-breadcrumb">THE NORTH <span>/</span> ${name(route)}</div><div class="lx-top-actions"><button class="lx-btn lx-menu-button" data-action="menu">${icon("tasks")}${L("Explore", "الأقسام")}</button>${btn(icon("inbox") + L("Search", "بحث"), "command", 'aria-label="' + L("Search, Control K", "بحث، Control K") + '"')}${btn(ar() ? "EN" : "ع", "language")}${btn(icon("account"), "navigate", 'data-to="account" aria-label="' + name("account") + '"')}</div>`;
     $("#lxCommand").setAttribute(

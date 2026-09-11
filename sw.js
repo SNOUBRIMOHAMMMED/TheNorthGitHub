@@ -1,21 +1,21 @@
 /* Offline shell only. Never intercept external traffic or clear other apps' caches. */
-const CACHE = "lifeos-v4-20260910-premium1";
+const CACHE = "lifeos-v4-20260910-premium4";
 const ASSETS = [
   "./",
   "index.html",
   "styles.css",
-  "styles.css?v=premium1",
+  "styles.css?v=premium4",
   "landing.css",
-  "landing.css?v=premium1",
+  "landing.css?v=premium4",
   "north-workspace.jpg",
   "executive.css",
-  "executive.css?v=premium1",
+  "executive.css?v=premium4",
   "core.js",
-  "core.js?v=premium1",
+  "core.js?v=premium4",
   "app.js",
-  "app.js?v=premium1",
+  "app.js?v=premium4",
   "workspace.js",
-  "workspace.js?v=premium1",
+  "workspace.js?v=premium4",
   "manifest.webmanifest",
   "brand-mark.svg",
   "icon-180.png",
