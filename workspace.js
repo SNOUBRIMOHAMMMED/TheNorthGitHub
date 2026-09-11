@@ -275,12 +275,10 @@
     const secondary = Object.keys(labels).filter(k => !primary.includes(k) && k !== "account");
     $(".side-nav").innerHTML = primary.map(navItem).join("") +
       `<details class="lx-nav-more" ${secondary.includes(route) ? "open" : ""}><summary>${L("More", "المزيد")}</summary>${secondary.map(navItem).join("")}</details>`;
-    $(".bottom-nav").innerHTML = ["home", "goals", "focus", "habits", "account"]
-      .map(
-        (k) =>
-          `<button class="bottom-item ${route === k ? "active" : ""}" data-route="${k}" aria-label="${name(k)}">${icon(k)}<small>${name(k)}</small></button>`,
-      )
-      .join("");
+    const mobileRoutes = ["home", "goals", "focus", "habits"];
+    $(".bottom-nav").innerHTML = mobileRoutes.map(k =>
+      `<button class="bottom-item ${route === k ? "active" : ""}" data-route="${k}" aria-label="${name(k)}" ${route === k ? 'aria-current="page"' : ""}>${icon(k)}<small>${k === "habits" ? L("Habits", "العادات") : name(k)}</small></button>`).join("") +
+      `<button class="bottom-item ${!mobileRoutes.includes(route) ? "active" : ""}" data-action="menu" aria-haspopup="dialog" aria-label="${L("More sections", "المزيد من الأقسام")}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 6h14M5 12h14M5 18h14"/></svg><small>${L("More", "المزيد")}</small></button>`;
     $("#lxTopbar").innerHTML =
       `<div class="lx-breadcrumb">THE NORTH <span>/</span> ${name(route)}</div><div class="lx-top-actions"><button class="lx-btn lx-menu-button" data-action="menu">${icon("tasks")}${L("Explore", "الأقسام")}</button>${btn(icon("inbox") + L("Search", "بحث"), "command", 'aria-label="' + L("Search, Control K", "بحث، Control K") + '"')}${btn(ar() ? "EN" : "ع", "language")}${btn(icon("account"), "navigate", 'data-to="account" aria-label="' + name("account") + '"')}</div>`;
     $("#lxCommand").setAttribute(

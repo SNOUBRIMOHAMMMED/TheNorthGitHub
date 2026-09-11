@@ -58,3 +58,36 @@ html[dir=rtl] .app,html[dir=rtl] .lx-dialog{font-family:"Noto Sans Arabic","IBM 
 /* Secondary navigation stays discoverable without competing with daily work. */
 .lx-nav-more summary{cursor:pointer;padding:14px;color:inherit;font-weight:600}
 .lx-nav-more summary:focus-visible{outline:2px solid currentColor;outline-offset:-2px}
+
+/* Premium reading and mobile navigation: scoped to the existing workspace. */
+:root{--lx-font:ui-sans-serif,system-ui,-apple-system,"Segoe UI","Noto Sans Arabic",Tahoma,Arial,sans-serif;--lx-muted:#59675e;--lx-radius:18px;--lx-shadow:0 3px 16px #16221b08}
+html[data-theme=dark]{--lx-bg:#191e1b;--lx-panel:#222923;--lx-soft:#29312b;--lx-ink:#e5eae5;--lx-muted:#b0bab2;--lx-line:#3a463d;--lx-shadow:0 4px 20px #00000012}
+.life-workspace .app,.lx-dialog{font-size:15px;line-height:1.65;font-family:var(--lx-font)}
+html[dir=rtl] .app,html[dir=rtl] .lx-dialog{font-family:"Segoe UI","Noto Sans Arabic",Tahoma,Arial,sans-serif;line-height:1.85}
+.life-workspace input,.life-workspace textarea,.life-workspace select,.lx-dialog input,.lx-dialog textarea,.lx-dialog select{font-family:inherit;font-size:16px;line-height:1.5}
+.lx-page-head p,.lx-card p{font-size:14px;line-height:1.8;overflow-wrap:anywhere}
+.lx-card h2{font-size:20px;line-height:1.45;font-weight:650}
+.lx-card h3{line-height:1.55}
+.lx-card{border-radius:var(--lx-radius);box-shadow:var(--lx-shadow)}
+.lx-card summary{cursor:pointer;line-height:1.6;padding-block:8px;font-size:14px;font-weight:600}
+.lx-card[open]>summary{margin-bottom:16px}
+.lx-btn{min-height:44px;font-size:13px;border-radius:11px;line-height:1.5}
+.life-workspace .nav-item{font-size:14px;min-height:44px}
+.lx-page-head h1{letter-spacing:-.6px;line-height:1.35}
+html[dir=rtl] .lx-page-head h1{letter-spacing:0;line-height:1.55}
+@media(max-width:980px){
+ .life-workspace .bottom-nav{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));left:0!important;right:0!important;bottom:0!important;border-radius:0!important;border:0;border-top:1px solid var(--lx-line);padding:7px 10px calc(7px + env(safe-area-inset-bottom,0px))!important;background:var(--lx-panel);box-shadow:0 -4px 20px #00000008;backdrop-filter:none;gap:4px}
+ .life-workspace .bottom-nav .bottom-item{position:relative;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:5px;min-height:56px!important;min-width:0;padding:6px 2px!important;color:var(--lx-muted)!important;background:transparent!important;border-radius:12px;transition:background-color 160ms ease,color 160ms ease,transform 120ms ease;font-family:inherit}
+ .life-workspace .bottom-nav .bottom-item svg{width:24px;height:24px;stroke-width:1.8}
+ .life-workspace .bottom-nav .bottom-item small{display:block;font-size:11px;font-weight:550;line-height:1.35;white-space:normal}
+ .life-workspace .bottom-nav .bottom-item.active{color:var(--lx-accent)!important;background:var(--lx-accent-soft)!important}
+ .life-workspace .bottom-nav .bottom-item.active svg{stroke-width:2.3}
+ .life-workspace .bottom-nav .bottom-item:active{transform:scale(.96)}
+ .life-workspace .bottom-nav .bottom-item:focus-visible{outline:2px solid var(--lx-accent);outline-offset:-2px}
+ .life-workspace .bottom-nav .bottom-item::after{display:none!important}
+ .life-workspace .content{padding-bottom:calc(110px + env(safe-area-inset-bottom,0px))!important}
+ .lx-mini{bottom:calc(88px + env(safe-area-inset-bottom,0px))}
+ .lx-menu-button{display:none!important}
+ .lx-focusing .bottom-nav{display:none!important}
+}
+@media(prefers-reduced-motion:reduce){.life-workspace .bottom-nav .bottom-item{transition:none;transform:none}}
