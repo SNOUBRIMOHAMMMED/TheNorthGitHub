@@ -1,25 +1,25 @@
 /* Offline shell only. Never intercept external traffic or clear other apps' caches. */
-const CACHE = "lifeos-v4-20260910-auto1";
+const CACHE = "lifeos-v4-20260910-auto2";
 const ASSETS = [
   "./",
   "index.html",
   "styles.css",
-  "styles.css?v=auto1",
+  "styles.css?v=auto2",
   "landing.css",
-  "landing.css?v=auto1",
+  "landing.css?v=auto2",
   "north-workspace.jpg",
   "executive.css",
-  "executive.css?v=auto1",
+  "executive.css?v=auto2",
   "auth.js",
-  "auth.js?v=auto1",
+  "auth.js?v=auto2",
   "cloud-sync.js",
-  "cloud-sync.js?v=auto1",
+  "cloud-sync.js?v=auto2",
   "core.js",
-  "core.js?v=auto1",
+  "core.js?v=auto2",
   "app.js",
-  "app.js?v=auto1",
+  "app.js?v=auto2",
   "workspace.js",
-  "workspace.js?v=auto1",
+  "workspace.js?v=auto2",
   "manifest.webmanifest",
   "brand-mark.svg",
   "icon-180.png",
@@ -76,3 +76,4 @@ self.addEventListener("fetch", (event) => {
     })(),
   );
 });
+

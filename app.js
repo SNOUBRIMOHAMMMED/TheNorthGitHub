@@ -317,7 +317,7 @@ async function authSubmit(e,signup) {
     if(result.session)await enterCloud(result.user);
     else {toast(currentLang()==="ar"?"أرسلنا رسالة لتأكيد بريدك. أكّد البريد ثم سجّل الدخول.":"Check your email to confirm your account, then sign in.");authTab("login");$("#loginEmail").value=email;}
   }catch(err){
-    toast(currentLang()==="ar"?"تعذر الدخول. تحقق من الاتصال والبريد وكلمة المرور وتأكيد البريد. للحساب المحلي القديم: أنشئ حسابًا بنفس البريد أولًا.":"Unable to sign in. Check connection, credentials and email confirmation. For an old local account, first sign up with the same email.");
+    toast(window.NorthAuth.errorMessage(err,currentLang(),signup));
   }finally{password.value="";authBusy=false;buttons.forEach(b=>b.disabled=false);}
 }
 $("#signupForm").addEventListener("submit",e=>authSubmit(e,true));
@@ -465,3 +465,4 @@ window.NorthAuth?.client?.auth.onAuthStateChange((event)=>{
 });
 if("serviceWorker" in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
 })();
+
