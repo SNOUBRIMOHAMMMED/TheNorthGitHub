@@ -10,7 +10,7 @@ for (const f of [
   "executive.css",
   "landing.css",
   "north-workspace.jpg",
-  "core.js",
+  "auth.js", "cloud-sync.js", "core.js",
   "app.js",
   "workspace.js",
   "sw.js",
