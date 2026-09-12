@@ -1,8 +1,8 @@
 const {test}=require('node:test'),assert=require('node:assert/strict'),vm=require('node:vm'),fs=require('node:fs'),path=require('node:path'),C=require('../core.js');
-test('legacy rendering and language switching tolerate replaced navigation elements',()=>{
+test('legacy rendering and language switching tolerate replaced navigation elements',async()=>{
  const html=fs.readFileSync(path.join(__dirname,'../index.html'),'utf8'),source=fs.readFileSync(path.join(__dirname,'../app.js'),'utf8');
  const els=new Map([...html.matchAll(/id="([^"]+)"/g)].map(x=>['#'+x[1],{classList:{add(){},remove(){},toggle(){}},style:{},dataset:{},options:[],addEventListener(){},value:'',textContent:''}]));
  els.delete('#bottomAvatar');els.delete('#sideNotifCount');let events=0;const data=C.migrate({profile:{name:'QA',email:'qa',lang:'ar',threshold:60},goals:[],tasks:[],lastOpened:C.day()});const map=new Map([[C.ACCOUNT_KEY,JSON.stringify({qa:{passwordHash:'local',data}})],[C.SESSION_KEY,'qa']]);
- const document={documentElement:{lang:'en'},querySelector:s=>els.get(s)||null,querySelectorAll:()=>[],dispatchEvent:()=>events++};const ctx={window:{LifeCore:C,scrollTo(){},addEventListener(){}},document,localStorage:{getItem:k=>map.get(k),setItem:(k,v)=>map.set(k,v)},navigator:{},Intl,Date,CustomEvent:function(){},setTimeout(){}};
- vm.createContext(ctx);vm.runInContext(source,ctx);assert.equal(document.documentElement.lang,'ar');ctx.window.LifeLegacy.toggleLang();assert.equal(document.documentElement.lang,'en');assert.ok(events>=2);
+ let load;const document={documentElement:{lang:'en'},querySelector:s=>els.get(s)||null,querySelectorAll:()=>[],dispatchEvent:()=>events++};const ctx={window:{dispatchEvent(){},LifeCore:C,scrollTo(){},addEventListener(name,fn){if(name==='load')load=fn;},NorthAuth:{session:async()=>({user:{id:'uid-qa',email:'qa'}})}},document,localStorage:{getItem:k=>map.get(k),setItem:(k,v)=>map.set(k,v),removeItem:k=>map.delete(k)},navigator:{},Intl,Date,Event:function(){},CustomEvent:function(){},setTimeout(){}};
+ vm.createContext(ctx);vm.runInContext(source,ctx);assert.equal(map.has(C.SESSION_KEY),false);await load();assert.equal(document.documentElement.lang,'ar');ctx.window.LifeLegacy.toggleLang();assert.equal(document.documentElement.lang,'en');assert.ok(events>=2);
 });
