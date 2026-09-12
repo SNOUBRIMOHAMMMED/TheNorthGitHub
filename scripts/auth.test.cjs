@@ -1,0 +1,8 @@
+const {test}=require('node:test');const assert=require('node:assert/strict');const vm=require('node:vm');const fs=require('node:fs');const path=require('node:path');
+const source=fs.readFileSync(path.join(__dirname,'../auth.js'),'utf8');
+function setup(auth){const context={window:{supabase:{createClient:()=>({auth})}}};vm.runInNewContext(source,context);return context.window.NorthAuth;}
+test('signup requiring confirmation does not produce a signed-in session',async()=>{const a=setup({signUp:async()=>({data:{session:null,user:{id:'pending'}}})});const result=await a.signup('a@example.test','password','A','ar');assert.equal(result.session,null);});
+test('invalid cloud credentials never fall back to local authentication',async()=>{const error=new Error('Invalid login');const a=setup({signInWithPassword:async()=>({error})});await assert.rejects(a.login('a@example.test','incorrect'),/Invalid login/);});
+test('authenticated session restores the same cloud identity',async()=>{const session={user:{id:'u',email:'a@example.test'}};const a=setup({getSession:async()=>({data:{session}})});assert.equal((await a.session()).user.id,'u');});
+test('logout invalidates this device session without signing out other devices',async()=>{let scope;const a=setup({signOut:async options=>{scope=options.scope;return {data:{}};}});await a.logout();assert.equal(scope,'local');});
+test('missing CDN fails closed rather than opening a local account',async()=>{const context={window:{}};vm.runInNewContext(source,context);await assert.rejects(context.window.NorthAuth.login('a@example.test','password'),/network/);});
