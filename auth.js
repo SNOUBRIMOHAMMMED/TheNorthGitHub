@@ -7,7 +7,11 @@
   window.NorthAuth={
     client,
     async login(email,password){if(!client)throw Error('network');return check(await client.auth.signInWithPassword({email,password}));},
-    async signup(email,password,name,lang){if(!client)throw Error('network');return check(await client.auth.signUp({email,password,options:{data:{name,lang}}}));},
+    async signup(email,password,name,lang){
+      if(!client)throw Error('network');
+      const redirectTo = typeof window !== 'undefined' && window.location ? (window.location.origin + window.location.pathname) : undefined;
+      return check(await client.auth.signUp({email,password,options:{emailRedirectTo:redirectTo,data:{name,lang}}}));
+    },
     async session(){if(!client)throw Error('network');return check(await client.auth.getSession()).session;},
     async logout(){if(!client)return;check(await client.auth.signOut({scope:'local'}));}
   };
