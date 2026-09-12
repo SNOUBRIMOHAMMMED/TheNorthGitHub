@@ -688,7 +688,8 @@
   function goals(d) {
     const g = d.goals.find((g) => g.id === detail);
     if (g) {
-      const ts = d.tasks.filter((t) => t.goalId === g.id),
+      const ts = d.tasks.filter((t) => t.goalId === g.id && !t.archived),
+        hs = (d.habits || []).filter((h) => h.goalId === g.id && !h.archived),
         time = C.duration(
           C.reportSessions(d),
           0,
@@ -704,10 +705,20 @@
               L("Edit goal", "تعديل الهدف"),
               "edit",
               `data-kind="goals" data-id="${g.id}"`,
+            ) +
+            btn(
+              "+ " + L("Add habit", "إضافة عادة"),
+              "new",
+              `data-kind="habits" data-goal="${g.id}"`,
+            ) +
+            btn(
+              "+ " + L("Add task", "إضافة مهمة"),
+              "new",
+              `data-kind="tasks" data-goal="${g.id}"`,
             ),
         ) +
         entityTime(d, "goalId", g.id) +
-        `<div class="lx-grid-two"><section class="lx-card"><h2>${L("Outcome progress", "تقدم النتيجة")} · ${g.progress}%</h2>${progress(g.progress)}<p>${L("Time is an investment, not an automatic measure of completion.", "الوقت استثمار، وليس مقياسًا تلقائيًا لاكتمال الهدف.")}</p><div class="lx-mini-stats">${stat(L("Estimated", "المقدر"), (g.targetHours || 0) + L(" hours", " ساعة"))}${stat(L("Remaining", "المتبقي"), hrs(Math.max(0, (g.targetHours || 0) * 3600000 - time)))}${stat(L("Days left", "الأيام المتبقية"), g.deadline ? Math.max(0, Math.ceil((+new Date(g.deadline + "T23:59:59") - Date.now()) / 86400000)) : "—")}</div><h3>${L("Milestones", "المراحل")}</h3>${["m6", "m3", "month", "week"].map((key, i) => `<div class="lx-list-line"><span>${L(["6 months", "Quarter", "Month", "Week"][i], ["ستة أشهر", "ربع سنة", "شهر", "أسبوع"][i])}</span><strong>${esc(g.plan?.[key] || "—")}</strong></div>`).join("")}<p class="lx-pre">${esc(g.notes || "")}</p></section><section class="lx-card"><h2>${name("tasks")}</h2>${ts.map((t) => taskRow(t, d)).join("") || empty(L("Connect actions to this outcome.", "اربط التنفيذ بهذه النتيجة."), "tasks")}</section></div>`
+        `<div class="lx-grid-two"><section class="lx-card"><h2>${L("Outcome progress", "تقدم النتيجة")} · ${g.progress}%</h2>${progress(g.progress)}<p>${L("Time is an investment, not an automatic measure of completion.", "الوقت استثمار، وليس مقياسًا تلقائيًا لاكتمال الهدف.")}</p><div class="lx-mini-stats">${stat(L("Estimated", "المقدر"), (g.targetHours || 0) + L(" hours", " ساعة"))}${stat(L("Remaining", "المتبقي"), hrs(Math.max(0, (g.targetHours || 0) * 3600000 - time)))}${stat(L("Momentum", "الزخم"), (g.momentum || 0) + "%")}${stat(L("Days left", "الأيام المتبقية"), g.deadline ? Math.max(0, Math.ceil((+new Date(g.deadline + "T23:59:59") - Date.now()) / 86400000)) : "—")}</div><h3>${L("Milestones", "المراحل")}</h3>${["m6", "m3", "month", "week"].map((key, i) => `<div class="lx-list-line"><span>${L(["6 months", "Quarter", "Month", "Week"][i], ["ستة أشهر", "ربع سنة", "شهر", "أسبوع"][i])}</span><strong>${esc(g.plan?.[key] || "—")}</strong></div>`).join("")}<p class="lx-pre">${esc(g.notes || "")}</p></section><section class="lx-card"><h2>${name("tasks")} (${ts.filter((t) => t.done).length}/${ts.length})</h2>${ts.map((t) => taskRow(t, d)).join("") || empty(L("Connect actions to this outcome.", "اربط التنفيذ بهذه النتيجة."), "tasks")}<h3>${name("habits")} (${hs.length})</h3>${hs.map((h) => `<div class="lx-list-line"><span><strong>${esc(h.title)}</strong><small>🔥 ${C.habitStreak(h.checks || [], C.day()).current} ${L("day streak", "أيام متتالية")}</small></span>${btn(h.checks?.includes(C.day()) ? "✓ " + L("Done", "تمت") : L("Check", "إكمال"), "habit-toggle", `data-id="${h.id}"`, h.checks?.includes(C.day()))}</div>`).join("") || `<p class="lx-pre">${L("No habits linked to this goal yet.", "لا توجد عادات مرتبطة بهذا الهدف بعد.")}</p>`}</section></div>`
       );
     }
     return (
@@ -729,10 +740,12 @@
       `<div class="lx-grid-three">${
         d.goals
           .filter((g) => !g.archived)
-          .map(
-            (g) =>
-              `<article class="lx-card"><div class="lx-eyebrow">${esc(g.horizon ? L(g.horizon, { annual: "سنوي", quarterly: "ربع سنوي", monthly: "شهري", weekly: "أسبوعي" }[g.horizon] || g.horizon) : L("Long term", "بعيد المدى"))}</div><h2><button class="lx-text-button" data-route="goals" data-id="${g.id}">${esc(g.name)}</button></h2><p>${esc(g.why || "")}</p><div class="lx-split"><strong>${g.progress}%</strong><small>${dateText(g.deadline)}</small></div>${progress(g.progress)}<p>${hrs(C.duration(C.reportSessions(d), 0, Infinity, (s) => s.goalId === g.id))} ${L("invested", "مستثمرة")}</p></article>`,
-          )
+          .map((g) => {
+            const ts = d.tasks.filter((t) => t.goalId === g.id && !t.archived);
+            const hs = (d.habits || []).filter((h) => h.goalId === g.id && !h.archived);
+            const doneTs = ts.filter((t) => t.done).length;
+            return `<article class="lx-card"><div class="lx-eyebrow">${esc(g.horizon ? L(g.horizon, { annual: "سنوي", quarterly: "ربع سنوي", monthly: "شهري", weekly: "أسبوعي" }[g.horizon] || g.horizon) : L("Long term", "بعيد المدى"))}</div><h2><button class="lx-text-button" data-route="goals" data-id="${g.id}">${esc(g.name)}</button></h2><p>${esc(g.why || "")}</p><div class="lx-split"><strong>${g.progress}%</strong><small>${dateText(g.deadline)}</small></div>${progress(g.progress)}<p>${hrs(C.duration(C.reportSessions(d), 0, Infinity, (s) => s.goalId === g.id))} ${L("invested", "مستثمرة")}</p><div class="lx-mini-stats">${stat(name("tasks"), `${doneTs}/${ts.length}`)}${stat(name("habits"), `${hs.length}`)}${stat(L("Momentum", "الزخم"), `${g.momentum || 0}%`)}</div></article>`;
+          })
           .join("") ||
         empty(
           L(
@@ -821,7 +834,7 @@
         })
         .join(
           "",
-        )}</section><section class="lx-card"><h2>${L("Projects · this week", "المشاريع · هذا الأسبوع")}</h2>${d.projects.map((p) => `<div class="lx-list-line"><span>${esc(p.name)}</span><strong>${hrs(C.duration(tt.all, C.week(now, d.settings.weekStart), Infinity, (s) => s.projectId === p.id))}</strong></div>`).join("") || "<p>—</p>"}</section><section class="lx-card"><h2>${L("Your rhythm", "إيقاعك")}</h2><p>${L("Most tracked hour", "الساعة الأكثر تسجيلًا")}: <b dir="ltr">${hours[bestHour] ? String(bestHour).padStart(2, "0") + ":00 – " + String(bestHour + 1).padStart(2, "0") + ":00" : "—"}</b></p><p>${L("Best day · last 30 days", "أفضل يوم · آخر 30 يومًا")}: ${best?.[1] ? dateText(best[0]) : "—"}</p><p>${L("Average daily deep work · 7 days", "متوسط العمل العميق اليومي · 7 أيام")}: ${hrs(C.duration(tt.all, C.midnight(now) - 6 * 86400000, Infinity, (s) => s.categoryId === "Deep Work") / 7)}</p><p>${L("Time tracked describes effort, not quality.", "الوقت المسجل يصف الجهد، وليس جودته.")}</p></section></div><div class="lx-grid-two"><section class="lx-card"><h2>${L("Execution", "التنفيذ")}</h2><p>${L("Tasks completed", "المهام المكتملة")}: ${d.tasks.filter((t) => t.done).length} / ${d.tasks.length}</p>${progress(percent(d.tasks.filter((t) => t.done).length, d.tasks.length))}<p>${L("Habits today", "عادات اليوم")}: ${d.habits.filter((h) => h.checks?.includes(C.day())).length} / ${d.habits.length}</p>${progress(percent(d.habits.filter((h) => h.checks?.includes(C.day())).length, d.habits.length))}</section><section class="lx-card"><h2>${L("Goals progress", "تقدم الأهداف")}</h2>${d.goals.map((g) => `<div class="lx-list-line"><span>${esc(g.name)}</span><strong>${g.progress}%</strong></div>${progress(g.progress)}`).join("") || "<p>—</p>"}</section></div><div class="lx-grid-two"><section class="lx-card"><h2>${L("Focus time by week", "وقت التركيز حسب الأسبوع")}</h2>${weeklyChart(tt.all, d)}</section><section class="lx-card"><h2>${L("Time per goal · this month", "الوقت لكل هدف · هذا الشهر")}</h2>${d.goals.map((g) => `<button class="lx-list-button" data-route="goals" data-id="${g.id}">${esc(g.name)}<strong>${hrs(C.duration(tt.all, +new Date(new Date().getFullYear(), new Date().getMonth(), 1), Infinity, (s) => s.goalId === g.id))}</strong></button>`).join("") || "<p>—</p>"}</section></div><section class="lx-card"><h2>${L("Session history", "سجل الجلسات")}</h2>${
+        )}</section><section class="lx-card"><h2>${L("Projects · this week", "المشاريع · هذا الأسبوع")}</h2>${d.projects.map((p) => `<div class="lx-list-line"><span>${esc(p.name)}</span><strong>${hrs(C.duration(tt.all, C.week(now, d.settings.weekStart), Infinity, (s) => s.projectId === p.id))}</strong></div>`).join("") || "<p>—</p>"}</section><section class="lx-card"><h2>${L("Your rhythm", "إيقاعك")}</h2><p>${L("Most tracked hour", "الساعة الأكثر تسجيلًا")}: <b dir="ltr">${hours[bestHour] ? String(bestHour).padStart(2, "0") + ":00 – " + String(bestHour + 1).padStart(2, "0") + ":00" : "—"}</b></p><p>${L("Best day · last 30 days", "أفضل يوم · آخر 30 يومًا")}: ${best?.[1] ? dateText(best[0]) : "—"}</p><p>${L("Average daily deep work · 7 days", "متوسط العمل العميق اليومي · 7 أيام")}: ${hrs(C.duration(tt.all, C.midnight(now) - 6 * 86400000, Infinity, (s) => s.categoryId === "Deep Work") / 7)}</p><p>${L("Time tracked describes effort, not quality.", "الوقت المسجل يصف الجهد، وليس جودته.")}</p></section></div><div class="lx-grid-two"><section class="lx-card"><h2>${L("Execution", "التنفيذ")}</h2><p>${L("Tasks completed", "المهام المكتملة")}: ${d.tasks.filter((t) => !t.archived && t.done).length} / ${d.tasks.filter((t) => !t.archived).length}</p>${progress(percent(d.tasks.filter((t) => !t.archived && t.done).length, d.tasks.filter((t) => !t.archived).length))}<p>${L("Habits today", "عادات اليوم")}: ${d.habits.filter((h) => !h.archived && h.checks?.includes(C.day())).length} / ${d.habits.filter((h) => !h.archived).length}</p>${progress(percent(d.habits.filter((h) => !h.archived && h.checks?.includes(C.day())).length, d.habits.filter((h) => !h.archived).length))}</section><section class="lx-card"><h2>${L("Goals progress", "تقدم الأهداف")}</h2>${d.goals.filter((g) => !g.archived).map((g) => `<div class="lx-list-line"><span>${esc(g.name)}</span><strong>${g.progress}%</strong></div>${progress(g.progress)}`).join("") || "<p>—</p>"}</section></div><div class="lx-grid-two"><section class="lx-card"><h2>${L("Focus time by week", "وقت التركيز حسب الأسبوع")}</h2>${weeklyChart(tt.all, d)}</section><section class="lx-card"><h2>${L("Time per goal · this month", "الوقت لكل هدف · هذا الشهر")}</h2>${d.goals.map((g) => `<button class="lx-list-button" data-route="goals" data-id="${g.id}">${esc(g.name)}<strong>${hrs(C.duration(tt.all, +new Date(new Date().getFullYear(), new Date().getMonth(), 1), Infinity, (s) => s.goalId === g.id))}</strong></button>`).join("") || "<p>—</p>"}</section></div><section class="lx-card"><h2>${L("Session history", "سجل الجلسات")}</h2>${
         d.sessions
           .slice(0, historyLimit)
           .map((s) => sessionRow(s, d))
@@ -1041,30 +1054,34 @@
       `<div class="lx-grid-three">${
         d.habits
           .filter((h) => !h.archived)
-          .map(
-            (h) =>
-              `<article class="lx-card"><div class="lx-card-head"><h2>${esc(h.title)}</h2>${btn(L("Edit", "تعديل"), "edit", `data-kind="habits" data-id="${h.id}"`)}</div><p>${esc(h.description || "")}</p><p>${L("Last 7 days", "آخر 7 أيام")}: ${Array.from(
-                { length: 7 },
-                (_, i) => {
-                  const dt = new Date();
-                  dt.setDate(dt.getDate() - i);
-                  return h.checks?.includes(C.day(+dt)) ? 1 : 0;
-                },
-              ).reduce(
-                (a, b) => a + b,
-                0,
-              )} / 7</p><div class="lx-habit-days">${Array.from(
-                { length: 7 },
-                (_, i) => {
-                  const dt = new Date();
-                  dt.setDate(dt.getDate() - 6 + i);
-                  const key = C.day(+dt);
-                  return `<span class="${h.checks?.includes(key) ? "checked" : ""}" title="${key}">${dt.getDate()}</span>`;
-                },
-              ).join(
-                "",
-              )}</div>${btn(h.checks?.includes(C.day()) ? L("Completed today ✓", "تمت اليوم ✓") : L("Mark today complete", "إكمال عادة اليوم"), "habit-toggle", `data-id="${h.id}"`, true)}<p>${esc(h.time || "")} · ${L("Daily", "يوميًا")}</p></article>`,
-          )
+          .map((h) => {
+            const strk = C.habitStreak(h.checks || [], C.day());
+            const goal = h.goalId ? d.goals.find((g) => g.id === h.goalId) : null;
+            const isTodayChecked = h.checks?.includes(C.day());
+            const weekDays = Array.from({ length: 7 }, (_, i) => {
+              const dt = new Date();
+              dt.setDate(dt.getDate() - 6 + i);
+              const key = C.day(+dt);
+              const isChk = h.checks?.includes(key);
+              const isToday = key === C.day();
+              const dayName = new Intl.DateTimeFormat(ar() ? "ar-MA" : "en-GB", { weekday: "narrow" }).format(dt);
+              return `<button type="button" class="lx-habit-day-btn ${isChk ? "checked" : ""} ${isToday ? "is-today" : ""}" data-action="habit-toggle-day" data-id="${h.id}" data-date="${key}" title="${key}: ${isChk ? L("Done", "مكتمل") : L("Not done", "غير مكتمل")}"><small>${dayName}</small><span>${dt.getDate()}</span></button>`;
+            }).join("");
+            const past7Count = Array.from({ length: 7 }, (_, i) => {
+              const dt = new Date();
+              dt.setDate(dt.getDate() - i);
+              return h.checks?.includes(C.day(+dt)) ? 1 : 0;
+            }).reduce((a, b) => a + b, 0);
+
+            const freqMap = {
+              daily: L("Daily", "يوميًا"),
+              weekdays: L("Weekdays (Sun-Thu)", "أيام العمل"),
+              weekly: L("Weekly", "أسبوعيًا"),
+            };
+            const freqText = freqMap[h.frequency] || L("Daily", "يوميًا");
+
+            return `<article class="lx-card"><div class="lx-card-head"><div><span class="lx-streak-badge" title="${L("Current streak / Best streak", "التتابع الحالي / أفضل تتابع")}">🔥 ${strk.current} <small>(${L("Best", "الأفضل")}: ${strk.best})</small></span><h2>${esc(h.title)}</h2></div>${btn(L("Edit", "تعديل"), "edit", `data-kind="habits" data-id="${h.id}"`)}</div><p>${esc(h.description || "")}</p>${goal ? `<div class="lx-habit-goal-pill"><button class="lx-text-button" data-route="goals" data-id="${goal.id}">🎯 ${esc(goal.name)}</button><small>+${h.impact || 5}% ${L("momentum", "زخم")}</small></div>` : ""}<p class="lx-habit-meta"><span>${L("Last 7 days", "آخر 7 أيام")}: <strong>${past7Count} / 7</strong></span><span>${esc(h.time || "")} · ${freqText}</span></p><div class="lx-habit-days">${weekDays}</div>${btn(isTodayChecked ? L("Completed today ✓", "تمت اليوم ✓") : L("Mark today complete", "إكمال عادة اليوم"), "habit-toggle", `data-id="${h.id}"`, isTodayChecked)}</article>`;
+          })
           .join("") ||
         empty(
           L(
@@ -1272,6 +1289,29 @@
       body += area(L("Details", "التفاصيل"), "body", o.body || "");
     if (kind === "habits")
       body +=
+        select(
+          name("goals"),
+          "goalId",
+          options(d.goals),
+          o.goalId || seed.goalId || "",
+        ) +
+        select(
+          L("Frequency", "التكرار"),
+          "frequency",
+          [
+            ["daily", L("Daily", "يوميًا")],
+            ["weekdays", L("Weekdays (Sun-Thu)", "أيام العمل")],
+            ["weekly", L("Weekly", "أسبوعيًا")],
+          ],
+          o.frequency || "daily",
+        ) +
+        field(
+          L("Goal momentum impact (+%)", "أثر الزخم على الهدف (+%)"),
+          "impact",
+          o.impact !== undefined ? o.impact : 5,
+          "number",
+          'min="0" max="50" step="1"',
+        ) +
         area(
           L("Intention / routine steps", "النية / خطوات الروتين"),
           "description",
@@ -1637,7 +1677,7 @@
       $("#lxCommand").close();
     if (a === "navigate") navigate(b.dataset.to);
     if (a === "language") window.LifeLegacy.toggleLang();
-    if (a === "new") editor(kind, "", { projectId: b.dataset.project || "" });
+    if (a === "new") editor(kind, "", { projectId: b.dataset.project || "", goalId: b.dataset.goal || "" });
     if (a === "edit") editor(kind, id);
     if (a === "close") $("#lxDialog").close();
     if (a === "close-command") $("#lxCommand").close();
@@ -1748,14 +1788,14 @@
         const t = d.settings.moneyTodos?.find((t) => t.id === id);
         if (t) t.done = !t.done;
       });
-    if (a === "habit-toggle")
-      await mutate((d) => {
-        const h = d.habits.find((h) => h.id === id);
-        h.checks = h.checks || [];
-        h.checks = h.checks.includes(C.day())
-          ? h.checks.filter((x) => x !== C.day())
-          : [...h.checks, C.day()];
-      });
+    if (a === "habit-toggle") {
+      await mutate((d) => C.toggleHabit(d, id, C.day()));
+      window.LifeLegacy?.renderAll?.();
+    }
+    if (a === "habit-toggle-day") {
+      await mutate((d) => C.toggleHabit(d, id, b.dataset.date));
+      window.LifeLegacy?.renderAll?.();
+    }
     if (a === "convert") {
       const target = document.querySelector(`[name="convert-${id}"]`).value;
       const item = db.read().inbox.find((x) => x.id === id);
@@ -1958,6 +1998,12 @@
             item.history = item.history || [{ date: C.day(), value: 0 }];
             item.momentum = item.momentum || 0;
             item.color = item.color || "#789b8b";
+          }
+          if (kind === "habits") {
+            item.checks = item.checks || [];
+            item.frequency = data.frequency || "daily";
+            item.goalId = data.goalId || "";
+            item.impact = Number(data.impact) >= 0 ? Number(data.impact) : 5;
           }
           if (kind === "tasks") {
             item.subtasks = data.subtaskText
@@ -2320,6 +2366,18 @@
           "اكتمل هدف العمل العميق اليومي",
         ),
       });
+    d.habits.forEach((habit) => {
+      if (habit.archived || !habit.time) return;
+      const doneToday = habit.checks?.includes(today);
+      if (doneToday) return;
+      const at = +new Date(today + "T" + habit.time);
+      if (Date.now() >= at && Date.now() - at <= 3600000) {
+        alerts.push({
+          id: "habit-" + habit.id + "-" + today,
+          title: L("Habit reminder: ", "تذكير بالعادة: ") + habit.title,
+        });
+      }
+    });
     d.events.forEach((event) => {
       const at = +new Date(event.date + "T" + (event.startTime || "00:00"));
       if (at - Date.now() > 0 && at - Date.now() <= 600000)

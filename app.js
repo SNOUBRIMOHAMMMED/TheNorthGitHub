@@ -328,9 +328,10 @@ function rollover(){
   const start=new Date(last+"T12:00:00"), end=new Date(today+"T12:00:00");
   const diff=Math.max(1,Math.round((end-start)/86400000));
   d.goals.forEach(g=>{
+    if(g.archived||g.progress>=100)return;
     for(let i=1;i<=diff;i++){
       const dt=new Date(start);dt.setDate(dt.getDate()+i);const day=window.LifeCore.day(+dt);
-      const hadAction=d.tasks.some(x=>x.goalId===g.id&&x.done&&x.completedDate===day);
+      const hadAction=d.tasks.some(x=>x.goalId===g.id&&x.done&&x.completedDate===day)||d.habits.some(h=>h.goalId===g.id&&h.checks?.includes(day))||(d.sessions||[]).some(s=>s.goalId===g.id&&window.LifeCore.day(s.startedAt)===day);
       if(!hadAction)g.momentum=clamp(g.momentum-5);
       if(!g.history.some(h=>h.date===day))g.history.push({date:day,value:g.momentum});
     }
@@ -375,9 +376,10 @@ function setAvatar(el){if(!el)return;const p=data().profile;if(p.avatar){el.styl
 function renderSummary(){
   const d=data(); if(!d)return;
   const th=d.profile.threshold||60;
-  const total=d.goals.length;
-  const onTrack=d.goals.filter(g=>g.momentum>=th).length;
-  const risk=d.goals.filter(g=>g.momentum<th).length;
+  const activeGoals=d.goals.filter(g=>!g.archived);
+  const total=activeGoals.length;
+  const onTrack=activeGoals.filter(g=>g.momentum>=th).length;
+  const risk=activeGoals.filter(g=>g.momentum<th).length;
   const todays=d.tasks.filter(x=>x.date===iso());
   const done=todays.filter(x=>x.done).length;
   const execution=todays.length?Math.round(done/todays.length*100):0;
@@ -388,25 +390,25 @@ function renderSummary(){
 }
 
 function renderChart(){
-  const svg=$("#marketChart"), d=data();if(!svg||!d.goals.length){if(svg)svg.innerHTML="";return}
+  const svg=$("#marketChart"), d=data();const activeGoals=d.goals.filter(g=>!g.archived);if(!svg||!activeGoals.length){if(svg)svg.innerHTML="";return}
   const W=1100,H=430,p={l:55,r:24,t:25,b:42},iw=W-p.l-p.r,ih=H-p.t-p.b,n=d.range||7;
-  const dates=[...new Set(d.goals.flatMap(g=>g.history.map(h=>h.date)))].sort().slice(-n);if(!dates.length)return;
+  const dates=[...new Set(activeGoals.flatMap(g=>g.history.map(h=>h.date)))].sort().slice(-n);if(!dates.length)return;
   const x=i=>p.l+(dates.length===1?iw/2:i/(dates.length-1)*iw), y=v=>p.t+(1-v/100)*ih;
   let out="";
   for(let v=0;v<=100;v+=20){out+=`<line x1="${p.l}" y1="${y(v)}" x2="${W-p.r}" y2="${y(v)}" stroke="#252b36"/><text x="${p.l-11}" y="${y(v)+4}" text-anchor="end" font-size="11" fill="#7e8798">${v}</text>`}
   const th=d.profile.threshold||60;out+=`<line x1="${p.l}" y1="${y(th)}" x2="${W-p.r}" y2="${y(th)}" stroke="#d8dce5" stroke-width="2" stroke-dasharray="9 7" opacity=".72"/><rect x="${W-190}" y="${y(th)-16}" width="145" height="22" rx="8" fill="#e9e6df"/><text x="${W-118}" y="${y(th)-1}" text-anchor="middle" font-size="10" font-weight="800" fill="#17191e">${t("onTrackChart")} ${th}</text>`;
   dates.forEach((dt,i)=>{if(dates.length<=8||i%Math.ceil(dates.length/7)===0||i===dates.length-1){const label=new Intl.DateTimeFormat(currentLang()==="ar"?"ar-MA":"en-GB",{month:"short",day:"numeric"}).format(new Date(dt+"T12:00:00"));out+=`<text x="${x(i)}" y="${H-15}" text-anchor="middle" font-size="10" fill="#7e8798">${label}</text>`}});
-  d.goals.forEach(g=>{
+  activeGoals.forEach(g=>{
     const map=new Map(g.history.map(h=>[h.date,h.value]));let last=0;const pts=dates.map((dt,i)=>{if(map.has(dt))last=map.get(dt);return[x(i),y(last)]});
     const path=pts.map((pt,i)=>`${i?"L":"M"} ${pt[0].toFixed(1)} ${pt[1].toFixed(1)}`).join(" ");out+=`<path d="${path}" fill="none" stroke="#0d1016" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" opacity=".92"/><path d="${path}" fill="none" stroke="${g.color}" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/>`;
     const end=pts[pts.length-1];out+=`<circle cx="${end[0]}" cy="${end[1]}" r="8" fill="${g.color}" stroke="white" stroke-width="4"/>`;
   });svg.innerHTML=out;
 }
-function renderLegend(){const el=$("#marketLegend"),d=data();if(!el)return;el.innerHTML=d.goals.map(g=>`<div class="legend-pill"><i class="dot" style="background:${g.color}"></i>${esc(g.name)} <b>${Math.round(g.momentum)}</b></div>`).join("")}
+function renderLegend(){const el=$("#marketLegend"),d=data();if(!el)return;el.innerHTML=d.goals.filter(g=>!g.archived).map(g=>`<div class="legend-pill"><i class="dot" style="background:${g.color}"></i>${esc(g.name)} <b>${Math.round(g.momentum)}</b></div>`).join("")}
 function smallGoal(g){const [label,cls]=status(g);return `<div class="goal-row"><div class="goal-row-top"><div class="goal-title"><i class="dot" style="background:${g.color}"></i>${esc(g.name)}</div><div class="momentum-score">${Math.round(g.momentum)}</div></div><div class="goal-status ${cls}">${label}</div><div class="goal-foot"><span>${t("goalProgress")}</span><b>${Number(g.progress||0).toFixed(1)}%</b></div><div class="progress-line"><i style="width:${clamp(g.progress||0)}%;background:${g.color}"></i></div></div>`}
 function renderGoalLists(){
-  const d=data();$("#dashboardGoals").innerHTML=d.goals.length?d.goals.map(smallGoal).join(""):`<div class="empty-block">${t("noGoals")}</div>`;
-  $("#goalsPage").innerHTML=d.goals.length?d.goals.map(g=>{const [label,cls]=status(g);return `<article class="goal-large"><div class="goal-large-head"><div><div class="goal-title"><i class="dot" style="background:${g.color}"></i><h3>${esc(g.name)}</h3></div><div class="goal-status ${cls}">${label}</div></div><div class="goal-actions"><button class="icon-btn" data-delete-goal="${g.id}" title="${t("delete")}">🗑</button></div></div><div class="goal-big-score">${Math.round(g.momentum)} <small>${t("momentum")}</small></div><div class="goal-foot"><span>${t("goalProgress")}</span><b>${Number(g.progress||0).toFixed(1)}%</b></div><div class="progress-line"><i style="width:${clamp(g.progress||0)}%;background:${g.color}"></i></div><div class="why-box">${esc(g.why||"—")}</div><div class="goal-foot"><span>${esc(g.category||"")}</span><span>${g.deadline?esc(g.deadline):t("noDeadline")}</span></div></article>`}).join(""):`<div class="empty-block">${t("noGoals")}</div>`;
+  const d=data(),activeGoals=d.goals.filter(g=>!g.archived);$("#dashboardGoals").innerHTML=activeGoals.length?activeGoals.map(smallGoal).join(""):`<div class="empty-block">${t("noGoals")}</div>`;
+  $("#goalsPage").innerHTML=activeGoals.length?activeGoals.map(g=>{const [label,cls]=status(g);return `<article class="goal-large"><div class="goal-large-head"><div><div class="goal-title"><i class="dot" style="background:${g.color}"></i><h3>${esc(g.name)}</h3></div><div class="goal-status ${cls}">${label}</div></div><div class="goal-actions"><button class="icon-btn" data-delete-goal="${g.id}" title="${t("delete")}">🗑</button></div></div><div class="goal-big-score">${Math.round(g.momentum)} <small>${t("momentum")}</small></div><div class="goal-foot"><span>${t("goalProgress")}</span><b>${Number(g.progress||0).toFixed(1)}%</b></div><div class="progress-line"><i style="width:${clamp(g.progress||0)}%;background:${g.color}"></i></div><div class="why-box">${esc(g.why||"—")}</div><div class="goal-foot"><span>${esc(g.category||"")}</span><span>${g.deadline?esc(g.deadline):t("noDeadline")}</span></div></article>`}).join(""):`<div class="empty-block">${t("noGoals")}</div>`;
   $$("[data-delete-goal]").forEach(b=>b.onclick=()=>deleteGoal(b.dataset.deleteGoal));
 }
 function taskHtml(tk){const g=data().goals.find(g=>g.id===tk.goalId);return `<div class="task-row ${tk.done?"done":""}"><button class="task-check" data-task="${tk.id}">${tk.done?"✓":""}</button><div><div class="task-name">${esc(tk.title)}</div><div class="task-meta"><i class="dot" style="display:inline-block;background:${g?.color||"#aaa"}"></i> ${esc(g?.name||"")} · +${tk.progressImpact}%</div></div><span class="impact-chip">+${tk.impact}</span></div>`}
@@ -415,7 +417,7 @@ function renderTasks(){
   $("#dashboardTasks").innerHTML=html;$("#todayPageTasks").innerHTML=html;$$("[data-task]").forEach(b=>b.onclick=()=>toggleTask(b.dataset.task));
 }
 function renderPlanner(){
-  const d=data();$("#plannerPage").innerHTML=d.goals.length?d.goals.map(g=>`<article class="plan-card"><div class="plan-title"><i class="dot" style="background:${g.color}"></i>${esc(g.name)}</div><div class="cascade">${step(t("sixMonths"),g.plan.m6)}${step(t("threeMonths"),g.plan.m3)}${step(t("thisMonth"),g.plan.month)}${step(t("thisWeek"),g.plan.week)}</div></article>`).join(""):`<div class="empty-block">${t("noGoals")}</div>`;
+  const d=data(),activeGoals=d.goals.filter(g=>!g.archived);$("#plannerPage").innerHTML=activeGoals.length?activeGoals.map(g=>`<article class="plan-card"><div class="plan-title"><i class="dot" style="background:${g.color}"></i>${esc(g.name)}</div><div class="cascade">${step(t("sixMonths"),g.plan.m6)}${step(t("threeMonths"),g.plan.m3)}${step(t("thisMonth"),g.plan.month)}${step(t("thisWeek"),g.plan.week)}</div></article>`).join(""):`<div class="empty-block">${t("noGoals")}</div>`;
 }
 function step(label,text){return `<div class="cascade-step"><b>${label.toUpperCase()}</b><span>${esc(text||t("noPlan"))}</span></div>`}
 function renderInsights(){
@@ -432,7 +434,7 @@ $$("[data-view]").forEach(b=>b.onclick=()=>showView(b.dataset.view));$("#profile
 
 const goalDialog=$("#goalDialog"),taskDialog=$("#taskDialog");
 $$("[data-add-goal]").forEach(b=>b.onclick=()=>goalDialog.showModal());
-$$("[data-add-task]").forEach(b=>b.onclick=()=>{if(!data().goals.length)return toast(t("createGoalFirst"));$("#taskGoal").innerHTML=data().goals.map(g=>`<option value="${g.id}">${esc(g.name)}</option>`).join("");taskDialog.showModal()});
+$$("[data-add-task]").forEach(b=>b.onclick=()=>{const ag=data().goals.filter(g=>!g.archived);if(!ag.length)return toast(t("createGoalFirst"));$("#taskGoal").innerHTML=ag.map(g=>`<option value="${g.id}">${esc(g.name)}</option>`).join("");taskDialog.showModal()});
 $$(".close-dialog").forEach(b=>b.onclick=()=>b.closest("dialog").close());
 
 $("#goalForm").addEventListener("submit",e=>{
@@ -443,9 +445,29 @@ $("#taskForm").addEventListener("submit",e=>{
   e.preventDefault();const tk={id:uid(),title:$("#taskTitle").value.trim(),goalId:$("#taskGoal").value,impact:Number($("#taskImpact").value),progressImpact:Number($("#taskProgress").value||0),date:iso(),done:false,completedDate:""};saveData(d=>d.tasks.push(tk));taskDialog.close();e.target.reset();renderAll();toast(t("taskAdded"));
 });
 function toggleTask(id){
-  saveData(d=>{const tk=d.tasks.find(x=>x.id===id);if(!tk)return;const g=d.goals.find(x=>x.id===tk.goalId);if(!g)return;if(!tk.done){tk.done=true;tk.completedDate=iso();g.momentum=clamp(g.momentum+tk.impact);g.progress=clamp(g.progress+tk.progressImpact);updateHistory(g);d.notifications.unshift({id:"done-"+id+"-"+Date.now(),type:"success",title:`${g.name} ${t("movedUp")}`,body:`${t("completed")}: ${tk.title}. ${t("momentum")}: ${Math.round(g.momentum)}.`,ts:Date.now()})}else{tk.done=false;tk.completedDate="";g.momentum=clamp(g.momentum-tk.impact);g.progress=clamp(g.progress-tk.progressImpact);updateHistory(g)}});generateSignals();renderAll();
+  saveData(d=>{
+    if(window.LifeCore?.completeTask){
+      window.LifeCore.completeTask(d,id);
+      const tk=d.tasks.find(x=>x.id===id);
+      const g=d.goals.find(x=>x.id===tk?.goalId);
+      if(tk&&g&&tk.done){
+        d.notifications.unshift({id:"done-"+id+"-"+Date.now(),type:"success",title:`${g.name} ${t("movedUp")}`,body:`${t("completed")}: ${tk.title}. ${t("momentum")}: ${Math.round(g.momentum)}.`,ts:Date.now()});
+      }
+      return;
+    }
+    const tk=d.tasks.find(x=>x.id===id);if(!tk)return;const g=d.goals.find(x=>x.id===tk.goalId);if(!g)return;if(!tk.done){tk.done=true;tk.completedDate=iso();g.momentum=clamp(g.momentum+tk.impact);g.progress=clamp(g.progress+tk.progressImpact);updateHistory(g);d.notifications.unshift({id:"done-"+id+"-"+Date.now(),type:"success",title:`${g.name} ${t("movedUp")}`,body:`${t("completed")}: ${tk.title}. ${t("momentum")}: ${Math.round(g.momentum)}.`,ts:Date.now()})}else{tk.done=false;tk.completedDate="";g.momentum=clamp(g.momentum-tk.impact);g.progress=clamp(g.progress-tk.progressImpact);updateHistory(g)}
+  });generateSignals();renderAll();
 }
-function deleteGoal(id){if(!confirm(t("delete")+"?"))return;saveData(d=>{d.goals=d.goals.filter(g=>g.id!==id);d.tasks=d.tasks.filter(t=>t.goalId!==id)});renderAll()}
+function deleteGoal(id){
+  if(!confirm(t("delete")+"?"))return;
+  saveData(d=>{
+    const g=d.goals.find(x=>x.id===id);
+    if(g)g.archived=true;
+    d.tasks.forEach(t=>{if(t.goalId===id)t.goalId="";});
+    d.habits.forEach(h=>{if(h.goalId===id)h.goalId="";});
+  });
+  renderAll();
+}
 $$(".range-btn").forEach(b=>b.onclick=()=>{saveData(d=>d.range=Number(b.dataset.range));$$(".range-btn").forEach(x=>x.classList.toggle("active",x===b));renderChart()});
 $("#clearNotifications").onclick=()=>{saveData(d=>{d.notifications=[];d.dismissed={}});renderAll()};
 $("#saveProfileBtn").onclick=()=>{saveData(d=>{d.profile.name=$("#accountNameInput").value.trim()||d.profile.name;d.profile.threshold=clamp(Number($("#thresholdInput").value||60),10,90)});renderAll();toast(t("saved"))};
