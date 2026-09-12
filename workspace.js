@@ -301,6 +301,8 @@
       "aria-label",
       L("Global search", "البحث الشامل"),
     );
+    const top=$("#lxTopbar");
+    if(cloud){const state=document.createElement("small");state.dataset.cloudStatus="";state.setAttribute("role","status");state.textContent=cloudMessages()[cloudState];top.append(state);}
     theme(d);
   }
   function navItem(k) {
@@ -1423,6 +1425,49 @@
         "",
       )}</div><p class="lx-muted">${L("Changes apply to the next session. Automatic cycles include elapsed time while the device sleeps. Notifications and sound are delivered when the app is awake.", "تطبق التغييرات على الجلسة التالية. الدورات التلقائية تشمل الوقت المنقضي أثناء سكون الجهاز. تصل التنبيهات والأصوات عندما يكون التطبيق نشطًا.")}</p><button class="lx-btn lx-primary" type="submit">${L("Save Pomodoro settings", "حفظ إعدادات بومودورو")}</button></form>`);
   }
+  let cloudState = "disconnected";
+  const supabase = window.NorthAuth?.client;
+  const cloudMessages = () => ({
+    disconnected:L("Restoring account…", "جارٍ استرجاع الحساب…"),
+    syncing:L("Syncing…", "جارٍ الحفظ والمزامنة…"), connecting:L("Connecting…", "جارٍ الاتصال…"),
+    saved:L("Workspace saved", "تم حفظ مساحة العمل"),
+    conflict:L("Changes exist on both devices. Choose which copy to keep; local recovery backup is retained.", "توجد تغييرات محلية وسحابية. اختر النسخة المعتمدة؛ نحتفظ بنسخة استعادة محلية."),
+    schema:L("Run supabase-setup.sql in Supabase first.", "شغّل ملف supabase-setup.sql في Supabase أولًا."),
+    offline:L("Cloud unavailable. Changes remain local; reconnect or retry.", "تعذر الحفظ السحابي. التغييرات محفوظة محليًا؛ أعد الاتصال أو المحاولة."),
+    auth:L("Sign-in failed. Check your cloud account and confirmed email.", "تعذر الدخول. تحقق من الحساب السحابي وتأكيد البريد."),
+    confirm:L("Confirm your email, then sign in here.", "أكد بريدك من الرسالة، ثم سجّل الدخول هنا."),
+    identity:L("Cloud email must match the current local account.", "يجب أن يطابق البريد السحابي بريد الحساب المحلي الحالي."),
+    active:L("Finish the active session before downloading cloud changes.", "أنهِ الجلسة النشطة قبل استرجاع التغييرات السحابية.")
+  });
+  const cloud = supabase && window.NorthCloud ? window.NorthCloud.create({
+    client:supabase, read:()=>db.read(), storage:localStorage,
+    email:()=>localStorage.getItem(C.SESSION_KEY),
+    apply:payload=>{
+      const validated=C.validateImport({...db.read(),...payload});
+      db.update(d=>{for(const k of Object.keys(payload)) if(k!=="activeSession") d[k]=validated[k];});
+      window.LifeLegacy?.renderAll?.(); render();
+    },
+    status:state=>{cloudState=state; for(const el of document.querySelectorAll("[data-cloud-status]")) el.textContent=cloudMessages()[state];}
+  }) : null;
+  function cloudPanel() {
+    return `<details class="lx-card"><summary>${L("Sync and recovery", "المزامنة والاستعادة")}</summary><p id="lxCloudStatus" data-cloud-status role="status">${cloudMessages()[cloudState]}</p><p>${L("Your workspace saves automatically. If both devices change the same workspace, choose the copy to retain. Export a backup before replacing a copy.", "تُحفظ مساحة عملك تلقائيًا. إذا عُدّلت على جهازين، اختر النسخة المعتمدة. صدّر نسخة احتياطية قبل استبدال نسخة.")}</p>${btn(L("Retry sync", "إعادة المزامنة"),"cloud-sync")}<details><summary>${L("Resolve conflict", "حل تعارض")}</summary>${btn(L("Use cloud copy", "اعتماد النسخة السحابية"),"cloud-remote")}${btn(L("Use this device’s copy", "اعتماد نسخة هذا الجهاز"),"cloud-local")}</details></details>`;
+  }
+  document.addEventListener("click", async e=>{
+    const action=e.target.closest("[data-action]")?.dataset.action;
+    if(!cloud || !action?.startsWith("cloud-"))return;
+    if(action==="cloud-sync")await cloud.resume();
+
+    if(action==="cloud-remote" || action==="cloud-local")await cloud.resolve(action.slice(6));
+  });
+  if(cloud){
+    const update=db.update;
+    let pending;
+    db.update=fn=>{const result=update(fn);clearTimeout(pending);pending=setTimeout(()=>cloud.sync(),700);return result;};
+    setInterval(()=>cloud.resume(),15000);
+    window.addEventListener("online",()=>cloud.resume());
+    window.addEventListener("north:local-change",()=>{clearTimeout(pending);pending=setTimeout(()=>cloud.sync(),700);});
+    window.NorthBoot={prepare:()=>cloud.resume(),flush:async()=>{flushSaves();await cloud.sync();}};
+  }
   function settingsPanel(d) {
     let panel = $("#lxSettings");
     if (!panel) {
@@ -1431,7 +1476,7 @@
       panel.className = "lx-card lx-margin";
       document.querySelector('[data-view-panel="account"]').prepend(panel);
     }
-    panel.innerHTML = `<h2>${L("Your operating preferences", "تفضيلات نظامك")}</h2><form id="lxSettingsForm"><div class="lx-fields-three">${select(
+    panel.innerHTML = cloudPanel() + `<h2>${L("Your operating preferences", "تفضيلات نظامك")}</h2><form id="lxSettingsForm"><div class="lx-fields-three">${select(
       L("Theme", "المظهر"),
       "theme",
       [
@@ -1457,7 +1502,7 @@
         [6, L("Saturday", "السبت")],
       ],
       d.settings.weekStart,
-    )}${field(L("Daily deep work (hours)", "العمل العميق اليومي (ساعات)"), "dailyHours", d.settings.dailyHours, "number", 'min="0.5" max="24" step="0.5" required')}${field(L("Weekly deep work (hours)", "العمل العميق الأسبوعي (ساعات)"), "weeklyHours", d.settings.weeklyHours, "number", 'min="1" max="168" step="0.5" required')}${field(L("Daily summary time · in-app", "موعد ملخص اليوم · داخل التطبيق"), "summaryTime", d.settings.summaryTime || "20:00", "time")}${field(L("Currency", "العملة"), "currency", d.settings.currency, "text", 'required minlength="3" maxlength="3"')}</div><details class="lx-card"><summary>${L("Time categories", "تصنيفات الوقت")}</summary>${area(L("Time categories · one per line", "تصنيفات الوقت · تصنيف في كل سطر"), "categories", d.categories.join("\n"))}</details><button class="lx-btn lx-primary" type="submit">${L("Save preferences", "حفظ التفضيلات")}</button></form><details class="lx-card"><summary>${L("Data and recovery", "البيانات والاستعادة")}</summary><p>${L("Local workspace. Your data stays in this browser; no cloud sync or remote account protection. Export regularly. Import preserves your login and saves a recovery copy first.", "مساحة عمل محلية. بياناتك في هذا المتصفح؛ لا توجد مزامنة سحابية أو حماية حساب على خادم. صدّر بياناتك دوريًا. الاستيراد يحفظ بيانات الدخول وينشئ نسخة استعادة أولًا.")}</p>${btn(L("Restore previous import", "استعادة ما قبل الاستيراد"), "restore-import")}</details>`;
+    )}${field(L("Daily deep work (hours)", "العمل العميق اليومي (ساعات)"), "dailyHours", d.settings.dailyHours, "number", 'min="0.5" max="24" step="0.5" required')}${field(L("Weekly deep work (hours)", "العمل العميق الأسبوعي (ساعات)"), "weeklyHours", d.settings.weeklyHours, "number", 'min="1" max="168" step="0.5" required')}${field(L("Daily summary time · in-app", "موعد ملخص اليوم · داخل التطبيق"), "summaryTime", d.settings.summaryTime || "20:00", "time")}${field(L("Currency", "العملة"), "currency", d.settings.currency, "text", 'required minlength="3" maxlength="3"')}</div><details class="lx-card"><summary>${L("Time categories", "تصنيفات الوقت")}</summary>${area(L("Time categories · one per line", "تصنيفات الوقت · تصنيف في كل سطر"), "categories", d.categories.join("\n"))}</details><button class="lx-btn lx-primary" type="submit">${L("Save preferences", "حفظ التفضيلات")}</button></form><details class="lx-card"><summary>${L("Data and recovery", "البيانات والاستعادة")}</summary><p>${L("Your workspace syncs automatically with your account. A local copy supports offline work. Export backups regularly. Imports preserve your login and create a recovery copy first.", "تُزامَن مساحة عملك تلقائيًا مع حسابك. تدعم النسخة المحلية العمل دون اتصال. صدّر نسخًا احتياطية دوريًا؛ يحافظ الاستيراد على دخولك ويحفظ نسخة استعادة أولًا.")}</p>${btn(L("Restore previous import", "استعادة ما قبل الاستيراد"), "restore-import")}</details>`;
   }
   function command() {
     const dialog = $("#lxCommand");

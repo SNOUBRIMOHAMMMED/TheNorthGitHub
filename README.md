@@ -1,40 +1,34 @@
-# THE NORTH / الشمال — النسخة المدمجة
+# THE NORTH / الشمال — Automatic cloud workspace
 
-الشعار والترويسة مدمجان مباشرة باستخدام HTML وCSS وSVG. لا تحتاج ملف NorthHeader.tsx ولا React ولا Tailwind.
+## Run locally
+Recommended Node.js: 24.x (also pinned in package.json and .nvmrc).
 
-## التشغيل
-
-Node.js 24.x
+```sh
 npm ci
 npm start
+```
 
-افتح http://127.0.0.1:4173. يمكن اختيار منفذ آخر باستخدام PORT.
+Use the localhost URL printed by the server.
 
+```sh
 npm run lint
 npm test
 npm run build
+```
 
-Vercel: npm run build ثم Output Directory = dist. يوجد vercel.json بهذه الإعدادات.
+Production files are generated in dist. Vercel configuration is included: npm run build, output directory dist. Upload the full project contents, including scripts, auth.js and cloud-sync.js. No GitHub push or deployment is performed by this package.
 
-## الملفات التي تغيّرت عن النسخة المبسّطة
+## Accounts and automatic saving
+Create account and Sign in now use Supabase email/password authentication directly. Gmail addresses work as email addresses; Google OAuth is not implemented. Confirm the email if requested, then sign in. On another device, sign in to the SAME existing account rather than creating another account. No separate cloud connection or Save button is required.
 
-- brand-mark.svg: شعار N وسهم الشمال الأبيض والبرتقالي.
-- index.html: ترويسة ثنائية اللغة واسم الموقع وروابط ملفات الإصدار الجديد.
-- executive.css: أبعاد الشعار والترويسة الداكنة والتجاوب.
-- app.js وworkspace.js: الاسم الظاهر في النصوص فقط؛ لم تتغير مفاتيح البيانات.
-- manifest.webmanifest: اسم التطبيق وألوان شاشة التثبيت.
-- sw.js: تحديث نسخة الملفات المخزنة للعمل دون اتصال.
-- icon-180.png وicon-192.png وicon-512.png: أيقونات بنفس الشعار.
-- BRAND.md: مواصفات الهوية.
+Previous browser-only accounts must first register with Supabase using the same email to retain their matching local workspace. Existing Supabase users should sign in directly. Different local and cloud copies produce a recovery choice instead of silently replacing data.
 
-احتفظ بجميع ملفات المشروع وارفعها مع مجلدي scripts وtests في مساريهما. لا ترفع ZIP كملف مشروع؛ فك ضغطه وارفع محتوياته.
+Tasks, completed focus sessions, projects, goals, habits, finances, notes, events, learning, health, planning and workspace preferences are synchronized. An active timer remains on its originating device until finished. Local pending edits survive connection failures; wait for the saved indicator before closing or switching devices.
 
-نجح البناء و24 اختبارًا. روجعت صفحة البداية والشريط الجانبي وعرض الهاتف، دون تجاوز أفقي في صفحة البداية المختبرة.
+## Configuration and database
+The public Supabase URL and publishable browser key are configured in auth.js. No environment variables or server secrets are required. Never place a service-role key in browser code.
 
-الخط الكوفي غير مضمّن؛ سيستخدم المتصفح الخطوط المتاحة وفق ترتيب البدائل. تغيير عنوان الموقع لا ينقل بيانات المتصفح تلقائيًا؛ استخدم تصدير واستيراد بيانات التطبيق عند الحاجة.
+The existing user_sessions JSON workspace table and owner-only RLS policies are used. You already reported successfully running supabase-setup.sql: do NOT rerun it for this update. For a new Supabase project only, follow SUPABASE-SETUP.md.
 
-## صفحة الهبوط الجديدة
-
-تصميم ثنائي اللغة بألوان متناسقة مع التطبيق، ومعاينة توضيحية وصورة مكتبية مولّدة. التفاصيل في LANDING.md. ملفات landing.css وnorth-workspace.jpg ضرورية ويشملها البناء تلقائيًا.
-
-لا توجد قاعدة بيانات خارجية أو متغيرات بيئة مطلوبة. البيانات محلية داخل المتصفح؛ احتفظ بنسخ احتياطية من إعدادات التطبيق.
+## Validation
+Production build and 39 automated tests passed. Local landing and account screens opened without captured console errors. Auth and database tests use mocks; live email confirmation, two-device synchronization and deployed RLS isolation have not been verified with real accounts.

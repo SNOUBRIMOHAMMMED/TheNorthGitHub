@@ -108,3 +108,5 @@ html[dir=rtl] .lx-page-head h1{letter-spacing:0;line-height:1.55}
 html[data-theme=dark] .life-workspace .bottom-nav{--dock-light:#dbe9dd;--dock-face:#8aaa94;--dock-edge:#4b6855;--dock-recess:#2d4836;--dock-arrow:#e5a477;--dock-shadow:#00000035}
 .life-workspace .bottom-nav .bottom-item .dock-dimensional{width:29px;height:29px;fill:none;stroke:none;filter:drop-shadow(0 1px 1px #00000018)}
 .life-workspace .bottom-nav .bottom-item.active .dock-dimensional{stroke:none;--dock-light:#e4f1e6;--dock-face:#92c5a1}
+
+.lx-topbar:has([data-cloud-status]){height:auto;min-height:70px;flex-wrap:wrap;padding-block:10px}.lx-topbar [data-cloud-status]{flex-basis:100%;font-size:12px;color:var(--lx-muted);line-height:1.6;overflow-wrap:anywhere}

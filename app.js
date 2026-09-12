@@ -1,5 +1,6 @@
 (() => {
 const APP_KEY="lifeos_v11_accounts", SESSION_KEY="lifeos_v11_session";
+localStorage.removeItem(SESSION_KEY); // Restore only after Supabase establishes the identity.
 const palette=["#5B8CFF","#37C98A","#FF6A64","#A57BFF","#FF9A4D","#39C7D2","#E7B94B","#F06CB5","#7D91FF"];
 const $=(s,p=document)=>p.querySelector(s), $$=(s,p=document)=>[...p.querySelectorAll(s)];
 const iso=()=>window.LifeCore.day();
@@ -20,7 +21,7 @@ startNow:"Start now",heroPill:"YOUR PERSONAL EXECUTION SYSTEM",landingHeadline:"
 authKicker:"YOUR PERSONAL EXECUTION SYSTEM",authHeadline:"Lead your life with the same clarity you expect from your business.",authSub:"Goals, signals, execution and recovery — one private operating system for people who refuse to run on noise.",
 authPoint1:"One board for the direction of every goal",authPoint2:"Know where your attention has the highest return",authPoint3:"Turn execution into visible momentum",
 signIn:"Sign in",createAccount:"Create account",welcomeBack:"Welcome back to your command center",loginHint:"Continue from the exact point where your execution stopped.",email:"Email",password:"Password",
-localAccountNote:"Trial account: your data is stored on this browser until cloud sync is connected.",buildYourSystem:"Create your private operating system",signupHint:"Start with your identity. Your workspace stays intentionally empty until you define what matters.",
+localAccountNote:"Your account saves automatically. Confirm your email to begin.",buildYourSystem:"Create your private operating system",signupHint:"Start with your identity. Your workspace stays intentionally empty until you define what matters.",
 yourName:"Your name",createMyAccount:"Create my account",dashboard:"Dashboard",goals:"Goals",today:"Today",planner:"Planner",notifications:"Notifications",account:"Account",accountSettings:"Account & settings",
 addTask:"Add task",momentum:"Momentum",startHere:"START HERE",emptyHeadline:"What do you want to move forward first?",emptySub:"Create your first big goal. THE NORTH will build its line from zero and connect your daily actions to it.",
 createFirstGoal:"Create my first goal",todaySignals:"TODAY'S SIGNALS",whatMatters:"Executive signals",goalMarket:"GOAL MARKET",momentumDashboard:"Goal momentum map",
@@ -49,7 +50,7 @@ startNow:"ابدأ الآن",heroPill:"نظامك الشخصي للتنفيذ",l
 authKicker:"نظامك الشخصي للتنفيذ",authHeadline:"قُد حياتك بالوضوح نفسه الذي تقود به أعمالك.",authSub:"أهداف، إشارات، تنفيذ، واستعادة للمسار — في نظام خاص لمن يرفض أن يدير حياته بالارتجال.",
 authPoint1:"لوحة واحدة ترى فيها اتجاه كل هدف",authPoint2:"اعرف أين يحقق انتباهك أعلى عائد",authPoint3:"حوّل التنفيذ اليومي إلى زخم تراه بوضوح",
 signIn:"تسجيل الدخول",createAccount:"إنشاء حساب",welcomeBack:"مرحبًا بعودتك إلى مركز قيادتك",loginHint:"أكمل التنفيذ من النقطة التي توقفت عندها، دون ضوضاء أو تشتيت.",email:"البريد الإلكتروني",password:"كلمة المرور",
-localAccountNote:"حساب تجريبي: بياناتك محفوظة في هذا المتصفح إلى أن نربط المزامنة السحابية.",buildYourSystem:"أنشئ نظامك التنفيذي الخاص",signupHint:"ابدأ بهويتك فقط. ستبقى مساحة العمل فارغة حتى تحدد أنت ما يستحق أن يدخلها.",
+localAccountNote:"حسابك يحفظ بياناتك تلقائيًا. أكّد بريدك للبدء.",buildYourSystem:"أنشئ نظامك التنفيذي الخاص",signupHint:"ابدأ بهويتك فقط. ستبقى مساحة العمل فارغة حتى تحدد أنت ما يستحق أن يدخلها.",
 yourName:"اسمك",createMyAccount:"إنشاء حسابي",dashboard:"القيادة",goals:"الأهداف",today:"التنفيذ",planner:"الخطة",notifications:"الإشارات",account:"الحساب",accountSettings:"الملف الشخصي والتحكم",
 addTask:"إضافة مهمة",momentum:"الزخم",startHere:"ابدأ من هنا",emptyHeadline:"حدّد أول نتيجة تستحق أن تتحرك الآن.",emptySub:"ابدأ بهدف واحد مهم. سيبدأ من الصفر، ثم تبني تقدمه بما تنفذه كل يوم.",
 createFirstGoal:"تحديد أول هدف",todaySignals:"إشارات اليوم",whatMatters:"الإشارات التنفيذية الآن",goalMarket:"مؤشر الأهداف",momentumDashboard:"خريطة زخم الأهداف",
@@ -130,7 +131,7 @@ Object.assign(dict.en, {
   "nlQ1": "Who is THE NORTH for?",
   "nlA1": "Founders, entrepreneurs and professionals who want to connect their goals with daily execution. This is your personal workspace, not a shared team management platform.",
   "nlQ2": "Where is my data stored?",
-  "nlA2": "The current version saves your workspace in this browser. Export backups regularly. Moving to another browser or device requires exporting and importing your data; automatic cloud sync is not included.",
+  "nlA2": "Your workspace saves automatically to your account. Sign in with the same email on another device to restore it. Offline changes sync when reconnected; finish an active timer on the device where it started.",
   "nlQ3": "Can I use it in Arabic and on my phone?",
   "nlA3": "Yes. Switch between Arabic and English, with right-to-left layouts for Arabic and responsive navigation for mobile, tablet and desktop.",
   "nlQ4": "How does focus tracking work?",
@@ -202,7 +203,7 @@ Object.assign(dict.ar, {
   "nlQ1": "لمن صُمّم الشمال؟",
   "nlA1": "لرواد الأعمال والمؤسسين والمهنيين الذين يريدون ربط أهدافهم بالتنفيذ اليومي. هذه مساحتك الشخصية، وليست منصة مشتركة لإدارة فريق العمل.",
   "nlQ2": "أين تُحفظ بياناتي؟",
-  "nlA2": "تحفظ النسخة الحالية بياناتك داخل هذا المتصفح. صدّر نسخة احتياطية بانتظام. الانتقال إلى جهاز أو متصفح آخر يتطلب تصدير البيانات واستيرادها؛ المزامنة السحابية التلقائية غير متاحة.",
+  "nlA2": "تُحفظ مساحة عملك تلقائيًا في حسابك. سجّل الدخول بنفس البريد على جهاز آخر لاسترجاعها. تُزامَن تغييرات عدم الاتصال عند عودة الشبكة؛ أكمل المؤقت النشط على الجهاز الذي بدأت عليه.",
   "nlQ3": "هل يعمل بالعربية وعلى الهاتف؟",
   "nlA3": "نعم. يمكنك التبديل بين العربية والإنجليزية، مع واجهة عربية من اليمين إلى اليسار وتصميم يناسب الهاتف والجهاز اللوحي والحاسوب.",
   "nlQ4": "كيف يُحسب وقت التركيز؟",
@@ -214,7 +215,7 @@ Object.assign(dict.ar, {
 });
 function t(k){return dict[currentLang()][k]||k}
 function getAccounts(){try{return JSON.parse(localStorage.getItem(APP_KEY)||"{}")}catch{return {}}}
-function setAccounts(v){try{localStorage.setItem(APP_KEY,JSON.stringify(v))}catch(e){toast(currentLang()==="ar"?"تعذر الحفظ. تحقق من مساحة التخزين وصدّر نسخة احتياطية.":"Could not save. Check storage and export a backup.");throw e}}
+function setAccounts(v){try{localStorage.setItem(APP_KEY,JSON.stringify(v));window.dispatchEvent(new Event("north:local-change"))}catch(e){toast(currentLang()==="ar"?"تعذر الحفظ. تحقق من مساحة التخزين وصدّر نسخة احتياطية.":"Could not save. Check storage and export a backup.");throw e}}
 function currentEmail(){return localStorage.getItem(SESSION_KEY)||""}
 function account(){return getAccounts()[currentEmail()]||null}
 function currentLang(){return account()?.data?.profile?.lang === "ar" ? "ar" : account()?.data?.profile?.lang === "en" ? "en" : document.documentElement.lang === "ar" ? "ar" : "en"}
@@ -292,17 +293,35 @@ $("#landingLogo").onclick=(e)=>{e.preventDefault();showLanding()};
 $$("[data-scroll-how]").forEach(b=>b.onclick=()=>$("#howItWorks").scrollIntoView({behavior:"smooth"}));
 $("#authLangBtn").onclick=toggleLang;$("#landingLangBtn").onclick=toggleLang;$("#langBtn").onclick=toggleLang;$("#mobileLangBtn").onclick=toggleLang;$("#accountLangBtn").onclick=toggleLang;
 
-$("#signupForm").addEventListener("submit",async e=>{
-  e.preventDefault(); const name=$("#signupName").value.trim(), email=$("#signupEmail").value.trim().toLowerCase(), pw=$("#signupPassword").value;
-  const all=getAccounts(); if(all[email])return toast(t("accountExists"));
-  const lang=document.documentElement.lang==="ar"?"ar":"en";
-  all[email]={passwordHash:await hash(pw),data:freshData(name,email,lang)};setAccounts(all);localStorage.setItem(SESSION_KEY,email);
-  toast(t("accountCreated"));showApp();
-});
-$("#loginForm").addEventListener("submit",async e=>{
-  e.preventDefault(); const email=$("#loginEmail").value.trim().toLowerCase(), pw=$("#loginPassword").value; const a=getAccounts()[email];
-  if(!a || a.passwordHash!==await hash(pw))return toast(t("wrongLogin"));localStorage.setItem(SESSION_KEY,email);showApp();
-});
+let authBusy=false;
+async function enterCloud(user) {
+  const email=user.email.toLowerCase(), all=getAccounts();
+  if(all[email]?.cloudUserId && all[email].cloudUserId!==user.id){
+    localStorage.setItem("north_identity_recovery_"+Date.now(),JSON.stringify(all[email]));
+    delete all[email];
+  }
+  if(!all[email])all[email]={data:freshData(user.user_metadata?.name||email.split("@")[0],email,user.user_metadata?.lang||document.documentElement.lang)};
+  all[email].cloudUserId=user.id;
+  delete all[email].passwordHash;
+  setAccounts(all);localStorage.setItem(SESSION_KEY,email);
+  if(window.NorthBoot)await window.NorthBoot.prepare();
+  showApp();
+}
+async function authSubmit(e,signup) {
+  e.preventDefault();if(authBusy)return;authBusy=true;
+  const form=e.target, buttons=[...form.querySelectorAll("button")];buttons.forEach(b=>b.disabled=true);
+  const email=$(signup?"#signupEmail":"#loginEmail").value.trim().toLowerCase();
+  const password=$(signup?"#signupPassword":"#loginPassword");
+  try{
+    const result=signup?await window.NorthAuth.signup(email,password.value,$("#signupName").value.trim(),document.documentElement.lang):await window.NorthAuth.login(email,password.value);
+    if(result.session)await enterCloud(result.user);
+    else {toast(currentLang()==="ar"?"أرسلنا رسالة لتأكيد بريدك. أكّد البريد ثم سجّل الدخول.":"Check your email to confirm your account, then sign in.");authTab("login");$("#loginEmail").value=email;}
+  }catch(err){
+    toast(currentLang()==="ar"?"تعذر الدخول. تحقق من الاتصال والبريد وكلمة المرور وتأكيد البريد. للحساب المحلي القديم: أنشئ حسابًا بنفس البريد أولًا.":"Unable to sign in. Check connection, credentials and email confirmation. For an old local account, first sign up with the same email.");
+  }finally{password.value="";authBusy=false;buttons.forEach(b=>b.disabled=false);}
+}
+$("#signupForm").addEventListener("submit",e=>authSubmit(e,true));
+$("#loginForm").addEventListener("submit",e=>authSubmit(e,false));
 
 function rollover(){
   const d=data(); if(!d)return; const today=iso(), last=d.lastOpened||today;if(last===today){ensureToday();return}
@@ -432,11 +451,17 @@ $("#clearNotifications").onclick=()=>{saveData(d=>{d.notifications=[];d.dismisse
 $("#saveProfileBtn").onclick=()=>{saveData(d=>{d.profile.name=$("#accountNameInput").value.trim()||d.profile.name;d.profile.threshold=clamp(Number($("#thresholdInput").value||60),10,90)});renderAll();toast(t("saved"))};
 $("#thresholdInput").addEventListener("change",()=>{saveData(d=>d.profile.threshold=clamp(Number($("#thresholdInput").value||60),10,90));renderAll()});
 $("#avatarInput").addEventListener("change",e=>{const f=e.target.files?.[0];if(!f)return;const r=new FileReader();r.onload=()=>{saveData(d=>d.profile.avatar=r.result);renderAll()};r.readAsDataURL(f)});
-$("#logoutBtn").onclick=()=>{localStorage.removeItem(SESSION_KEY);showLanding()};
+$("#logoutBtn").onclick=async()=>{try{await window.NorthBoot?.flush();await window.NorthAuth.logout();localStorage.removeItem(SESSION_KEY);showLanding();}catch{toast(currentLang()==="ar"?"تعذر تسجيل الخروج. تحقق من الاتصال وأعد المحاولة.":"Could not sign out. Check your connection and retry.");}};
 $("#exportBtn").onclick=()=>{const blob=new Blob([JSON.stringify({schemaVersion:4,exportedAt:Date.now(),data:data()},null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=`lifeos-backup-${iso()}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),400)};
 $("#importInput").addEventListener("change",e=>{const f=e.target.files?.[0];if(!f)return;if(f.size>10000000){toast(currentLang()==="ar"?"الملف كبير جدًا":"File is too large");return;}const r=new FileReader();r.onload=()=>{try{window.LifeWorkspace.importData(JSON.parse(r.result));}catch{toast(currentLang()==="ar"?"ملف غير صالح. لم تتغير بياناتك.":"Invalid file. Your data was not changed.");}e.target.value="";};r.onerror=()=>toast(currentLang()==="ar"?"تعذر قراءة الملف":"Could not read file");r.readAsText(f)});
 
 window.LifeLegacy={renderAll,applyLang,toggleLang};
-if(currentEmail()&&account())showApp();else showLanding();
+showLanding();
+window.addEventListener("load",async()=>{
+ try{const session=await window.NorthAuth.session();if(session)await enterCloud(session.user);}catch{toast(currentLang()==="ar"?"تعذر الاتصال. أعد تحميل الصفحة عند عودة الإنترنت.":"Unable to connect. Reload when online.");}
+});
+window.NorthAuth?.client?.auth.onAuthStateChange((event)=>{
+ if(event==="SIGNED_OUT"){localStorage.removeItem(SESSION_KEY);showLanding();}
+});
 if("serviceWorker" in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
 })();

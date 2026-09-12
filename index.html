@@ -1,15 +1,16 @@
 <!doctype html>
 <html lang="en" dir="ltr">
 <head>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
   <meta name="theme-color" content="#0D0D0D"/>
   <meta name="description" content="THE NORTH — personal execution system"/>
   <link rel="manifest" href="manifest.webmanifest"/>
   <link rel="apple-touch-icon" href="icon-180.png"/>
-  <link rel="stylesheet" href="styles.css?v=premium7"/>
-  <link rel="stylesheet" href="executive.css?v=premium7"/>
-  <link rel="stylesheet" href="landing.css?v=premium7"/>
+  <link rel="stylesheet" href="styles.css?v=auto1"/>
+  <link rel="stylesheet" href="executive.css?v=auto1"/>
+  <link rel="stylesheet" href="landing.css?v=auto1"/>
   <link rel="icon" type="image/svg+xml" href="brand-mark.svg"/><title>THE NORTH / الشمال</title>
 </head>
 <body>
@@ -80,7 +81,7 @@
       </div></section>
       <section class="nl-section nl-shell nl-faq" id="north-questions"><div><p class="nl-eyebrow" data-i18n="nlFaqLabel">03 / BEFORE YOU BEGIN</p><h2 data-i18n="nlFaqTitle">A few clear answers.</h2></div><div class="nl-faq-list">
         <details><summary data-i18n="nlQ1">Who is THE NORTH for?</summary><p data-i18n="nlA1">Founders, entrepreneurs and professionals who want to connect their goals with daily execution. This is your personal workspace, not a shared team management platform.</p></details>
-        <details><summary data-i18n="nlQ2">Where is my data stored?</summary><p data-i18n="nlA2">The current version saves your workspace in this browser. Export backups regularly. Moving to another browser or device requires exporting and importing your data; automatic cloud sync is not included.</p></details>
+        <details><summary data-i18n="nlQ2">Where is my data stored?</summary><p data-i18n="nlA2">Your workspace saves automatically to your account. Sign in with the same email on another device to restore it. Offline changes sync when reconnected; finish an active timer on the device where it started.</p></details>
         <details><summary data-i18n="nlQ3">Can I use it in Arabic and on my phone?</summary><p data-i18n="nlA3">Yes. Switch between Arabic and English, with right-to-left layouts for Arabic and responsive navigation for mobile, tablet and desktop.</p></details>
         <details><summary data-i18n="nlQ4">How does focus tracking work?</summary><p data-i18n="nlA4">Choose a task or goal, start your session, pause when needed and save when finished. Your reports count recorded focus time and exclude breaks and pauses. Active sessions are recovered after refresh.</p></details>
       </div></section>
@@ -141,7 +142,7 @@
               <label><span data-i18n="password">Password</span><input id="loginPassword" type="password" autocomplete="current-password" required minlength="6" placeholder="••••••••"/></label>
               <button class="btn primary wide" type="submit" data-i18n="signIn">Sign in</button>
             </form>
-            <div class="auth-note" data-i18n="localAccountNote">Trial account: your data is stored on this browser until cloud sync is connected.</div>
+            <div class="auth-note" data-i18n="localAccountNote">Your account saves automatically. Confirm your email to begin.</div>
           </div>
 
           <div id="signupPane" class="auth-pane hidden">
@@ -155,7 +156,7 @@
               <label><span data-i18n="password">Password</span><input id="signupPassword" type="password" autocomplete="new-password" minlength="6" required placeholder="6+ characters"/></label>
               <button class="btn primary wide" type="submit" data-i18n="createMyAccount">Create my account</button>
             </form>
-            <div class="auth-note" data-i18n="localAccountNote">Trial account: your data is stored on this browser until cloud sync is connected.</div>
+            <div class="auth-note" data-i18n="localAccountNote">Your account saves automatically. Confirm your email to begin.</div>
           </div>
         </div>
       </div>
@@ -446,8 +447,10 @@
 
   <div id="toast" class="toast"></div>
 
-  <script src="core.js?v=premium7"></script>
-  <script src="app.js?v=premium7"></script>
-  <script src="workspace.js?v=premium7"></script>
+  <script src="core.js?v=auto1"></script>
+  <script src="auth.js?v=auto1"></script>
+  <script src="app.js?v=auto1"></script>
+  <script src="cloud-sync.js?v=auto1"></script>
+  <script src="workspace.js?v=auto1"></script>
 </body>
 </html>
