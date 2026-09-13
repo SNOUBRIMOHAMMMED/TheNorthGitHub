@@ -312,14 +312,31 @@ async function authSubmit(e,signup) {
   const form=e.target, buttons=[...form.querySelectorAll("button")];buttons.forEach(b=>b.disabled=true);
   const email=$(signup?"#signupEmail":"#loginEmail").value.trim().toLowerCase();
   const password=$(signup?"#signupPassword":"#loginPassword");
+  const pw=password.value;
   try{
-    const result=signup?await window.NorthAuth.signup(email,password.value,$("#signupName").value.trim(),document.documentElement.lang):await window.NorthAuth.login(email,password.value);
-    if(result.session)await enterCloud(result.user);
-    else {toast(currentLang()==="ar"?"أرسلنا رسالة لتأكيد بريدك. أكّد البريد ثم سجّل الدخول.":"Check your email to confirm your account, then sign in.");authTab("login");$("#loginEmail").value=email;}
+    const result=signup?await window.NorthAuth.signup(email,pw,$("#signupName").value.trim(),document.documentElement.lang):await window.NorthAuth.login(email,pw);
+    if(result.session){await enterCloud(result.user);}
+    else if(signup){
+      // Supabase sometimes returns no session on first signup even with confirm=off.
+      // Immediately attempt sign-in with the same credentials.
+      try{
+        const loginResult=await window.NorthAuth.login(email,pw);
+        if(loginResult.session){await enterCloud(loginResult.user);}
+        else{toast(currentLang()==="ar"?"تم إنشاء الحساب. سجّل الدخول الآن.":"Account created. Please sign in.");authTab("login");$("#loginEmail").value=email;}
+      }catch(loginErr){
+        // If login fails after signup, the account was created but email confirmation may still be pending.
+        const msg=loginErr?.code==="email_not_confirmed"
+          ?(currentLang()==="ar"?"تم إنشاء الحساب. افتح بريدك الإلكتروني للتأكيد ثم سجّل الدخول.":"Account created. Check your email to confirm, then sign in.")
+          :window.NorthAuth.errorMessage(loginErr,currentLang(),false);
+        toast(msg);authTab("login");$("#loginEmail").value=email;
+      }
+    }
+    else{toast(currentLang()==="ar"?"أرسلنا رسالة لتأكيد بريدك. أكّد البريد ثم سجّل الدخول.":"Check your email to confirm your account, then sign in.");authTab("login");$("#loginEmail").value=email;}
   }catch(err){
     toast(window.NorthAuth.errorMessage(err,currentLang(),signup));
   }finally{password.value="";authBusy=false;buttons.forEach(b=>b.disabled=false);}
 }
+
 $("#signupForm").addEventListener("submit",e=>authSubmit(e,true));
 $("#loginForm").addEventListener("submit",e=>authSubmit(e,false));
 
