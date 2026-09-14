@@ -238,7 +238,10 @@ html[dir=rtl] .north-2026 .lx-eyebrow::before{display:none}
 .north-2026 .mini-market{background:var(--n-glass);border-color:var(--n-b)}
 .north-2026 .visual-copy h1{color:var(--n-i1)}
 .north-2026 .visual-copy>p{color:var(--n-i2)}
-/* TOPBAR: hide duplicate mobile-header, keep single unified topbar */
+/* TOPBAR ARCHITECTURE:
+   - Desktop (>980px): Show lxTopbar, hide mobile-header.
+   - Mobile (<=980px): Hide lxTopbar completely (remove search/explore clutter), show sleek mobile-header with compact brand-mark, active page title, language toggle, and avatar.
+*/
 body.north-2026 .mobile-header{display:none!important}
 .north-2026 .page-head #langBtn{display:none!important}
 .north-2026 .lx-topbar{display:flex;align-items:center;justify-content:space-between;height:60px;padding:0 28px;background:rgba(8,10,12,.85);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid var(--n-b);position:sticky;top:0;z-index:40}
@@ -259,11 +262,64 @@ body.north-2026 .mobile-header{display:none!important}
 @media(max-width:980px){
 body.north-2026 .sidebar{display:none}
 body.north-2026 .app-main,html[dir=rtl] body.north-2026 .app-main{margin:0!important}
-body.north-2026 .content{padding:22px 20px 120px!important}
-.north-2026 .lx-topbar{height:56px;padding:0 16px}
-.north-2026 .lx-top-actions>[data-action="language"]{display:inline-flex!important}
-.north-2026 .lx-top-actions>[data-to="account"]{display:inline-flex!important}
-.north-2026 .lx-top-actions .lx-menu-button{display:none!important}
+body.north-2026 .content{padding:18px 16px 120px!important}
+
+/* ON MOBILE: HIDE lxTopbar completely — no search bar or second header clutter */
+body.north-2026 #lxTopbar,body.north-2026 .lx-topbar{display:none!important}
+
+/* ON MOBILE: SHOW mobile-header as the single, high-end Meta-grade top bar */
+body.north-2026 .mobile-header{
+  display:flex!important;
+  align-items:center;
+  justify-content:space-between;
+  height:54px;
+  padding:0 16px;
+  background:rgba(8,10,12,.88)!important;
+  backdrop-filter:blur(28px) saturate(190%)!important;
+  -webkit-backdrop-filter:blur(28px) saturate(190%)!important;
+  border-bottom:1px solid var(--n-b)!important;
+  position:sticky;
+  top:0;
+  z-index:45;
+  box-shadow:0 4px 20px rgba(0,0,0,.35);
+}
+/* Hide the old big text wordmark completely */
+body.north-2026 .mobile-header .north-name{display:none!important}
+body.north-2026 .mobile-header .side-brand{display:flex;align-items:center;gap:10px;padding:0;margin:0}
+body.north-2026 .mobile-header .brand-mark{width:28px!important;height:28px!important;flex:0 0 28px!important;border-radius:8px!important}
+body.north-2026 .mobile-header .brand-mark:after{width:28px!important;height:28px!important}
+body.north-2026 .mobile-header .lx-mobile-page{font-size:13px;font-weight:700;color:var(--n-i1);letter-spacing:-.2px;opacity:.9}
+body.north-2026 .mobile-header .mobile-actions{display:flex;align-items:center;gap:8px}
+body.north-2026 .mobile-header .icon-btn,body.north-2026 .mobile-header #mobileLangBtn{
+  background:rgba(255,255,255,.06)!important;
+  border:1px solid rgba(255,255,255,.09)!important;
+  color:var(--n-i1)!important;
+  border-radius:20px!important;
+  padding:4px 12px!important;
+  font-size:11px!important;
+  font-weight:700!important;
+  min-height:30px!important;
+  cursor:pointer;
+  transition:all .18s var(--n-spring);
+}
+body.north-2026 .mobile-header #mobileLangBtn:active{transform:scale(.92);background:rgba(255,255,255,.12)!important}
+body.north-2026 .mobile-header .avatar,body.north-2026 .mobile-header #mobileProfileBtn{
+  width:32px!important;
+  height:32px!important;
+  border-radius:50%!important;
+  background:linear-gradient(135deg,rgba(0,212,255,.25),rgba(0,212,255,.05))!important;
+  border:1px solid rgba(0,212,255,.35)!important;
+  color:var(--n-a)!important;
+  font-weight:700!important;
+  font-size:12px!important;
+  display:inline-flex!important;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  transition:all .18s var(--n-spring);
+}
+body.north-2026 .mobile-header #mobileProfileBtn:active{transform:scale(.9)}
+
 body.north-2026 .bottom-nav{left:14px!important;right:14px!important;bottom:calc(14px + env(safe-area-inset-bottom,0px))!important;border-radius:28px!important;border:1px solid var(--n-b2)!important;background:rgba(14,17,20,.95)!important;backdrop-filter:blur(28px) saturate(200%)!important;-webkit-backdrop-filter:blur(28px) saturate(200%)!important;box-shadow:0 8px 40px rgba(0,0,0,.5)!important;padding:8px!important;gap:4px}
 body.north-2026 .bottom-nav .bottom-item{border-radius:20px!important;min-height:56px!important;color:var(--n-i3)!important;background:transparent!important;transition:background .2s,color .2s,transform .2s var(--n-spring)!important}
 body.north-2026 .bottom-nav .bottom-item:active{transform:scale(.94)!important}
@@ -623,5 +679,101 @@ html[dir=rtl] .nl-science-card h3{
     padding:24px 20px;
   }
 }
+
+/* ============================================================
+   META-GRADE DESIGN 2026: IDENTITY CASCADE & SPRING ANIMATIONS
+   ============================================================ */
+.north-2026 .lx-cascade-card{
+  background:linear-gradient(145deg,rgba(14,18,24,.96),rgba(9,11,15,.99))!important;
+  border:1px solid rgba(0,212,255,.22)!important;
+  border-radius:var(--n-r5)!important;
+  padding:24px!important;
+  margin-bottom:24px!important;
+  box-shadow:0 8px 32px rgba(0,0,0,.5),inset 0 1px 0 rgba(0,212,255,.15)!important;
+}
+.north-2026 .lx-cascade-badge{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  font-size:10px;
+  font-weight:800;
+  letter-spacing:1.8px;
+  color:var(--n-a);
+  text-transform:uppercase;
+  margin-bottom:16px;
+  background:rgba(0,212,255,.08);
+  padding:4px 12px;
+  border-radius:20px;
+  border:1px solid rgba(0,212,255,.22);
+}
+.north-2026 .lx-cascade-pipeline{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:12px;
+}
+@media(max-width:850px){
+  .north-2026 .lx-cascade-pipeline{grid-template-columns:1fr 1fr;gap:10px}
+}
+@media(max-width:520px){
+  .north-2026 .lx-cascade-pipeline{grid-template-columns:1fr;gap:8px}
+}
+.north-2026 .lx-cascade-step{
+  background:rgba(255,255,255,.03);
+  border:1px solid rgba(255,255,255,.07);
+  border-radius:var(--n-r3);
+  padding:14px;
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  transition:all .22s var(--n-spring);
+}
+.north-2026 .lx-cascade-step:hover{
+  background:rgba(255,255,255,.06);
+  border-color:rgba(0,212,255,.3);
+  transform:translateY(-2px);
+}
+.north-2026 .lx-cascade-step.is-identity{border-color:rgba(255,190,0,.3);background:rgba(255,190,0,.04)}
+.north-2026 .lx-cascade-step.is-goal{border-color:rgba(0,212,255,.3);background:rgba(0,212,255,.04)}
+.north-2026 .lx-cascade-step.is-habits{border-color:rgba(16,185,129,.3);background:rgba(16,185,129,.04)}
+.north-2026 .lx-cascade-step.is-tasks{border-color:rgba(168,85,247,.3);background:rgba(168,85,247,.04)}
+.north-2026 .lx-cascade-step-tag{
+  font-size:9.5px;
+  font-weight:750;
+  letter-spacing:1px;
+  text-transform:uppercase;
+  color:var(--n-i3);
+}
+.north-2026 .lx-cascade-step strong{
+  font-size:13.5px;
+  font-weight:600;
+  color:var(--n-i1);
+  line-height:1.45;
+}
+.north-2026 .lx-identity-tag{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  font-size:11px;
+  font-weight:600;
+  color:#ffc83b;
+  background:rgba(255,200,59,.09);
+  border:1px solid rgba(255,200,59,.24);
+  padding:3px 10px;
+  border-radius:20px;
+  margin-bottom:8px;
+  max-width:100%;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+/* Meta-level smooth dialog animation */
+dialog.lx-dialog[open]{
+  animation:lxMetaModal .26s cubic-bezier(.16,1,.3,1) forwards;
+}
+@keyframes lxMetaModal{
+  from{opacity:0;transform:translateY(16px) scale(.97)}
+  to{opacity:1;transform:translateY(0) scale(1)}
+}
+
 
 

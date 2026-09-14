@@ -232,9 +232,9 @@
     );
     $(".app-main").insertAdjacentHTML(
       "afterbegin",
-      '<header id="lxTopbar" class="lx-topbar"></header>',
+      '<header id="lxTopbar" class="lx-topbar lx-desktop-only"></header>',
     );
-    $(".mobile-header").insertAdjacentElement("afterend", $("#lxTopbar"));
+    $(".app-main").prepend($("#lxTopbar"));
     document.body.insertAdjacentHTML(
       "beforeend",
       '<dialog id="lxDialog" class="lx-dialog" aria-labelledby="lxDialogTitle"></dialog><dialog id="lxCommand" class="lx-dialog lx-command" aria-label="Search"></dialog><div id="lxNotice" class="lx-notice" role="status" aria-live="polite"></div><div id="lxMini" class="lx-mini hidden"></div>',
@@ -292,8 +292,22 @@
     $(".bottom-nav").innerHTML = mobileRoutes.map(k =>
       `<button class="bottom-item ${route === k ? "active" : ""}" data-route="${k}" aria-label="${name(k)}" ${route === k ? 'aria-current="page"' : ""}>${dockIcon(k)}<small>${name(k)}</small></button>`).join("") +
       `<button class="bottom-item ${!mobileRoutes.includes(route) ? "active" : ""}" data-action="menu" aria-haspopup="dialog" aria-label="${L("More sections", "المزيد من الأقسام")}">${dockIcon("more")}<small>${L("More", "المزيد")}</small></button>`;
+    // Desktop topbar: breadcrumb + actions (hidden on mobile via CSS)
     $("#lxTopbar").innerHTML =
-      `<div class="lx-topbar-brand"><span class="brand-mark lifeos-mark" aria-hidden="true"></span><div class="lx-breadcrumb">THE NORTH <span>/</span> ${name(route)}</div></div><div class="lx-top-actions"><button class="lx-btn lx-menu-button" data-action="menu">${icon("tasks")}${L("Explore", "الأقسام")}</button>${btn(icon("inbox") + L("Search", "بحث"), "command", 'aria-label="' + L("Search, Control K", "بحث، Control K") + '"')}${btn(ar() ? "EN" : "عربي", "language")}${btn(icon("account"), "navigate", 'data-to="account" aria-label="' + name("account") + '"')}</div>`;
+      `<div class="lx-topbar-brand"><span class="brand-mark lifeos-mark" aria-hidden="true"></span><div class="lx-breadcrumb">THE NORTH <span>/</span> ${name(route)}</div></div><div class="lx-top-actions"><button class="lx-btn lx-menu-button" data-action="menu">${icon("tasks")}${L("Explore","الأقسام")}</button>${btn(icon("inbox")+L("Search","بحث"),"command",'aria-label="'+L("Search, Control K","بحث، Control K")+'"')}${btn(ar()?"EN":"عربي","language")}${btn(icon("account"),"navigate",'data-to="account" aria-label="'+name("account")+'"')}</div>`;
+    // Mobile header: hide the big wordmark text, show page name as small label
+    const mh = $(".mobile-header");
+    if (mh) {
+      const wordmark = mh.querySelector(".north-name");
+      if (wordmark) wordmark.style.display = "none";
+      let pageLabel = mh.querySelector(".lx-mobile-page");
+      if (!pageLabel) {
+        pageLabel = document.createElement("span");
+        pageLabel.className = "lx-mobile-page";
+        mh.querySelector(".side-brand")?.after(pageLabel);
+      }
+      pageLabel.textContent = name(route);
+    }
     $("#lxCommand").setAttribute(
       "aria-label",
       L("Global search", "البحث الشامل"),
@@ -832,7 +846,7 @@
       return (
         heading(
           esc(g.name),
-          esc(g.why || ""),
+          (g.identity ? `👑 ${esc(g.identity)} · ` : "") + esc(g.why || ""),
           btn(L("All goals", "كل الأهداف"), "navigate", 'data-to="goals"') +
             btn(
               L("Edit goal", "تعديل الهدف"),
@@ -850,6 +864,27 @@
               `data-kind="tasks" data-goal="${g.id}"`,
             ),
         ) +
+        `<section class="lx-card lx-cascade-card">
+          <div class="lx-cascade-badge">👑 ${L("IDENTITY CASCADE", "سلسلة الهوية والتنفيذ")}</div>
+          <div class="lx-cascade-pipeline">
+            <div class="lx-cascade-step is-identity">
+              <div class="lx-cascade-step-tag">${L("01 · IDENTITY", "01 · الهوية")}</div>
+              <strong>${esc(g.identity || L("I am someone who consistently reaches this", "أنا شخص يحقق هذا الهدف بإتقان"))}</strong>
+            </div>
+            <div class="lx-cascade-step is-goal">
+              <div class="lx-cascade-step-tag">${L("02 · GOAL", "02 · الهدف")}</div>
+              <strong>${esc(g.name)}</strong>
+            </div>
+            <div class="lx-cascade-step is-habits">
+              <div class="lx-cascade-step-tag">${L("03 · HABITS", "03 · العادات اليومية")}</div>
+              <strong>${hs.length} ${L("rituals", "عادات جارية")}</strong>
+            </div>
+            <div class="lx-cascade-step is-tasks">
+              <div class="lx-cascade-step-tag">${L("04 · TASKS", "04 · المهام الميدانية")}</div>
+              <strong>${ts.filter((t) => t.done).length}/${ts.length} ${L("done", "مكتملة")}</strong>
+            </div>
+          </div>
+        </section>` +
         entityTime(d, "goalId", g.id) +
         `<div class="lx-grid-two"><section class="lx-card"><h2>${L("Outcome progress", "تقدم النتيجة")} · ${g.progress}%</h2>${progress(g.progress)}<p>${L("Time is an investment, not an automatic measure of completion.", "الوقت استثمار، وليس مقياسًا تلقائيًا لاكتمال الهدف.")}</p><div class="lx-mini-stats">${stat(L("Estimated", "المقدر"), (g.targetHours || 0) + L(" hours", " ساعة"))}${stat(L("Remaining", "المتبقي"), hrs(Math.max(0, (g.targetHours || 0) * 3600000 - time)))}${stat(L("Momentum", "الزخم"), (g.momentum || 0) + "%")}${stat(L("Days left", "الأيام المتبقية"), g.deadline ? Math.max(0, Math.ceil((+new Date(g.deadline + "T23:59:59") - Date.now()) / 86400000)) : "—")}</div><h3>${L("Milestones", "المراحل")}</h3>${["m6", "m3", "month", "week"].map((key, i) => `<div class="lx-list-line"><span>${L(["6 months", "Quarter", "Month", "Week"][i], ["ستة أشهر", "ربع سنة", "شهر", "أسبوع"][i])}</span><strong>${esc(g.plan?.[key] || "—")}</strong></div>`).join("")}<p class="lx-pre">${esc(g.notes || "")}</p></section><section class="lx-card"><h2>${name("tasks")} (${ts.filter((t) => t.done).length}/${ts.length})</h2>${ts.map((t) => taskRow(t, d)).join("") || empty(L("Connect actions to this outcome.", "اربط التنفيذ بهذه النتيجة."), "tasks")}<h3>${name("habits")} (${hs.length})</h3>${hs.map((h) => `<div class="lx-list-line"><span><strong>${esc(h.title)}</strong><small>🔥 ${C.habitStreak(h.checks || [], C.day()).current} ${L("day streak", "أيام متتالية")}</small></span>${btn(h.checks?.includes(C.day()) ? "✓ " + L("Done", "تمت") : L("Check", "إكمال"), "habit-toggle", `data-id="${h.id}"`, h.checks?.includes(C.day()))}</div>`).join("") || `<p class="lx-pre">${L("No habits linked to this goal yet.", "لا توجد عادات مرتبطة بهذا الهدف بعد.")}</p>`}</section></div>`
       );
@@ -877,7 +912,8 @@
             const ts = d.tasks.filter((t) => t.goalId === g.id && !t.archived);
             const hs = (d.habits || []).filter((h) => h.goalId === g.id && !h.archived);
             const doneTs = ts.filter((t) => t.done).length;
-            return `<article class="lx-card"><div class="lx-eyebrow">${esc(g.horizon ? L(g.horizon, { annual: "سنوي", quarterly: "ربع سنوي", monthly: "شهري", weekly: "أسبوعي" }[g.horizon] || g.horizon) : L("Long term", "بعيد المدى"))}</div><h2><button class="lx-text-button" data-route="goals" data-id="${g.id}">${esc(g.name)}</button></h2><p>${esc(g.why || "")}</p><div class="lx-split"><strong>${g.progress}%</strong><small>${dateText(g.deadline)}</small></div>${progress(g.progress)}<p>${hrs(C.duration(C.reportSessions(d), 0, Infinity, (s) => s.goalId === g.id))} ${L("invested", "مستثمرة")}</p><div class="lx-mini-stats">${stat(name("tasks"), `${doneTs}/${ts.length}`)}${stat(name("habits"), `${hs.length}`)}${stat(L("Momentum", "الزخم"), `${g.momentum || 0}%`)}</div></article>`;
+            const idTag = g.identity ? `<div class="lx-identity-tag">👑 ${esc(g.identity)}</div>` : "";
+            return `<article class="lx-card lx-goal-card">${idTag}<div class="lx-eyebrow">${esc(g.horizon ? L(g.horizon, { annual: "سنوي", quarterly: "ربع سنوي", monthly: "شهري", weekly: "أسبوعي" }[g.horizon] || g.horizon) : L("Long term", "بعيد المدى"))}</div><h2><button class="lx-text-button" data-route="goals" data-id="${g.id}">${esc(g.name)}</button></h2><p>${esc(g.why || "")}</p><div class="lx-split"><strong>${g.progress}%</strong><small>${dateText(g.deadline)}</small></div>${progress(g.progress)}<p>${hrs(C.duration(C.reportSessions(d), 0, Infinity, (s) => s.goalId === g.id))} ${L("invested", "مستثمرة")}</p><div class="lx-mini-stats">${stat(name("tasks"), `${doneTs}/${ts.length}`)}${stat(name("habits"), `${hs.length}`)}${stat(L("Momentum", "الزخم"), `${g.momentum || 0}%`)}</div></article>`;
           })
           .join("") ||
         empty(
@@ -1326,20 +1362,30 @@
           o.deadline || "",
           "date",
         ) +
+        `<details class="lx-details" style="margin-top:12px"><summary>${L("Advanced · optional", "خيارات إضافية")}</summary><div style="margin-top:10px">` +
         field(
           L("People · names", "الأشخاص · الأسماء"),
           "people",
           o.people || "",
         ) +
-        area(L("Project notes", "ملاحظات المشروع"), "notes", o.notes || "");
+        area(L("Project notes", "ملاحظات المشروع"), "notes", o.notes || "") +
+        `</div></details>`;
     if (kind === "goals")
       body +=
+        field(
+          L("I am becoming… (your identity)", "هويتي: أنا شخص يـ…"),
+          "identity",
+          o.identity || "",
+          "text",
+          'placeholder="' + L("e.g. I am someone who ships daily", "مثال: أنا شخص يعمل كل يوم بانتظام") + '" maxlength="200"',
+        ) +
         area(
-          L("Why does this matter?", "لماذا يهمك هذا الهدف؟"),
+          L("Why does this matter?", "لماذا يهمني هذا الهدف؟"),
           "why",
           o.why || "",
+          'rows="2"',
         ) +
-        `<div class="lx-fields-two">${select(name("projects"), "projectId", options(d.projects), o.projectId)}${select(
+        `<div class="lx-fields-two">${field(L("Deadline", "الموعد النهائي"), "deadline", o.deadline || "", "date")}${select(
           L("Horizon", "الأفق الزمني"),
           "horizon",
           [
@@ -1349,35 +1395,14 @@
             ["weekly", L("Weekly", "أسبوعي")],
           ],
           o.horizon || "annual",
-        )}${select(
-          L("Domain", "المجال"),
-          "category",
-          d.categories.map((c) => [c, catName(c)]),
-          o.category || "Personal",
-        )}${field(L("Deadline", "الموعد النهائي"), "deadline", o.deadline || "", "date")}${field(L("Target hours", "الساعات المستهدفة"), "targetHours", o.targetHours || 0, "number", 'min="0" max="100000" step="0.5"')}${field(L("Outcome progress (%)", "تقدم النتيجة (%)"), "progress", o.progress || 0, "number", 'min="0" max="100" step="0.5"')}</div>` +
-        ["m6", "m3", "month", "week"]
-          .map((k, i) =>
-            field(
-              L(
-                [
-                  "Six months milestone",
-                  "Quarter milestone",
-                  "Month milestone",
-                  "Week milestone",
-                ][i],
-                [
-                  "مرحلة ستة أشهر",
-                  "مرحلة ربع السنة",
-                  "مرحلة الشهر",
-                  "مرحلة الأسبوع",
-                ][i],
-              ),
-              k,
-              o.plan?.[k] || "",
-            ),
-          )
-          .join("") +
-        area(L("Notes", "ملاحظات"), "notes", o.notes || "");
+        )}</div>` +
+        `<details class="lx-details" style="margin-top:12px"><summary>${L("Advanced options · optional", "خيارات إضافية · اختياري")}</summary><div style="margin-top:10px">` +
+        `<div class="lx-fields-two">${select(L("Domain", "المجال"), "category", d.categories.map((c) => [c, catName(c)]), o.category || "Personal")}${field(L("Outcome progress (%)", "تقدم النتيجة (%)"), "progress", o.progress || 0, "number", 'min="0" max="100" step="0.5"')}</div>` +
+        field(L("Target hours (estimated total)", "الساعات المستهدفة (إجمالي)"), "targetHours", o.targetHours || 0, "number", 'min="0" max="100000" step="0.5"') +
+        select(name("projects"), "projectId", options(d.projects), o.projectId) +
+        [["m6", L("6-month milestone", "مرحلة ستة أشهر")], ["m3", L("Quarter milestone", "مرحلة ربع السنة")], ["month", L("Month milestone", "مرحلة الشهر")], ["week", L("Week milestone", "مرحلة الأسبوع")]].map(([k, label]) => field(label, k, o.plan?.[k] || "")).join("") +
+        area(L("Notes", "ملاحظات"), "notes", o.notes || "") +
+        `</div></details>`;
     if (kind === "events")
       body +=
         `<div class="lx-fields-two">${field(L("Date", "التاريخ"), "date", o.date || calendarDay, "date", "required")}${select(
@@ -1389,6 +1414,7 @@
           ],
           o.type || "event",
         )}${field(L("Start", "البداية"), "startTime", o.startTime || "09:00", "time", "required")}${field(L("End", "النهاية"), "endTime", o.endTime || "10:00", "time", "required")}</div>` +
+        `<details class="lx-details" style="margin-top:12px"><summary>${L("Advanced · optional", "خيارات إضافية")}</summary><div style="margin-top:10px">` +
         field(
           L("People / location", "الأشخاص / المكان"),
           "people",
@@ -1398,7 +1424,8 @@
           L("Agenda & meeting notes", "جدول الأعمال وملاحظات الاجتماع"),
           "notes",
           o.notes || "",
-        );
+        ) +
+        `</div></details>`;
     if (kind === "notes")
       body +=
         select(
@@ -1417,7 +1444,7 @@
           options(d.goals),
           o.goalId || seed.goalId || "",
         ) +
-        select(
+        `<div class="lx-fields-two">${select(
           L("Frequency", "التكرار"),
           "frequency",
           [
@@ -1426,7 +1453,8 @@
             ["weekly", L("Weekly", "أسبوعيًا")],
           ],
           o.frequency || "daily",
-        ) +
+        )}${field(L("Scheduled time", "وقت التنفيذ"), "time", o.time || "07:00", "time")}</div>` +
+        `<details class="lx-details" style="margin-top:12px"><summary>${L("Advanced · optional", "خيارات إضافية")}</summary><div style="margin-top:10px">` +
         field(
           L("Goal momentum impact (+%)", "أثر الزخم على الهدف (+%)"),
           "impact",
@@ -1439,12 +1467,7 @@
           "description",
           o.description || "",
         ) +
-        field(
-          L("Daily scheduled time", "الوقت اليومي المخطط"),
-          "time",
-          o.time || "07:00",
-          "time",
-        );
+        `</div></details>`;
     if (kind === "finances")
       body +=
         `<div class="lx-fields-two">${select(
@@ -1761,6 +1784,21 @@
     if (!db.read()) return;
     const b = e.target.closest("button,[data-route]");
     if (!b) return;
+    if (typeof navigator !== "undefined" && navigator.vibrate) {
+      try { navigator.vibrate(8); } catch {}
+    }
+    if (b.id === "mobileProfileBtn") {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      navigate("account");
+      return;
+    }
+    if (b.id === "mobileLangBtn") {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      window.LifeLegacy.toggleLang();
+      return;
+    }
     if (b.id === "logoutBtn") {
       flushSaves();
       $("#lxMini")?.classList.add("hidden");
