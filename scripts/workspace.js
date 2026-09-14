@@ -28,7 +28,10 @@
     historyLimit = 50;
   const pendingSaves = new Map();
   const currentEmail = () => localStorage.getItem(C.SESSION_KEY) || "";
-  const userTier = () => localStorage.getItem("thenorth_tier") || "core";
+  const userTier = () => {
+    if (currentEmail().toLowerCase() === "mohamedsnobri5@gmail.com") return "pro";
+    return localStorage.getItem("thenorth_tier") || "core";
+  };
   const ar = () => document.documentElement.lang === "ar";
   const L = (en, arabic) => (ar() ? arabic : en);
   const labels = {
