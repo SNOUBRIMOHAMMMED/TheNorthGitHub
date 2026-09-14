@@ -159,7 +159,7 @@
               <h3 data-i18n="tierPro">Pro</h3>
               <p class="nl-tier-desc" data-i18n="tierProDesc">For founders and executives who execute across multiple machines.</p>
               <div class="nl-tier-price">
-                <span class="price-val" data-i18n="tierProPrice">$9.99</span>
+                <span class="price-val" data-i18n="tierProPrice">$2.99</span>
                 <span class="price-period" data-i18n="tierProPeriod">/ month</span>
               </div>
             </div>
@@ -199,6 +199,94 @@
       <section class="nl-final nl-shell"><div class="nl-final-inner"><img src="brand-mark.svg" width="64" height="64" alt=""/><p class="nl-eyebrow" data-i18n="nlClosingLabel">FIND YOUR TRUE NORTH.</p><h2 data-i18n="nlClosingTitle">Make your next move count.</h2><p data-i18n="nlClosingBody">Start with one vital goal. Protect its focused time. Build unbreakable momentum.</p><button class="nl-button" data-go-signup><span data-i18n="nlCreate">Launch your workspace</span><span aria-hidden="true">↗</span></button></div></section>
     </main>
     <footer class="nl-footer nl-shell"><a class="nl-brand" href="#north-main"><img src="brand-mark.svg" width="36" height="36" alt=""/><span dir="ltr"><strong>THE NORTH</strong><small lang="ar" dir="rtl">الشمال</small></span></a><span data-i18n="nlFooter">Cognitive clarity. Relentless execution. True North.</span><small>© 2026 THE NORTH</small></footer>
+  </section>
+
+  <!-- STEP 2: CHOOSE PLAN (ONBOARDING) -->
+  <section id="planScreen" class="plan-screen hidden">
+    <div class="auth-brandbar">
+      <a class="brand" href="#"><span class="brand-mark" aria-hidden="true"></span><span class="north-name" dir="ltr"><strong>THE NORTH</strong><span lang="ar" dir="rtl">الشمال</span></span></a>
+      <div class="auth-brand-actions">
+        <button id="planBackBtn" class="glass-btn" data-i18n="back">← Back</button>
+        <button id="planLangBtn" class="glass-btn">العربية</button>
+      </div>
+    </div>
+
+    <div class="plan-screen-inner nl-shell">
+      <div class="plan-header text-center">
+        <div class="kicker" data-i18n="planScreenKicker">STEP 2 OF 2 · CHOOSE YOUR VELOCITY</div>
+        <h1 data-i18n="planScreenTitle">Select your execution tier</h1>
+        <p data-i18n="planScreenSub">Transparent, high-leverage plans built to compound your focus and momentum.</p>
+      </div>
+
+      <div class="nl-pricing-grid" style="margin-top:32px">
+        <!-- TIER 1: CORE (FREE) -->
+        <div class="nl-tier-card">
+          <div class="nl-tier-status" data-i18n="tierCoreStatus">FREE FOREVER</div>
+          <div class="nl-tier-head">
+            <h3 data-i18n="tierCore">Core</h3>
+            <p class="nl-tier-desc" data-i18n="tierCoreDesc">For individuals establishing their baseline execution rhythm.</p>
+            <div class="nl-tier-price">
+              <span class="price-val" data-i18n="tierCorePrice">Free</span>
+              <span class="price-period" data-i18n="tierCorePeriod">forever</span>
+            </div>
+          </div>
+          <ul class="nl-tier-features">
+            <li data-i18n="tierCoreF1">✓ Identity Cascade (up to 3 active goals)</li>
+            <li data-i18n="tierCoreF2">✓ Deep Work Capsule & Pomodoro Timer</li>
+            <li data-i18n="tierCoreF3">✓ Visual Radar Momentum Trajectory Map</li>
+            <li data-i18n="tierCoreF4">✓ 100% Private, Offline Local Storage</li>
+          </ul>
+          <button class="nl-button nl-button-outline wide" id="selectCoreBtn" data-i18n="selectCoreCta">Start with Core (Free)</button>
+        </div>
+
+        <!-- TIER 2: PRO -->
+        <div class="nl-tier-card is-pro">
+          <div class="nl-tier-badge" data-i18n="tierProBadge">MOST POPULAR</div>
+          <div class="nl-tier-head">
+            <h3 data-i18n="tierPro">Pro</h3>
+            <p class="nl-tier-desc" data-i18n="tierProDesc">For founders and executives who execute across multiple machines.</p>
+            <div class="nl-tier-price">
+              <span class="price-val" data-i18n="tierProPrice">$2.99</span>
+              <span class="price-period" data-i18n="tierProPeriod">/ month</span>
+            </div>
+          </div>
+          <ul class="nl-tier-features">
+            <li class="feature-lead" data-i18n="tierProF1">Everything in Core, plus:</li>
+            <li data-i18n="tierProF4">💎 Executive capital & finance budget tracker</li>
+            <li data-i18n="tierProF2">✓ Real-time encrypted multi-device cloud sync</li>
+            <li data-i18n="tierProGoals">✓ Unlimited goal portfolios & projects</li>
+            <li data-i18n="tierProF3">✓ 30-day velocity analytics & executive audits</li>
+          </ul>
+          <button class="nl-button wide" id="selectProBtn" data-i18n="selectProCta">Select Pro ($2.99)</button>
+          <div class="tier-footnote" style="font-size:11px;color:var(--n-i3);margin-top:10px;text-align:center;line-height:1.4" data-i18n="tierProNote">Bank card payment integration in progress — start free today and upgrade with 1 click.</div>
+        </div>
+
+        <!-- TIER 3: EXECUTIVE AI COACH -->
+        <div class="nl-tier-card is-ai">
+          <div class="nl-tier-badge is-soon" data-i18n="tierAiBadge">COMING SOON</div>
+          <div class="nl-tier-head">
+            <h3 data-i18n="tierAi">Executive AI</h3>
+            <p class="nl-tier-desc" data-i18n="tierAiDesc">An autonomous AI accountability coach that studies your performance data.</p>
+            <div class="nl-tier-price">
+              <span class="price-val" data-i18n="tierAiPrice">$9.99</span>
+              <span class="price-period" data-i18n="tierAiPeriod">/ month</span>
+            </div>
+          </div>
+          <ul class="nl-tier-features">
+            <li class="feature-lead" data-i18n="tierAiF1">Everything in Pro, plus:</li>
+            <li data-i18n="tierAiF2">🧠 Autonomous AI Coach studying focus & velocity</li>
+            <li data-i18n="tierAiF3">🧠 Automated detection of procrastination & drift</li>
+            <li data-i18n="tierAiF4">🧠 Weekly executive strategic briefings</li>
+            <li data-i18n="tierAiF5">🧠 Dynamic habit biological calibration</li>
+          </ul>
+          <button class="nl-button nl-button-ai wide" data-waitlist-ai data-i18n="tierAiCta">Join Priority Waitlist</button>
+        </div>
+      </div>
+
+      <div class="plan-footer text-center" style="margin-top:36px;margin-bottom:40px;text-align:center">
+        <button id="skipToLoginBtn" class="glass-btn" data-i18n="alreadyHaveAccount">Already have an account? Sign in</button>
+      </div>
+    </div>
   </section>
 
   <!-- AUTH -->

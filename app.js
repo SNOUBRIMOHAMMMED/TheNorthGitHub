@@ -160,15 +160,16 @@ Object.assign(dict.en, {
   "tierCore": "Core",
   "tierCorePrice": "Free",
   "tierCorePeriod": "forever",
+  "tierCoreStatus": "FREE FOREVER",
   "tierCoreDesc": "For individuals establishing their baseline execution rhythm.",
-  "tierCoreF1": "Identity Cascade (Identity → Goals → Habits → Tasks)",
+  "tierCoreF1": "Identity Cascade (up to 3 active goals)",
   "tierCoreF2": "Deep Work Capsule & Pomodoro Timer",
   "tierCoreF3": "Visual Radar Momentum Trajectory Map",
   "tierCoreF4": "100% Private, Offline Local Storage",
   "tierCoreCta": "Start Free",
   "tierPro": "Pro",
   "tierProBadge": "MOST POPULAR",
-  "tierProPrice": "$9.99",
+  "tierProPrice": "$2.99",
   "tierProPeriod": "/ month",
   "tierProDesc": "For founders and executives who execute across multiple machines.",
   "tierProF1": "Everything in Core, plus:",
@@ -176,7 +177,24 @@ Object.assign(dict.en, {
   "tierProF3": "Advanced momentum audits & 30-day velocity analytics",
   "tierProF4": "Unlimited goal portfolios & executive capital budget tracker",
   "tierProF5": "Exportable executive audit reports (PDF/JSON)",
+  "tierProGoals": "✓ Unlimited goal portfolios & projects",
   "tierProCta": "Upgrade to Pro",
+  "tierProNote": "Bank card payment integration in progress — start free today and upgrade with 1 click.",
+  "selectCoreCta": "Start with Core (Free)",
+  "selectProCta": "Select Pro ($2.99)",
+  "planScreenKicker": "STEP 2 OF 2 · CHOOSE YOUR VELOCITY",
+  "planScreenTitle": "Select your execution tier",
+  "planScreenSub": "Transparent, high-leverage plans built to compound your focus and momentum.",
+  "alreadyHaveAccount": "Already have an account? Sign in",
+  "financesPaywallBadge": "👑 EXCLUSIVE TO PRO TIER",
+  "financesPaywallTitle": "Executive Capital & Finance Management",
+  "financesPaywallSub": "Take full control of your income streams, budget percentage allocations, and capital expenditures to support your strategic goals.",
+  "financesPaywallF1": "Dynamic percentage allocation for all incoming revenues",
+  "financesPaywallF2": "Forward-looking payment checklist & runway forecasting",
+  "financesPaywallF3": "Deep alignment between financial capital and active project goals",
+  "financesUpgradeCta": "👑 Upgrade to Pro ($2.99 / mo)",
+  "financesBackCta": "← Back to Dashboard",
+  "goalLimitNotice": "You reached the limit for the Free Core plan (3 active goals). Upgrade to Pro for unlimited goals and projects.",
   "tierAi": "Executive AI",
   "tierAiBadge": "COMING SOON",
   "tierAiPrice": "$24.99",
@@ -291,23 +309,41 @@ Object.assign(dict.ar, {
   "tierCore": "النواة (Core)",
   "tierCorePrice": "مجاناً",
   "tierCorePeriod": "مدى الحياة",
+  "tierCoreStatus": "مجاناً مدى الحياة",
   "tierCoreDesc": "للأفراد والمطورين الراغبين في بناء إيقاع انضباط وتنفيذ يومي حقيقي.",
-  "tierCoreF1": "سلسلة الهوية المتسلسلة (الهوية ← الأهداف ← العادات ← المهام)",
+  "tierCoreF1": "سلسلة الهوية المتسلسلة (حتى 3 أهداف نشطة)",
   "tierCoreF2": "كبسولة العمل العميق ومؤقت البومودورو بدون مشتتات",
   "tierCoreF3": "رادار الزخم البصري وخريطة مسار الأهداف الحية",
   "tierCoreF4": "خصوصية كاملة 100% مع تخزين محلي يعمل دون إنترنت",
   "tierCoreCta": "ابدأ مجاناً",
   "tierPro": "المحترف (Pro)",
   "tierProBadge": "الأكثر طلباً",
-  "tierProPrice": "9.99$",
+  "tierProPrice": "2.99$",
   "tierProPeriod": "/ شهرياً",
   "tierProDesc": "للمؤسسين والقادة الذين يديرون مشاريعهم عبر أجهزة وحواسيب متعددة.",
   "tierProF1": "كل ما في باقة Core، بالإضافة إلى:",
   "tierProF2": "مزامنة سحابية مشفرة وفورية عبر جميع أجهزتك (Supabase)",
   "tierProF3": "تحليلات الزخم المتقدمة وتدقيق المسار لآخر 30 يوماً",
-  "tierProF4": "محفظة أهداف غير محدودة ونظام إدارة الميزانية ورأس المال",
+  "tierProF4": "نظام إدارة التدفقات المالية وتوزيع رأس المال الذكي",
   "tierProF5": "تصدير تقارير تنفيذية ومشاركتها (PDF/JSON)",
-  "tierProCta": "الترقية إلى Pro",
+  "tierProGoals": "✓ محفظة أهداف ومشاريع غير محدودة",
+  "tierProCta": "الترقية إلى Pro (2.99$)",
+  "tierProNote": "بوابة الدفع البنكي الإلكتروني قيد التفعيل — ابدأ بالباقة المجانية حالياً وستتمكن من الترقية بنقرة واحدة فور اكتمال الربط.",
+  "selectCoreCta": "البدء بالباقة العادية (مجاناً)",
+  "selectProCta": "اختيار باقة Pro (2.99$)",
+  "planScreenKicker": "الخطوة 2 من 2 · اختر سرعة انطلاقك",
+  "planScreenTitle": "اختر باقة إدارتك وتنفيذك",
+  "planScreenSub": "باقات واضحة وعالية المردود مصممة لمضاعفة تركيزك وزخم أهدافك.",
+  "alreadyHaveAccount": "لديك حساب بالفعل؟ تسجيل الدخول",
+  "financesPaywallBadge": "👑 ميزة حصرية لمشتركي باقة PRO",
+  "financesPaywallTitle": "إدارة التدفقات المالية وتوزيع رأس المال الذكي",
+  "financesPaywallSub": "تحكم في دخلك الشهري، توزيع نسب الميزانية، وتتبع النفقات الرأسمالية لتحقيق أهدافك بوضوح تنفيذي.",
+  "financesPaywallF1": "توزيع آلي للدخل بالنسب المئوية المخصصة",
+  "financesPaywallF2": "قائمة متابعة الالتزامات المالية والتوقعات المستقبلية",
+  "financesPaywallF3": "ربط وثيق بين رأس المال وأهداف المشاريع التنفيذية",
+  "financesUpgradeCta": "👑 الترقية إلى باقة Pro (2.99$ / شهرياً)",
+  "financesBackCta": "← العودة للرئيسية",
+  "goalLimitNotice": "وصلت إلى الحد الأقصى للباقة العادية (3 أهداف نشطة). اشترك في باقة Pro لإضافة أهداف ومشاريع غير محدودة.",
   "tierAi": "المدرب الذكي (Executive AI)",
   "tierAiBadge": "قريباً · COMING SOON",
   "tierAiPrice": "24.99$",
@@ -359,6 +395,7 @@ function applyLang(){
   }
   const ar=lang==="ar";
   $("#authLangBtn").textContent=ar?"English":"العربية";
+  if($("#planLangBtn")) $("#planLangBtn").textContent=ar?"English":"العربية";
   $("#landingLangBtn").textContent=ar?"English":"العربية";
   $("#langBtn").textContent=ar?"English":"العربية";
   $("#mobileLangBtn").textContent=ar?"EN":"AR";
@@ -378,6 +415,15 @@ function toast(msg){const el=$("#toast");el.textContent=msg;el.classList.add("sh
 
 function showLanding(){
   $("#landingScreen").classList.remove("hidden");
+  $("#planScreen")?.classList.add("hidden");
+  $("#authScreen").classList.add("hidden");
+  $("#appScreen").classList.add("hidden");
+  applyLang();
+  window.scrollTo({top:0,behavior:"auto"});
+}
+function showPlans(){
+  $("#landingScreen").classList.add("hidden");
+  $("#planScreen")?.classList.remove("hidden");
   $("#authScreen").classList.add("hidden");
   $("#appScreen").classList.add("hidden");
   applyLang();
@@ -385,6 +431,7 @@ function showLanding(){
 }
 function openAuth(tab="signup"){
   $("#landingScreen").classList.add("hidden");
+  $("#planScreen")?.classList.add("hidden");
   $("#authScreen").classList.remove("hidden");
   $("#appScreen").classList.add("hidden");
   authTab(tab);
@@ -392,11 +439,11 @@ function openAuth(tab="signup"){
   window.scrollTo({top:0,behavior:"auto"});
 }
 function showAuth(){
-  $("#landingScreen").classList.add("hidden");$("#authScreen").classList.remove("hidden");$("#appScreen").classList.add("hidden");
+  $("#landingScreen").classList.add("hidden");$("#planScreen")?.classList.add("hidden");$("#authScreen").classList.remove("hidden");$("#appScreen").classList.add("hidden");
   applyLang();
 }
 function showApp(){
-  $("#landingScreen").classList.add("hidden");$("#authScreen").classList.add("hidden");$("#appScreen").classList.remove("hidden");
+  $("#landingScreen").classList.add("hidden");$("#planScreen")?.classList.add("hidden");$("#authScreen").classList.add("hidden");$("#appScreen").classList.remove("hidden");
   rollover();generateSignals();applyLang();renderAll();
 }
 function authTab(tab){
@@ -404,9 +451,18 @@ function authTab(tab){
   $("#loginPane").classList.toggle("hidden",tab!=="login");$("#signupPane").classList.toggle("hidden",tab!=="signup");
 }
 $$(".auth-tab").forEach(b=>b.onclick=()=>authTab(b.dataset.authTab));
-$$("[data-go-signup]").forEach(b=>b.onclick=()=>openAuth("signup"));
+$$("[data-go-signup]").forEach(b=>b.onclick=()=>showPlans());
 $$("[data-go-login]").forEach(b=>b.onclick=()=>openAuth("login"));
 $("#backToLandingBtn").onclick=showLanding;
+$("#planBackBtn")&&( $("#planBackBtn").onclick=showLanding );
+$("#planLangBtn")&&( $("#planLangBtn").onclick=toggleLang );
+$("#selectCoreBtn")&&( $("#selectCoreBtn").onclick=()=>{ localStorage.setItem("thenorth_tier","core"); openAuth("signup"); } );
+$("#selectProBtn")&&( $("#selectProBtn").onclick=()=>{
+  toast(currentLang()==="ar"?"بوابة الدفع البنكي الإلكتروني قيد الربط والتفعيل — تم تفعيل الباقة العادية لك حالياً، وستتمكن من الترقية بنقرة واحدة فور اكتمال الربط.":"Bank card payment integration in progress — Core tier activated for now. You will be able to upgrade with 1 click once live.");
+  localStorage.setItem("thenorth_tier","core");
+  openAuth("signup");
+} );
+$("#skipToLoginBtn")&&( $("#skipToLoginBtn").onclick=()=>openAuth("login") );
 $("#landingLogo").onclick=(e)=>{e.preventDefault();showLanding()};
 $$("[data-scroll-how]").forEach(b=>b.onclick=()=>($("#the-science")||$("#howItWorks")).scrollIntoView({behavior:"smooth"}));
 $$("[data-waitlist-ai]").forEach(b=>b.onclick=()=>{

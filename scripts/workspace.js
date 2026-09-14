@@ -28,6 +28,7 @@
     historyLimit = 50;
   const pendingSaves = new Map();
   const currentEmail = () => localStorage.getItem(C.SESSION_KEY) || "";
+  const userTier = () => localStorage.getItem("thenorth_tier") || "core";
   const ar = () => document.documentElement.lang === "ar";
   const L = (en, arabic) => (ar() ? arabic : en);
   const labels = {
@@ -484,6 +485,51 @@
     return Array.isArray(d.settings.budget) ? d.settings.budget : [];
   }
   function finance(d) {
+    if (userTier() === "core") {
+      return (
+        heading(
+          name("finances"),
+          L("Executive Capital Allocation", "إدارة رأس المال والميزانية"),
+          btn("👑 " + L("Upgrade to Pro", "الترقية إلى Pro"), "pricing", 'class="lx-btn lx-primary"')
+        ) +
+        `<section class="lx-card lx-paywall-card">
+          <div class="lx-paywall-badge">👑 ${L("EXCLUSIVE TO PRO TIER", "ميزة حصرية لباقة PRO")}</div>
+          <h2>${L("Executive Capital & Finance Management", "إدارة التدفقات المالية وتوزيع رأس المال الذكي")}</h2>
+          <p class="lx-paywall-sub">${L(
+            "Take full control of your income streams, budget percentage allocations, and capital expenditures to support your strategic goals.",
+            "تحكم في دخلك الشهري، توزيع نسب الميزانية، وتتبع النفقات الرأسمالية لتحقيق أهدافك بوضوح تنفيذي."
+          )}</p>
+          <div class="lx-paywall-features">
+            <div class="lx-pw-item">
+              <span class="lx-pw-icon">💎</span>
+              <div>
+                <strong>${L("Dynamic Percentage Budgeting", "توزيع آلي للدخل بالنسب المئوية")}</strong>
+                <p>${L("Targets, not just records. Real-time distribution across business, investments, and personal buffers.", "حدد نسباً واضحة للادخار والاستثمار ومصاريف التشغيل تتوزع تلقائياً مع كل دخل مسجل.")}</p>
+              </div>
+            </div>
+            <div class="lx-pw-item">
+              <span class="lx-pw-icon">💎</span>
+              <div>
+                <strong>${L("Runway & Payment Checklist", "قائمة متابعة الالتزامات والتوقعات المستقبلية")}</strong>
+                <p>${L("Anticipate upcoming obligations, rent, and software expenses before they impact execution.", "توقع الالتزامات المالية ومصاريف الشهر القادمة قبل أن تؤثر على زخم تنفيذ أهدافك.")}</p>
+              </div>
+            </div>
+            <div class="lx-pw-item">
+              <span class="lx-pw-icon">💎</span>
+              <div>
+                <strong>${L("Capital-to-Goal Direct Alignment", "ربط وثيق بين رأس المال وأهداف المشاريع")}</strong>
+                <p>${L("Connect monetary investment directly to your milestones and high-value project outcomes.", "اربط كل استثمار مالي بمشاريعك الكبرى لقياس العائد على تركيزك ووقتك.")}</p>
+              </div>
+            </div>
+          </div>
+          <div class="lx-paywall-cta">
+            <button type="button" class="lx-btn lx-primary lx-paywall-btn" data-action="pricing">👑 ${L("Upgrade to Pro — $2.99 / month", "الترقية إلى باقة Pro — 2.99$ / شهرياً")}</button>
+            <button type="button" class="lx-btn" data-action="navigate" data-to="home">${L("← Back to Dashboard", "← العودة للرئيسية")}</button>
+          </div>
+          <small class="lx-paywall-note">${L("Affordable velocity plan tailored for high-growth individuals (~30 MAD / month).", "سعر استثنائي في متناول الجميع (حوالي 30 درهم مغربي شهرياً). إلغاء في أي وقت.")}</small>
+        </section>`
+      );
+    }
     const month = C.day().slice(0, 7),
       rows = d.finances.filter((x) => !x.archived && x.date?.startsWith(month)),
       income = rows
@@ -1313,6 +1359,29 @@
   function editor(kind, id = "", seed = {}) {
     const d = db.read();
     if (!Array.isArray(d[kind])) return;
+    if (kind === "finances" && userTier() === "core") {
+      openPricingModal();
+      return;
+    }
+    if (kind === "goals" && !id && userTier() === "core") {
+      const activeGoals = (d.goals || []).filter((g) => !g.archived);
+      if (activeGoals.length >= 3) {
+        modal(
+          L("Goal Limit · Core Tier", "الحد الأقصى للأهداف · الباقة العادية"),
+          `<div class="lx-limit-modal" style="padding:10px 0">
+            <p style="margin-bottom:18px;line-height:1.75">${L(
+              "You have reached the limit of 3 active goals on the Free Core tier. Upgrade to Pro ($2.99/mo) to unlock unlimited goal portfolios, projects, and finance management.",
+              "لقد وصلت إلى الحد الأقصى للباقة العادية (3 أهداف نشطة). اشترك في باقة Pro (2.99$ شهرياً) لإضافة أهداف ومشاريع غير محدودة وإدارة التدفقات المالية والميزانية."
+            )}</p>
+            <div class="lx-dialog-footer">
+              <button type="button" class="lx-btn" data-action="close">${L("Cancel", "إلغاء")}</button>
+              <button type="button" class="lx-btn lx-primary" data-action="pricing">👑 ${L("Upgrade to Pro ($2.99)", "الترقية إلى Pro (2.99$)")}</button>
+            </div>
+          </div>`
+        );
+        return;
+      }
+    }
     const existing = d[kind].find((x) => x.id === id),
       o = existing || seed;
     const titleKey = ["projects", "goals"].includes(kind) ? "name" : "title";
@@ -1878,7 +1947,7 @@
     if (a === "pricing") openPricingModal();
     if (a === "upgrade-pro") {
       $("#lxDialog").close();
-      notice(L("Pro plan selected! Multi-device cloud sync and deep analytics are active.", "تم اختيار باقة Pro! المزامنة السحابية والتحليلات العميقة مفعلة."));
+      notice(L("Bank card payment integration is in progress. Core tier is active — you will be notified immediately once direct card payment goes live.", "بوابة الدفع البنكي الإلكتروني قيد الربط والتفعيل — تم تفعيل الباقة العادية لك حالياً، وستصلك رسالة إشعار للترقية فور اكتمال الربط."));
     }
     if (a === "waitlist-ai") {
       try {
@@ -2115,23 +2184,25 @@
           <div class="lx-tier-card is-pro">
             <div class="lx-tier-badge">${L("MOST POPULAR", "الأكثر طلباً")}</div>
             <h3>${L("Pro", "المحترف (Pro)")}</h3>
-            <div class="lx-tier-price"><strong>$9.99</strong> <small>${L("/ month", "/ شهرياً")}</small></div>
+            <div class="lx-tier-price"><strong>$2.99</strong> <small>${L("/ month", "/ شهرياً")}</small></div>
             <p class="lx-tier-desc">${L("For founders and executives who execute across multiple machines.", "للمؤسسين والقادة الذين يديرون مشاريعهم عبر أجهزة متعددة.")}</p>
             <ul class="lx-tier-features">
               <li class="lead">✓ ${L("Everything in Core, plus:", "كل ما في باقة Core، بالإضافة إلى:")}</li>
+              <li>💎 ${L("Executive capital & finance budget tracker", "إدارة التدفقات المالية وتوزيع رأس المال الذكي")}</li>
               <li>✓ ${L("Real-time encrypted cloud sync", "مزامنة سحابية فورية ومشفرة")}</li>
               <li>✓ ${L("30-day velocity audits & analytics", "تحليلات وتدقيق الزخم لآخر 30 يوماً")}</li>
-              <li>✓ ${L("Unlimited goals & capital budget", "أهداف غير محدودة وإدارة رأس المال")}</li>
+              <li>✓ ${L("Unlimited goals & projects", "أهداف ومشاريع غير محدودة")}</li>
               <li>✓ ${L("Exportable executive reports", "تصدير تقارير تنفيذية عالية الدقة")}</li>
             </ul>
-            <button class="lx-btn lx-primary" data-action="upgrade-pro" style="width:100%">${L("Upgrade to Pro", "الترقية إلى Pro")}</button>
+            <button class="lx-btn lx-primary" data-action="upgrade-pro" style="width:100%">${L("Upgrade to Pro ($2.99)", "الترقية إلى Pro (2.99$)")}</button>
+            <small style="font-size:11px;color:var(--n-i3);margin-top:8px;text-align:center;display:block">${L("Bank card integration in progress — click to register interest", "بوابة الدفع البنكي الإلكتروني قيد الربط والتفعيل — انقر لتسجيل رغبتك")}</small>
           </div>
 
           <!-- EXECUTIVE AI COACH -->
           <div class="lx-tier-card is-ai">
             <div class="lx-tier-badge is-soon">✨ ${L("COMING SOON", "قريباً · COMING SOON")}</div>
             <h3>${L("Executive AI", "المدرب الذكي (AI Coach)")}</h3>
-            <div class="lx-tier-price"><strong>$24.99</strong> <small>${L("/ month", "/ شهرياً")}</small></div>
+            <div class="lx-tier-price"><strong>$9.99</strong> <small>${L("/ month", "/ شهرياً")}</small></div>
             <p class="lx-tier-desc">${L("An autonomous AI accountability coach that studies your performance data.", "مدرب ذكاء اصطناعي تنفيذي يقرأ بيانات حسابك ويوجهك أسبوعياً.")}</p>
             <ul class="lx-tier-features">
               <li class="lead">✓ ${L("Everything in Pro, plus:", "كل ما في باقة Pro، بالإضافة إلى:")}</li>
