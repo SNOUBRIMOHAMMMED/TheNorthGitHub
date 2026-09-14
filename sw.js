@@ -1,5 +1,5 @@
 /* Offline shell only. Never intercept external traffic or clear other apps' caches. */
-const CACHE = "lifeos-v4-20260910-auto2";
+const CACHE = "lifeos-v4-20260914-ultra2026";
 const ASSETS = [
   "./",
   "index.html",
@@ -7,6 +7,8 @@ const ASSETS = [
   "styles.css?v=auto2",
   "landing.css",
   "landing.css?v=auto2",
+  "north-2026.css",
+  "north-2026.css?v=1",
   "north-workspace.jpg",
   "executive.css",
   "executive.css?v=auto2",

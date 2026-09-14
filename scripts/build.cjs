@@ -9,6 +9,7 @@ for (const f of [
   "styles.css",
   "executive.css",
   "landing.css",
+  "north-2026.css",
   "north-workspace.jpg",
   "auth.js", "cloud-sync.js", "core.js",
   "app.js",
