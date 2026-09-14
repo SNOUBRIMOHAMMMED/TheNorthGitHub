@@ -293,7 +293,7 @@
       `<button class="bottom-item ${route === k ? "active" : ""}" data-route="${k}" aria-label="${name(k)}" ${route === k ? 'aria-current="page"' : ""}>${dockIcon(k)}<small>${name(k)}</small></button>`).join("") +
       `<button class="bottom-item ${!mobileRoutes.includes(route) ? "active" : ""}" data-action="menu" aria-haspopup="dialog" aria-label="${L("More sections", "المزيد من الأقسام")}">${dockIcon("more")}<small>${L("More", "المزيد")}</small></button>`;
     $("#lxTopbar").innerHTML =
-      `<div class="lx-breadcrumb">THE NORTH <span>/</span> ${name(route)}</div><div class="lx-top-actions"><button class="lx-btn lx-menu-button" data-action="menu">${icon("tasks")}${L("Explore", "الأقسام")}</button>${btn(icon("inbox") + L("Search", "بحث"), "command", 'aria-label="' + L("Search, Control K", "بحث، Control K") + '"')}${btn(ar() ? "EN" : "ع", "language")}${btn(icon("account"), "navigate", 'data-to="account" aria-label="' + name("account") + '"')}</div>`;
+      `<div class="lx-topbar-brand"><span class="brand-mark lifeos-mark" aria-hidden="true"></span><div class="lx-breadcrumb">THE NORTH <span>/</span> ${name(route)}</div></div><div class="lx-top-actions"><button class="lx-btn lx-menu-button" data-action="menu">${icon("tasks")}${L("Explore", "الأقسام")}</button>${btn(icon("inbox") + L("Search", "بحث"), "command", 'aria-label="' + L("Search, Control K", "بحث، Control K") + '"')}${btn(ar() ? "EN" : "عربي", "language")}${btn(icon("account"), "navigate", 'data-to="account" aria-label="' + name("account") + '"')}</div>`;
     $("#lxCommand").setAttribute(
       "aria-label",
       L("Global search", "البحث الشامل"),
@@ -1273,57 +1273,46 @@
       "text",
       'required maxlength="180"',
     );
-    if (kind === "tasks")
+    if (kind === "tasks") {
       body +=
-        area(L("Description", "الوصف"), "description", o.description || "") +
-        `<div class="lx-fields-two">${select(name("projects"), "projectId", options(d.projects), o.projectId)}${select(name("goals"), "goalId", options(d.goals), o.goalId)}${select(
-          L("Priority", "الأولوية"),
-          "priority",
-          [
-            ["high", L("High", "عالية")],
-            ["medium", L("Medium", "متوسطة")],
-            ["low", L("Low", "منخفضة")],
-          ],
-          o.priority || "medium",
-        )}${select(
-          L("Status", "الحالة"),
-          "status",
-          [
-            ["todo", L("To do", "للتنفيذ")],
-            ["doing", L("In progress", "قيد التنفيذ")],
-            ["done", L("Done", "مكتملة")],
-          ],
-          o.status || "todo",
-        )}${field(L("Due date", "تاريخ الاستحقاق"), "date", o.date || C.day(), "date", "required")}${field(L("Start date", "تاريخ البداية"), "startDate", o.startDate || C.day(), "date")}${field(L("Scheduled time", "الوقت المخطط"), "startTime", o.startTime || "", "time")}${field(L("Estimated hours", "الوقت المقدر بالساعات"), "estimatedHours", o.estimatedHours || 0, "number", 'min="0" max="10000" step="0.25"')}${field(L("Momentum impact", "أثر الزخم"), "impact", o.impact ?? 10, "number", 'min="0" max="100"')}${field(L("Goal progress impact (%)", "أثر تقدم الهدف (%)"), "progressImpact", o.progressImpact ?? 1, "number", 'min="0" max="100" step="0.5"')}${select(
-          L("Repeat after completion", "تكرار بعد الإكمال"),
-          "recurring",
-          [
-            ["none", L("No repeat", "بلا تكرار")],
-            ["daily", L("Daily", "يومي")],
-            ["weekly", L("Weekly", "أسبوعي")],
-            ["monthly", L("Monthly", "شهري")],
-          ],
-          o.recurring || "none",
-        )}</div>` +
-        field(
-          L("Tags · comma separated", "الوسوم · مفصولة بفواصل"),
-          "tags",
-          o.tags || "",
-        ) +
-        area(
-          L(
-            "Subtasks · one per line, prefix completed items with [x]",
-            "المهام الفرعية · سطر لكل مهمة، ابدأ المكتملة بـ [x]",
-          ),
-          "subtaskText",
-          (o.subtasks || [])
-            .map((s) => (s.done ? "[x] " : "") + s.title)
-            .join("\n"),
-        ) +
-        area(L("Notes", "ملاحظات"), "notes", o.notes || "") +
+        `<div class="lx-fields-two">
+          ${select(name("goals"), "goalId", options(d.goals), o.goalId)}
+          ${field(L("Due date", "تاريخ الاستحقاق"), "date", o.date || C.day(), "date", "required")}
+        </div>
+        <div class="lx-fields-two">
+          ${select(
+            L("Priority", "الأولوية"),
+            "priority",
+            [
+              ["high", L("High", "عالية")],
+              ["medium", L("Medium", "متوسطة")],
+              ["low", L("Low", "منخفضة")],
+            ],
+            o.priority || "medium",
+          )}
+          ${select(name("projects"), "projectId", options(d.projects), o.projectId)}
+        </div>
+        <details class="lx-details" style="margin-top:12px">
+          <summary>${L("Advanced options · optional", "خيارات إضافية · اختياري")}</summary>
+          <div class="lx-fields-two" style="margin-top:10px">
+            ${select(
+              L("Status", "الحالة"),
+              "status",
+              [
+                ["todo", L("To do", "للتنفيذ")],
+                ["doing", L("In progress", "قيد التنفيذ")],
+                ["done", L("Done", "مكتملة")],
+              ],
+              o.status || "todo",
+            )}
+            ${field(L("Estimated hours", "الوقت المقدر بالساعات"), "estimatedHours", o.estimatedHours || 0, "number", 'min="0" max="10000" step="0.25"')}
+          </div>
+          ${area(L("Notes", "ملاحظات"), "notes", o.notes || "")}
+        </details>` +
         (existing
           ? `<div class="lx-info">${L("Actual time", "الوقت الفعلي")}: ${hrs(C.duration(C.reportSessions(d), 0, Infinity, (s) => s.taskId === id))} · ${L("Difference from estimate", "الفرق عن التقدير")}: ${(C.duration(C.reportSessions(d), 0, Infinity, (s) => s.taskId === id) / 3600000 - (o.estimatedHours || 0)).toFixed(2)} ${L("hours", "ساعة")}</div>`
           : "");
+    }
     if (kind === "projects")
       body +=
         area(
