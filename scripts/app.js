@@ -152,7 +152,53 @@ Object.assign(dict.en, {
   "nlClosingLabel": "FIND YOUR TRUE NORTH.",
   "nlClosingTitle": "Make your next move count.",
   "nlClosingBody": "Start with one vital goal. Protect its focused time. Build unbreakable momentum.",
-  "nlFooter": "Cognitive clarity. Relentless execution. True North."
+  "nlFooter": "Cognitive clarity. Relentless execution. True North.",
+  "nlPricingNav": "Pricing",
+  "nlPricingLabel": "05 / INVESTMENT IN VELOCITY",
+  "nlPricingTitle": "Transparent tiers for compounding momentum.",
+  "nlPricingSub": "Begin completely free. Upgrade when you are ready for autonomous synchronization and cognitive coaching.",
+  "tierCore": "Core",
+  "tierCorePrice": "Free",
+  "tierCorePeriod": "forever",
+  "tierCoreDesc": "For individuals establishing their baseline execution rhythm.",
+  "tierCoreF1": "Identity Cascade (Identity → Goals → Habits → Tasks)",
+  "tierCoreF2": "Deep Work Capsule & Pomodoro Timer",
+  "tierCoreF3": "Visual Radar Momentum Trajectory Map",
+  "tierCoreF4": "100% Private, Offline Local Storage",
+  "tierCoreCta": "Start Free",
+  "tierPro": "Pro",
+  "tierProBadge": "MOST POPULAR",
+  "tierProPrice": "$9.99",
+  "tierProPeriod": "/ month",
+  "tierProDesc": "For founders and executives who execute across multiple machines.",
+  "tierProF1": "Everything in Core, plus:",
+  "tierProF2": "Real-time encrypted multi-device cloud sync (Supabase)",
+  "tierProF3": "Advanced momentum audits & 30-day velocity analytics",
+  "tierProF4": "Unlimited goal portfolios & executive capital budget tracker",
+  "tierProF5": "Exportable executive audit reports (PDF/JSON)",
+  "tierProCta": "Upgrade to Pro",
+  "tierAi": "Executive AI",
+  "tierAiBadge": "COMING SOON",
+  "tierAiPrice": "$24.99",
+  "tierAiPeriod": "/ month",
+  "tierAiDesc": "An autonomous AI accountability coach that studies your performance data.",
+  "tierAiF1": "Everything in Pro, plus:",
+  "tierAiF2": "Autonomous AI Coach studying your focus patterns & velocity decay",
+  "tierAiF3": "Automated detection of procrastination & strategic misalignment",
+  "tierAiF4": "Weekly executive audio/text briefings to calibrate your week",
+  "tierAiF5": "Dynamic habit calibration matched to your biological peak hours",
+  "tierAiCta": "Join Priority Waitlist",
+  "feedbackTitle": "Help Shape THE NORTH",
+  "feedbackSub": "Your suggestions directly guide our engineering roadmap. Tell us what would make you 10x more effective.",
+  "feedbackType": "Category",
+  "feedbackFeature": "💡 New Feature",
+  "feedbackUx": "⚡ UX / Speed Polish",
+  "feedbackBug": "🐞 Bug Report",
+  "feedbackPlaceholder": "What idea, friction point, or suggestion do you have?",
+  "feedbackSubmit": "Send feedback",
+  "feedbackThanks": "Thank you! Your feedback directly shapes the future of THE NORTH.",
+  "viewPlans": "Membership & Plans",
+  "giveFeedback": "Share feedback / suggest a feature"
 });
 Object.assign(dict.ar, {
   "nlSkip": "انتقل إلى المحتوى",
@@ -237,7 +283,53 @@ Object.assign(dict.ar, {
   "nlClosingLabel": "اكتشف وجهتك الحقيقية.",
   "nlClosingTitle": "اجعل كل دقيقة من يومك ذات وزن وتأثير.",
   "nlClosingBody": "اختر هدفك الاستراتيجي الأهم. احمِ ساعات تركيزك. وابنِ زخمًا لا يقبل التراجع.",
-  "nlFooter": "وضوح إدراكي. تنفيذ بلا هوادة. وجهتك نحو القمة."
+  "nlFooter": "وضوح إدراكي. تنفيذ بلا هوادة. وجهتك نحو القمة.",
+  "nlPricingNav": "باقات الاشتراك",
+  "nlPricingLabel": "05 / الاستثمار في سرعة الإنجاز",
+  "nlPricingTitle": "باقات واضحة وشفافة لزخم تنفيذي لا يتوقف.",
+  "nlPricingSub": "ابدأ مجاناً بالكامل. طوّر نظامك للمزامنة السحابية الفورية والتدريب الإدراكي المتقدم.",
+  "tierCore": "النواة (Core)",
+  "tierCorePrice": "مجاناً",
+  "tierCorePeriod": "مدى الحياة",
+  "tierCoreDesc": "للأفراد والمطورين الراغبين في بناء إيقاع انضباط وتنفيذ يومي حقيقي.",
+  "tierCoreF1": "سلسلة الهوية المتسلسلة (الهوية ← الأهداف ← العادات ← المهام)",
+  "tierCoreF2": "كبسولة العمل العميق ومؤقت البومودورو بدون مشتتات",
+  "tierCoreF3": "رادار الزخم البصري وخريطة مسار الأهداف الحية",
+  "tierCoreF4": "خصوصية كاملة 100% مع تخزين محلي يعمل دون إنترنت",
+  "tierCoreCta": "ابدأ مجاناً",
+  "tierPro": "المحترف (Pro)",
+  "tierProBadge": "الأكثر طلباً",
+  "tierProPrice": "9.99$",
+  "tierProPeriod": "/ شهرياً",
+  "tierProDesc": "للمؤسسين والقادة الذين يديرون مشاريعهم عبر أجهزة وحواسيب متعددة.",
+  "tierProF1": "كل ما في باقة Core، بالإضافة إلى:",
+  "tierProF2": "مزامنة سحابية مشفرة وفورية عبر جميع أجهزتك (Supabase)",
+  "tierProF3": "تحليلات الزخم المتقدمة وتدقيق المسار لآخر 30 يوماً",
+  "tierProF4": "محفظة أهداف غير محدودة ونظام إدارة الميزانية ورأس المال",
+  "tierProF5": "تصدير تقارير تنفيذية ومشاركتها (PDF/JSON)",
+  "tierProCta": "الترقية إلى Pro",
+  "tierAi": "المدرب الذكي (Executive AI)",
+  "tierAiBadge": "قريباً · COMING SOON",
+  "tierAiPrice": "24.99$",
+  "tierAiPeriod": "/ شهرياً",
+  "tierAiDesc": "مدرب ذكاء اصطناعي تنفيذي يقرأ بيانات حسابك ويوجهك أسبوعياً نحو القمة.",
+  "tierAiF1": "كل ما في باقة Pro، بالإضافة إلى:",
+  "tierAiF2": "مدرب ذكاء اصطناعي يحلل جلسات تركيزك وسرعة زخم أهدافك",
+  "tierAiF3": "اكتشاف تلقائي للتسويف وهدر الانتباه وتنبيهك قبل فوات الأوان",
+  "tierAiF4": "إحاطة استراتيجية أسبوعية مخصصة لإعادة توجيه جدول أعمالك",
+  "tierAiF5": "معايرة ديناميكية لعاداتك وفق أوقات ذروة طاقتك اليومية",
+  "tierAiCta": "انضم لقائمة الانتظار المبكرة",
+  "feedbackTitle": "شاركنا رؤيتك لتطوير THE NORTH",
+  "feedbackSub": "اقتراحاتك وملاحظاتك تساهم مباشرة في توجيه خارطة تطوير النظام.",
+  "feedbackType": "نوع المقترح",
+  "feedbackFeature": "💡 ميزة جديدة",
+  "feedbackUx": "⚡ تحسين في التجربة والسرعة",
+  "feedbackBug": "🐞 إبلاغ عن مشكلة",
+  "feedbackPlaceholder": "ما هي الفكرة، الملاحظة، أو التحسين الذي تقترحه؟",
+  "feedbackSubmit": "إرسال المقترح",
+  "feedbackThanks": "شكراً لك! صوتك واقتراحك يبني معنا مستقبل THE NORTH.",
+  "viewPlans": "باقات الاشتراك والعضوية",
+  "giveFeedback": "شاركنا اقتراحك / طلب ميزة"
 });
 function t(k){return dict[currentLang()][k]||k}
 function getAccounts(){try{return JSON.parse(localStorage.getItem(APP_KEY)||"{}")}catch{return {}}}
@@ -317,6 +409,18 @@ $$("[data-go-login]").forEach(b=>b.onclick=()=>openAuth("login"));
 $("#backToLandingBtn").onclick=showLanding;
 $("#landingLogo").onclick=(e)=>{e.preventDefault();showLanding()};
 $$("[data-scroll-how]").forEach(b=>b.onclick=()=>($("#the-science")||$("#howItWorks")).scrollIntoView({behavior:"smooth"}));
+$$("[data-waitlist-ai]").forEach(b=>b.onclick=()=>{
+  const msg = currentLang() === "ar" ? "أدخل بريدك الإلكتروني للانضمام لقائمة الانتظار ذات الأولوية للمدرب الذكي:" : "Enter your email to join the Executive AI Coach priority waitlist:";
+  const email = prompt(msg);
+  if (email && email.includes("@")) {
+    try {
+      const waitlist = JSON.parse(localStorage.getItem("thenorth_ai_waitlist") || "[]");
+      if (!waitlist.includes(email)) waitlist.push(email);
+      localStorage.setItem("thenorth_ai_waitlist", JSON.stringify(waitlist));
+    } catch {}
+    toast(currentLang() === "ar" ? "✨ تم تسجيلك في قائمة الانتظار ذات الأولوية للمدرب الذكي!" : "✨ You are on the priority waitlist for Executive AI Coach!");
+  }
+});
 $("#authLangBtn").onclick=toggleLang;$("#landingLangBtn").onclick=toggleLang;$("#langBtn").onclick=toggleLang;$("#mobileLangBtn").onclick=toggleLang;$("#accountLangBtn").onclick=toggleLang;
 
 let authBusy=false;

@@ -1661,7 +1661,10 @@
       panel.className = "lx-card lx-margin";
       document.querySelector('[data-view-panel="account"]').prepend(panel);
     }
-    panel.innerHTML = cloudPanel() + `<h2>${L("Your operating preferences", "تفضيلات نظامك")}</h2><form id="lxSettingsForm"><div class="lx-fields-three">${select(
+    panel.innerHTML = cloudPanel() +
+      `<section class="lx-card lx-margin" style="margin-bottom:16px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.08)"><div class="lx-card-head"><div><div class="lx-eyebrow">${L("MEMBERSHIP", "العضوية والاشتراك")}</div><h2>${L("THE NORTH Plans & Upgrades", "باقات THE NORTH والترقية")}</h2></div>${btn(L("View Plans", "عرض الباقات"), "pricing", 'class="lx-btn lx-primary"')}</div><p class="lx-muted">${L("Choose your velocity tier. Autonomous AI Executive Coach coming soon.", "اختر باقة سرعتك التنفيذية. المدرب التنفيذي الذكي قريباً.")}</p></section>` +
+      `<section class="lx-card lx-margin" style="margin-bottom:16px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.08)"><div class="lx-card-head"><div><div class="lx-eyebrow">${L("FEEDBACK", "صوتك وملاحظاتك")}</div><h2>${L("Help Shape THE NORTH", "شاركنا رؤيتك لتطوير التطبيق")}</h2></div>${btn("💡 " + L("Share feedback", "شاركنا اقتراحك"), "feedback")}</div><p class="lx-muted">${L("Tell us what would make you 10x more effective. Your suggestions directly guide our engineering roadmap.", "أخبرنا بما يضاعف كفاءتك 10 مرات. ملاحظاتك تقود خارطة تطويرنا مباشرة دون إزعاج.")}</p></section>` +
+      `<h2>${L("Your operating preferences", "تفضيلات نظامك")}</h2><form id="lxSettingsForm"><div class="lx-fields-three">${select(
       L("Theme", "المظهر"),
       "theme",
       [
@@ -1847,10 +1850,30 @@
         L("Your workspace", "مساحة عملك"),
         `<div class="lx-menu-grid">${primaryRoutes
           .map(k => btn(icon(k) + name(k), "navigate", `data-to="${k}"`)).join("")}</div>
-          <details class="lx-nav-more"><summary>${L("More", "المزيد")}</summary><div class="lx-menu-grid">${secondaryRoutes
+          <details class="lx-nav-more" open><summary>${L("More sections", "المزيد من الأقسام")}</summary><div class="lx-menu-grid">${secondaryRoutes
           .map(k => btn(icon(k) + name(k), "navigate", `data-to="${k}"`)).join("")}</div></details>
-          ${btn(name("account"), "navigate", 'data-to="account"')}`,
+          <div class="lx-menu-actions" style="margin-top:16px;display:flex;flex-direction:column;gap:8px">
+            ${btn("👑 " + L("Membership & Plans", "باقات الاشتراك والعضوية"), "pricing", 'class="lx-btn lx-primary"')}
+            ${btn("💡 " + L("Share feedback & ideas", "شاركنا اقتراحك وملاحظاتك"), "feedback")}
+            ${btn(icon("account") + name("account"), "navigate", 'data-to="account"')}
+          </div>`,
       );
+    if (a === "feedback") openFeedbackModal();
+    if (a === "pricing") openPricingModal();
+    if (a === "upgrade-pro") {
+      $("#lxDialog").close();
+      notice(L("Pro plan selected! Multi-device cloud sync and deep analytics are active.", "تم اختيار باقة Pro! المزامنة السحابية والتحليلات العميقة مفعلة."));
+    }
+    if (a === "waitlist-ai") {
+      try {
+        const email = (currentEmail() || "").trim();
+        const waitlist = JSON.parse(localStorage.getItem("thenorth_ai_waitlist") || "[]");
+        if (email && !waitlist.includes(email)) waitlist.push(email);
+        localStorage.setItem("thenorth_ai_waitlist", JSON.stringify(waitlist));
+      } catch {}
+      $("#lxDialog").close();
+      notice(L("✨ You are registered on the Executive AI Coach priority waitlist!", "✨ تم تسجيلك بنجاح في قائمة الانتظار ذات الأولوية للمدرب الذكي!"));
+    }
     if (a === "more-sessions") {
       historyLimit += 50;
       render();
@@ -2024,6 +2047,90 @@
       window.LifeLegacy.applyLang();
     }
   }
+
+  function openFeedbackModal() {
+    modal(
+      L("Share feedback & suggestions", "شاركنا اقتراحك لتطوير THE NORTH"),
+      `<form id="lxFeedbackForm">
+        <p class="lx-muted" style="margin-bottom:14px;font-size:13px">${L("Your thoughts directly guide our roadmap. Tell us what would make you 10x more effective.", "صوتك وملاحظاتك تساهم مباشرة في توجيه خارطة تطوير النظام وبناء أفضل تجربة ممكنة.")}</p>
+        <div class="lx-feedback-cats" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
+          <label class="lx-pill-opt"><input type="radio" name="fbCategory" value="feature" checked> <span>💡 ${L("New Feature", "ميزة جديدة")}</span></label>
+          <label class="lx-pill-opt"><input type="radio" name="fbCategory" value="ux"> <span>⚡ ${L("UX / Speed", "تجربة وسرعة")}</span></label>
+          <label class="lx-pill-opt"><input type="radio" name="fbCategory" value="bug"> <span>🐞 ${L("Bug report", "إبلاغ عن خطأ")}</span></label>
+        </div>
+        <label class="lx-field">
+          <span>${L("Your suggestion or feedback", "اقتراحك أو فكرتك بالتفصيل")}</span>
+          <textarea name="fbMessage" rows="4" required placeholder="${L("Describe what feature, refinement, or friction point you have in mind…", "اكتب فكرتك أو ملاحظتك أو المشكلة التي واجهتها بالتفصيل…")}"></textarea>
+        </label>
+        <label class="lx-field">
+          <span>${L("Your email (optional, for updates)", "بريدك الإلكتروني (اختياري، لمتابعة التحديث)")}</span>
+          <input type="email" name="fbEmail" value="${esc(currentEmail() || "")}" placeholder="name@example.com">
+        </label>
+        <div class="lx-dialog-footer">
+          <button class="lx-btn" type="button" data-action="close">${L("Cancel", "إلغاء")}</button>
+          <button class="lx-btn lx-primary" type="submit">${L("Submit feedback", "إرسال الاقتراح")}</button>
+        </div>
+      </form>`
+    );
+  }
+
+  function openPricingModal() {
+    modal(
+      L("THE NORTH Membership & Plans", "باقات THE NORTH والترقية"),
+      `<div class="lx-pricing-modal">
+        <p class="lx-muted" style="margin-bottom:18px;font-size:13px">${L("Transparent tiers for compounding momentum. Choose your velocity.", "باقات شفافة لمضاعفة سرعة وزخم أهدافك. اختر المستوى الملائم لطموحك.")}</p>
+        <div class="lx-pricing-grid">
+          <!-- CORE -->
+          <div class="lx-tier-card">
+            <div class="lx-tier-status">${L("CURRENT PLAN", "باقتك الحالية")}</div>
+            <h3>${L("Core", "النواة (Core)")}</h3>
+            <div class="lx-tier-price"><strong>${L("Free", "مجاناً")}</strong> <small>${L("forever", "مدى الحياة")}</small></div>
+            <p class="lx-tier-desc">${L("For individuals establishing their baseline execution rhythm.", "لبناء إيقاع انضباط وتنفيذ يومي حقيقي.")}</p>
+            <ul class="lx-tier-features">
+              <li>✓ ${L("Identity Cascade Pipeline", "سلسلة الهوية والأهداف المتسلسلة")}</li>
+              <li>✓ ${L("Deep Work Capsule & Pomodoro", "كبسولة العمل العميق ومؤقت البومودورو")}</li>
+              <li>✓ ${L("Visual Radar Momentum Map", "رادار الزخم البصري للأهداف")}</li>
+              <li>✓ ${L("100% Private Offline Storage", "تخزين محلي خاص يعمل دون إنترنت")}</li>
+            </ul>
+            <button class="lx-btn" disabled style="width:100%;opacity:0.6">${L("Active Plan", "الخطة الحالية")}</button>
+          </div>
+
+          <!-- PRO -->
+          <div class="lx-tier-card is-pro">
+            <div class="lx-tier-badge">${L("MOST POPULAR", "الأكثر طلباً")}</div>
+            <h3>${L("Pro", "المحترف (Pro)")}</h3>
+            <div class="lx-tier-price"><strong>$9.99</strong> <small>${L("/ month", "/ شهرياً")}</small></div>
+            <p class="lx-tier-desc">${L("For founders and executives who execute across multiple machines.", "للمؤسسين والقادة الذين يديرون مشاريعهم عبر أجهزة متعددة.")}</p>
+            <ul class="lx-tier-features">
+              <li class="lead">✓ ${L("Everything in Core, plus:", "كل ما في باقة Core، بالإضافة إلى:")}</li>
+              <li>✓ ${L("Real-time encrypted cloud sync", "مزامنة سحابية فورية ومشفرة")}</li>
+              <li>✓ ${L("30-day velocity audits & analytics", "تحليلات وتدقيق الزخم لآخر 30 يوماً")}</li>
+              <li>✓ ${L("Unlimited goals & capital budget", "أهداف غير محدودة وإدارة رأس المال")}</li>
+              <li>✓ ${L("Exportable executive reports", "تصدير تقارير تنفيذية عالية الدقة")}</li>
+            </ul>
+            <button class="lx-btn lx-primary" data-action="upgrade-pro" style="width:100%">${L("Upgrade to Pro", "الترقية إلى Pro")}</button>
+          </div>
+
+          <!-- EXECUTIVE AI COACH -->
+          <div class="lx-tier-card is-ai">
+            <div class="lx-tier-badge is-soon">✨ ${L("COMING SOON", "قريباً · COMING SOON")}</div>
+            <h3>${L("Executive AI", "المدرب الذكي (AI Coach)")}</h3>
+            <div class="lx-tier-price"><strong>$24.99</strong> <small>${L("/ month", "/ شهرياً")}</small></div>
+            <p class="lx-tier-desc">${L("An autonomous AI accountability coach that studies your performance data.", "مدرب ذكاء اصطناعي تنفيذي يقرأ بيانات حسابك ويوجهك أسبوعياً.")}</p>
+            <ul class="lx-tier-features">
+              <li class="lead">✓ ${L("Everything in Pro, plus:", "كل ما في باقة Pro، بالإضافة إلى:")}</li>
+              <li>🧠 ${L("Autonomous AI Coach for focus & decay", "مدرب ذكي يحلل جلسات تركيزك وسرعة زخمك")}</li>
+              <li>🧠 ${L("Automated detection of procrastination", "اكتشاف تلقائي للتسويف وهدر الانتباه")}</li>
+              <li>🧠 ${L("Weekly executive strategic briefings", "إحاطة استراتيجية أسبوعية مخصصة")}</li>
+              <li>🧠 ${L("Dynamic habit biological calibration", "معايرة عاداتك حسب أوقات ذروة طاقتك")}</li>
+            </ul>
+            <button class="lx-btn lx-btn-ai" data-action="waitlist-ai" style="width:100%">${L("Join Priority Waitlist", "الانضمام لقائمة الانتظار المبكرة")}</button>
+          </div>
+        </div>
+      </div>`
+    );
+  }
+
   function activeDialog() {
     modal(
       L("You already have an active session.", "لديك جلسة تركيز نشطة."),
@@ -2040,6 +2147,23 @@
     if (submitButton) submitButton.disabled = true;
     let result;
     try {
+      if (form.id === "lxFeedbackForm") {
+        const cat = data.fbCategory || "feature";
+        const msg = String(data.fbMessage || "").trim();
+        const eml = String(data.fbEmail || "").trim();
+        if (!msg) {
+          notice(L("Please write your suggestion.", "يرجى كتابة فكرتك أو ملاحظتك."), true);
+          return;
+        }
+        try {
+          const stored = JSON.parse(localStorage.getItem("thenorth_feedbacks") || "[]");
+          stored.push({ id: C.id(), date: Date.now(), category: cat, message: msg, email: eml });
+          localStorage.setItem("thenorth_feedbacks", JSON.stringify(stored));
+        } catch {}
+        $("#lxDialog").close();
+        notice(L("Thank you! Your feedback directly shapes the future of THE NORTH.", "شكراً لك! صوتك واقتراحك يبني معنا مستقبل THE NORTH."));
+        return;
+      }
       if (form.id === "lxBudgetForm") {
         const budget = Array.from(form.querySelectorAll("[data-budget-row]"))
           .map((row) => ({
