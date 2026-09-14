@@ -298,3 +298,218 @@ html[dir=rtl] .north-2026 .lx-eyebrow::before{display:none}
 .north-2026 .lx-stats .lx-stat:nth-child(3){animation-delay:120ms}
 .north-2026 .lx-stats .lx-stat:nth-child(4){animation-delay:180ms}
 @media(prefers-reduced-motion:reduce){.north-2026 *,.north-2026 *::before,.north-2026 *::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+/* ==========================================================================
+   2026 ULTRA DOCK & MOBILE NAVIGATION
+   ========================================================================== */
+.north-2026 .bottom-nav{
+  position:fixed!important;
+  left:16px!important;
+  right:16px!important;
+  bottom:calc(16px + env(safe-area-inset-bottom,0px))!important;
+  margin:0 auto!important;
+  max-width:540px!important;
+  height:68px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-around!important;
+  padding:6px 10px!important;
+  border-radius:36px!important;
+  border:1px solid rgba(255,255,255,0.12)!important;
+  background:rgba(14,17,20,0.88)!important;
+  backdrop-filter:blur(32px) saturate(210%)!important;
+  -webkit-backdrop-filter:blur(32px) saturate(210%)!important;
+  box-shadow:0 12px 40px rgba(0,0,0,0.7),0 0 24px rgba(0,212,255,0.08)!important;
+  z-index:900!important;
+}
+.north-2026 .bottom-nav .bottom-item{
+  flex:1!important;
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:center!important;
+  justify-content:center!important;
+  height:100%!important;
+  padding:4px 0!important;
+  border-radius:24px!important;
+  color:rgba(255,255,255,0.45)!important;
+  background:transparent!important;
+  border:none!important;
+  font-family:inherit!important;
+  cursor:pointer!important;
+  gap:3px!important;
+  transition:all 0.22s cubic-bezier(0.16,1,0.3,1)!important;
+  user-select:none!important;
+  -webkit-tap-highlight-color:transparent!important;
+}
+.north-2026 .bottom-nav .bottom-item svg{
+  width:22px!important;
+  height:22px!important;
+  fill:none!important;
+  stroke:currentColor!important;
+  stroke-width:2.2!important;
+  stroke-linecap:round!important;
+  stroke-linejoin:round!important;
+  transition:transform 0.2s cubic-bezier(0.34,1.56,0.64,1)!important;
+}
+.north-2026 .bottom-nav .bottom-item small{
+  font-size:11px!important;
+  font-weight:600!important;
+  line-height:1!important;
+  letter-spacing:0!important;
+}
+.north-2026 .bottom-nav .bottom-item:active{
+  transform:scale(0.88)!important;
+}
+.north-2026 .bottom-nav .bottom-item.active{
+  color:var(--n-a)!important;
+  background:rgba(0,212,255,0.12)!important;
+  box-shadow:0 0 16px rgba(0,212,255,0.15)!important;
+}
+.north-2026 .bottom-nav .bottom-item.active svg{
+  stroke:var(--n-a)!important;
+  transform:scale(1.1)!important;
+  filter:drop-shadow(0 0 6px rgba(0,212,255,0.5))!important;
+}
+.north-2026 .bottom-nav .bottom-item.active small{
+  font-weight:700!important;
+  color:#fff!important;
+}
+
+/* ==========================================================================
+   2026 MOMENTUM MAP & EXECUTIVE DASHBOARD
+   ========================================================================== */
+.north-2026 .lx-momentum-section{
+  border:1px solid rgba(0,212,255,0.18)!important;
+  background:linear-gradient(180deg,rgba(0,212,255,0.03) 0%,rgba(14,17,20,0.95) 100%)!important;
+  box-shadow:0 8px 32px rgba(0,0,0,0.5),0 0 30px rgba(0,212,255,0.06)!important;
+}
+.north-2026 .lx-momentum-graph{
+  width:100%;
+  height:210px;
+  background:rgba(0,0,0,0.4);
+  border:1px solid rgba(255,255,255,0.06);
+  border-radius:var(--n-r3);
+  padding:10px 4px 6px;
+  margin:18px 0 14px;
+  position:relative;
+  overflow:hidden;
+}
+.north-2026 .lx-momentum-graph svg{
+  width:100%;
+  height:100%;
+  display:block;
+}
+.north-2026 .lx-momentum-legend{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  align-items:center;
+  margin-top:14px;
+}
+.north-2026 .lx-momentum-pill{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:8px 14px;
+  background:rgba(255,255,255,0.03);
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:99px;
+  color:var(--n-i1);
+  font:inherit;
+  font-size:12px;
+  cursor:pointer;
+  transition:all 0.2s cubic-bezier(0.16,1,0.3,1);
+}
+.north-2026 .lx-momentum-pill:hover{
+  background:rgba(255,255,255,0.08);
+  border-color:rgba(0,212,255,0.3);
+  transform:translateY(-2px);
+  box-shadow:0 4px 16px rgba(0,212,255,0.12);
+}
+.north-2026 .lx-dot{
+  width:8px;
+  height:8px;
+  border-radius:50%;
+  box-shadow:0 0 8px currentColor;
+}
+
+/* ==========================================================================
+   2026 ULTRA COHESIVE LANDING PAGE
+   ========================================================================== */
+#landingScreen.north-landing{
+  --nl-bg:#080A0C;
+  --nl-panel:#0E1114;
+  --nl-line:rgba(255,255,255,0.08);
+  --nl-muted:rgba(255,255,255,0.55);
+  --nl-sage:var(--n-a);
+  --nl-orange:#00D4FF;
+  background:
+    radial-gradient(ellipse at 15% 15%,rgba(0,212,255,0.09),transparent 55%),
+    radial-gradient(ellipse at 85% 75%,rgba(123,97,255,0.07),transparent 55%),
+    #080A0C!important;
+  color:#fff!important;
+}
+.north-landing .nl-header{
+  background:rgba(8,10,12,0.85)!important;
+  backdrop-filter:blur(24px)!important;
+  border-bottom:1px solid rgba(255,255,255,0.08)!important;
+}
+.north-landing .nl-button{
+  background:linear-gradient(135deg,var(--n-a),var(--n-a2))!important;
+  color:#000!important;
+  font-weight:700!important;
+  border:none!important;
+  border-radius:10px!important;
+  box-shadow:0 0 24px var(--n-ag)!important;
+  transition:all 0.2s var(--n-spring)!important;
+}
+.north-landing .nl-button:hover{
+  box-shadow:0 0 36px var(--n-ag),0 4px 18px rgba(0,212,255,0.3)!important;
+  transform:translateY(-2px)!important;
+}
+.north-landing .nl-preview{
+  background:rgba(14,17,20,0.92)!important;
+  border:1px solid rgba(0,212,255,0.25)!important;
+  box-shadow:0 24px 80px rgba(0,0,0,0.8),0 0 40px rgba(0,212,255,0.1)!important;
+  border-radius:20px!important;
+}
+.north-landing .nl-preview-bar{
+  background:rgba(8,10,12,0.95)!important;
+  border-bottom:1px solid rgba(255,255,255,0.08)!important;
+}
+.north-landing .nl-preview-dot{
+  background:rgba(0,212,255,0.15)!important;
+  color:var(--n-a)!important;
+}
+.north-landing .nl-preview-menu .nl-menu-active{
+  background:rgba(0,212,255,0.12)!important;
+  color:var(--n-a)!important;
+}
+.north-landing .nl-goal-card,.north-landing .nl-focus-card{
+  background:#141820!important;
+  border:1px solid rgba(255,255,255,0.08)!important;
+  border-radius:14px!important;
+}
+.north-landing .nl-chart-main{
+  stroke:var(--n-a)!important;
+  filter:drop-shadow(0 0 4px var(--n-ag))!important;
+}
+.north-landing .nl-feature-grid{
+  border:1px solid rgba(255,255,255,0.08)!important;
+  border-radius:16px!important;
+  background:#0E1114!important;
+}
+.north-landing .nl-feature+.nl-feature{
+  border-inline-start:1px solid rgba(255,255,255,0.08)!important;
+}
+.north-landing .nl-editorial{
+  background:#0E1114!important;
+  border-block:1px solid rgba(255,255,255,0.08)!important;
+}
+.north-landing .nl-final-inner{
+  background:linear-gradient(180deg,#141820,#0E1114)!important;
+  border:1px solid rgba(0,212,255,0.2)!important;
+  box-shadow:0 0 40px rgba(0,212,255,0.08)!important;
+  border-radius:22px!important;
+}
+

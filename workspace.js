@@ -280,20 +280,17 @@
     const dockIcon = (k) => {
       const flat = {
         home: '<path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1Z"/>',
+        goals: '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/><path d="M16.5 7.5 21 3"/>',
+        tasks: '<rect x="3" y="4" width="18" height="16" rx="3"/><path d="m8 12 2.5 2.5L16 9"/><path d="M8 8h8M8 16h4"/>',
+        focus: '<circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M10 2h4M12 2v2"/>',
         more: '<path d="M5 6h14M5 12h14M5 18h14"/>'
       };
       if (flat[k]) return `<svg viewBox="0 0 24 24" aria-hidden="true">${flat[k]}</svg>`;
-      // Local SVG surfaces preserve sharpness, theme contrast and offline support.
-      const body = {
-        goals: '<ellipse cx="16" cy="18" rx="11" ry="12" fill="var(--dock-edge)"/><ellipse cx="15" cy="15" rx="11" ry="12" fill="url(#dock-goals-face)"/><ellipse cx="15" cy="15" rx="7" ry="8" fill="var(--dock-recess)"/><ellipse cx="15" cy="15" rx="3.5" ry="4" fill="var(--dock-light)"/><path d="m15 15 11-11m-5 0h5v5" fill="none" stroke="var(--dock-arrow)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>',
-        focus: '<rect x="12" y="2" width="8" height="4" rx="1.5" fill="var(--dock-edge)"/><path d="M16 5v3m8 1 2-2" stroke="var(--dock-light)" stroke-width="2.5" stroke-linecap="round"/><circle cx="16" cy="19" r="11" fill="var(--dock-edge)"/><circle cx="16" cy="16.5" r="11" fill="url(#dock-focus-face)"/><circle cx="16" cy="16.5" r="7.5" fill="var(--dock-recess)"/><path d="M16 11v6l4 2" stroke="var(--dock-light)" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" fill="none"/><circle cx="16" cy="17" r="1.5" fill="var(--dock-arrow)"/>',
-        habits: '<rect x="5" y="8" width="23" height="22" rx="5" fill="var(--dock-edge)"/><rect x="4" y="5" width="23" height="22" rx="5" fill="url(#dock-habits-face)"/><path d="M5 12h21" stroke="var(--dock-recess)" stroke-width="1.5"/><path d="M10 3v5m11-5v5" stroke="var(--dock-light)" stroke-width="3" stroke-linecap="round"/><path d="m10 18 4 4 7-8" stroke="var(--dock-recess)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>'
-      };
-      return `<svg class="dock-dimensional" viewBox="0 0 32 34" aria-hidden="true"><defs><linearGradient id="dock-${k}-face" x1="0" y1="0" x2="1" y2="1"><stop stop-color="var(--dock-light)"/><stop offset="1" stop-color="var(--dock-face)"/></linearGradient></defs><ellipse cx="16" cy="31" rx="10" ry="2" fill="var(--dock-shadow)"/>${body[k]}</svg>`;
+      return `<svg viewBox="0 0 24 24" aria-hidden="true">${icon(k)}</svg>`;
     };
-    const mobileRoutes = ["home", "goals", "focus", "habits"];
+    const mobileRoutes = ["home", "goals", "tasks", "focus"];
     $(".bottom-nav").innerHTML = mobileRoutes.map(k =>
-      `<button class="bottom-item ${route === k ? "active" : ""}" data-route="${k}" aria-label="${name(k)}" ${route === k ? 'aria-current="page"' : ""}>${dockIcon(k)}<small>${k === "habits" ? L("Habits", "العادات") : name(k)}</small></button>`).join("") +
+      `<button class="bottom-item ${route === k ? "active" : ""}" data-route="${k}" aria-label="${name(k)}" ${route === k ? 'aria-current="page"' : ""}>${dockIcon(k)}<small>${name(k)}</small></button>`).join("") +
       `<button class="bottom-item ${!mobileRoutes.includes(route) ? "active" : ""}" data-action="menu" aria-haspopup="dialog" aria-label="${L("More sections", "المزيد من الأقسام")}">${dockIcon("more")}<small>${L("More", "المزيد")}</small></button>`;
     $("#lxTopbar").innerHTML =
       `<div class="lx-breadcrumb">THE NORTH <span>/</span> ${name(route)}</div><div class="lx-top-actions"><button class="lx-btn lx-menu-button" data-action="menu">${icon("tasks")}${L("Explore", "الأقسام")}</button>${btn(icon("inbox") + L("Search", "بحث"), "command", 'aria-label="' + L("Search, Control K", "بحث، Control K") + '"')}${btn(ar() ? "EN" : "ع", "language")}${btn(icon("account"), "navigate", 'data-to="account" aria-label="' + name("account") + '"')}</div>`;
@@ -521,19 +518,155 @@
     );
   }
 
+  function momentumMap(d) {
+    const gs = d.goals.filter((g) => !g.archived);
+    if (!gs.length) {
+      return empty(L("Your momentum line begins with your first goal.", "تبدأ خريطة الزخم مع أول هدف لك."), "goals");
+    }
+    const th = d.profile?.threshold || 60;
+    const avgMom = Math.round(gs.reduce((acc, g) => acc + (g.momentum || 0), 0) / gs.length);
+    const onTrack = gs.filter((g) => (g.momentum || 0) >= th).length;
+    const sorted = [...gs].sort((a, b) => (b.momentum || 0) - (a.momentum || 0));
+    const leading = sorted[0];
+    const colors = ["#00D4FF", "#7B61FF", "#00E599", "#FFB800", "#FF4D6A", "#0099FF"];
+
+    const days = 14;
+    const dates = Array.from({ length: days }, (_, i) => {
+      const dt = new Date();
+      dt.setDate(dt.getDate() - (days - 1 - i));
+      return C.day(+dt);
+    });
+
+    const width = 800, height = 210, padTop = 18, padBottom = 28, padLeft = 40, padRight = 20;
+    const plotW = width - padLeft - padRight;
+    const plotH = height - padTop - padBottom;
+    const thY = padTop + plotH - (th / 100) * plotH;
+
+    const paths = gs.map((g, gi) => {
+      const col = colors[gi % colors.length];
+      const histMap = new Map((g.history || []).map((h) => [h.date, h.value]));
+      let lastVal = g.momentum || 0;
+      const pts = dates.map((dStr, idx) => {
+        if (histMap.has(dStr)) lastVal = histMap.get(dStr);
+        const x = padLeft + (idx / Math.max(1, days - 1)) * plotW;
+        const y = padTop + plotH - (Math.max(0, Math.min(100, lastVal)) / 100) * plotH;
+        return `${x.toFixed(1)},${y.toFixed(1)}`;
+      });
+      return {
+        id: g.id,
+        name: g.name,
+        momentum: g.momentum || 0,
+        progress: g.progress || 0,
+        color: col,
+        path: pts.join(" ")
+      };
+    });
+
+    return `<div class="lx-momentum-wrapper">
+      <div class="lx-stats">
+        ${stat(L("System Momentum", "مؤشر الزخم العام"), `${avgMom}%`, avgMom >= th ? L("Above baseline (Stable)", "فوق خط الاستقرار") : L("Needs attention", "دون خط الاستقرار"))}
+        ${stat(L("Goals on Track", "أهداف مستقرة"), `${onTrack} / ${gs.length}`, `${Math.round((onTrack / gs.length) * 100)}% ${L("stable", "مستقر")}`)}
+        ${stat(L("Stability Line", "خط الزخم الأدنى"), `${th}%`, L("Critical boundary", "الحد الأدنى المستهدف"))}
+        ${stat(L("Leading Goal", "الهدف الأسرع نمواً"), esc(leading?.name || "—"), `${leading?.momentum || 0}% ${L("momentum", "زخم")}`)}
+      </div>
+      <div class="lx-momentum-graph" role="img" aria-label="${L("Momentum Map chart", "رسم خريطة الزخم")}">
+        <svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="none">
+          <line x1="${padLeft}" y1="${padTop}" x2="${width - padRight}" y2="${padTop}" stroke="rgba(255,255,255,0.06)" stroke-dasharray="3,3"/>
+          <text x="${padLeft - 8}" y="${padTop + 4}" fill="var(--n-i3)" font-size="9" text-anchor="end">100</text>
+          
+          <line x1="${padLeft}" y1="${thY}" x2="${width - padRight}" y2="${thY}" stroke="rgba(0,212,255,0.5)" stroke-width="1.5" stroke-dasharray="4,4"/>
+          <text x="${padLeft - 8}" y="${thY + 4}" fill="var(--n-a)" font-size="9" font-weight="700" text-anchor="end">${th}%</text>
+
+          <line x1="${padLeft}" y1="${padTop + plotH}" x2="${width - padRight}" y2="${padTop + plotH}" stroke="rgba(255,255,255,0.08)"/>
+          <text x="${padLeft - 8}" y="${padTop + plotH + 4}" fill="var(--n-i3)" font-size="9" text-anchor="end">0</text>
+
+          ${paths.map((p) => `<polyline points="${p.path}" fill="none" stroke="${p.color}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>`).join("")}
+        </svg>
+      </div>
+      <div class="lx-momentum-legend">
+        ${paths.map((p) => `
+          <button class="lx-momentum-pill" data-route="goals" data-id="${esc(p.id)}">
+            <span class="lx-dot" style="background:${p.color}"></span>
+            <strong>${esc(p.name)}</strong>
+            <span class="lx-badge ${p.momentum >= th ? "good" : "warn"}">${p.momentum}%</span>
+          </button>
+        `).join("")}
+      </div>
+    </div>`;
+  }
+
   function home(d) {
-    const tt = totals(d), today = C.day();
-    const due = d.tasks.filter(t => !t.archived && !t.done && (!t.date || t.date <= today))
-      .sort((a,b) => ["high","medium","low"].indexOf(a.priority) - ["high","medium","low"].indexOf(b.priority));
-    return heading(L("Your next step", "خطوتك القادمة"),
-      L("See the goal. Choose the work. Begin.", "راجع هدفك. اختر عملك. ابدأ.")) + goalBoard(d) +
-      `<section class="lx-card"><div class="lx-card-head"><h2>${L("Focus today", "تركيز اليوم")}</h2><span>${hrs(tt.deep)} / ${d.settings.dailyHours} ${L("hours", "ساعات")}</span></div>
-      ${progress(percent(tt.deep, d.settings.dailyHours * 3600000))}
-      <p>${L("Choose a task on the next screen and give it your attention.", "اختر مهمة في الشاشة التالية وامنحها انتباهك.")}</p>
-      ${btn(L(d.activeSession ? "Resume focus" : "Start focus", d.activeSession ? "استأنف التركيز" : "ابدأ التركيز"), "navigate", 'data-to="focus"', true)}</section>
-      <section class="lx-card"><div class="lx-card-head"><h2>${L("Next priorities", "الأولويات القادمة")}</h2>${btn(L("All tasks", "كل المهام"), "navigate", 'data-to="tasks"')}</div>
-      ${due.slice(0,3).map(t=>`<p>${esc(t.title)}</p>`).join("") || `<p>${L("Add your next action in Tasks.", "أضف خطوتك القادمة في قسم المهام.")}</p>`}</section>
-      <details class="lx-card"><summary>${L("Today’s schedule", "جدول اليوم")}</summary>${schedule(d,today)}</details>`;
+    const tt = totals(d), today = C.day(), now = Date.now();
+    const deepWeek = C.duration(
+      tt.all,
+      C.week(now, d.settings.weekStart),
+      Infinity,
+      (s) => s.categoryId === "Deep Work"
+    );
+    const due = d.tasks.filter((t) => !t.archived && !t.done && (!t.date || t.date <= today))
+      .sort((a, b) => ["high", "medium", "low"].indexOf(a.priority) - ["high", "medium", "low"].indexOf(b.priority));
+
+    return heading(L("Executive Radar", "القيادة التنفيذية"),
+      L("Trajectory. Deep attention. Relentless execution.", "مسار الزخم. التركيز العميق. والوصول إلى أهدافك.")) +
+      /* 1. خريطة الزخم */
+      `<section class="lx-card lx-momentum-section">
+        <div class="lx-card-head">
+          <div>
+            <div class="lx-eyebrow">${L("SYSTEM TRAJECTORY", "مسار الزخم")}</div>
+            <h2>${L("Momentum Map", "خريطة الزخم")}</h2>
+            <p class="lx-muted">${L("Live trajectory of your goals against the stability baseline.", "المسار الحي لزخم أهدافك وموقعها مقارنة بخط الاستقرار.")}</p>
+          </div>
+          ${btn(L("Manage goals", "إدارة الأهداف"), "navigate", 'data-to="goals"')}
+        </div>
+        ${momentumMap(d)}
+      </section>` +
+      /* 2. وقت التركيز حسب اليوم + 3. العمل العميق الأسبوعي */
+      `<div class="lx-grid-two">
+        <section class="lx-card">
+          <div class="lx-card-head">
+            <div>
+              <div class="lx-eyebrow">${L("TODAY'S ATTENTION", "انتباه اليوم")}</div>
+              <h2>${L("Focus time by day", "وقت التركيز حسب اليوم")}</h2>
+            </div>
+            <div class="lx-badge">${hrs(tt.deep)} / ${d.settings.dailyHours} ${L("h", "س")}</div>
+          </div>
+          <div class="lx-big-number">${hrs(tt.deep)}</div>
+          <p class="lx-muted">${L("Daily target: ", "الهدف اليومي: ")} ${d.settings.dailyHours} ${L("hours of deep execution.", "ساعات من العمل العميق المتواصل.")}</p>
+          ${progress(percent(tt.deep, d.settings.dailyHours * 3600000))}
+          <div class="lx-actions" style="margin-top:16px;">
+            ${btn(L(d.activeSession ? "Resume focus" : "Start focus", d.activeSession ? "استأنف التركيز" : "ابدأ جلسة تركيز"), "navigate", 'data-to="focus"', true)}
+            ${btn(L("Log time", "تسجيل يدوي"), "manual")}
+          </div>
+        </section>
+        <section class="lx-card">
+          <div class="lx-card-head">
+            <div>
+              <div class="lx-eyebrow">${L("SEVEN-DAY EXECUTION", "إنجاز الأسبوع")}</div>
+              <h2>${L("Weekly deep work", "العمل العميق الأسبوعي")}</h2>
+            </div>
+            <div class="lx-badge">${hrs(deepWeek)} / ${d.settings.weeklyHours} ${L("h", "س")}</div>
+          </div>
+          <div class="lx-big-number">${hrs(deepWeek)}</div>
+          <p class="lx-muted">${L("of", "من")} ${d.settings.weeklyHours} ${L("hours", "ساعة")} · ${hrs(Math.max(0, d.settings.weeklyHours * 3600000 - deepWeek))} ${L("remaining", "متبقية هذا الأسبوع")}</p>
+          ${progress(percent(deepWeek, d.settings.weeklyHours * 3600000))}
+          ${dayChart(tt.all, d)}
+        </section>
+      </div>` +
+      /* 4. خطة الأهداف */
+      goalBoard(d) +
+      /* 5. أولويات التنفيذ (Next Actions) */
+      `<section class="lx-card">
+        <div class="lx-card-head">
+          <div>
+            <div class="lx-eyebrow">${L("HIGH LEVERAGE", "الخطوات القادمة")}</div>
+            <h2>${L("Execution priorities", "أولويات التنفيذ")}</h2>
+          </div>
+          ${btn(L("All tasks", "كل المهام"), "navigate", 'data-to="tasks"')}
+        </div>
+        <div class="lx-task-list">
+          ${due.slice(0, 4).map((t) => taskRow(t, d)).join("") || empty(L("Add your next action in Tasks.", "أضف خطوتك القادمة في قسم المهام."), "tasks")}
+        </div>
+      </section>`;
   }
   function linkFields(d, obj = {}) {
     return `<div class="lx-fields-three">${select(name("projects"), "projectId", options(d.projects), obj.projectId)}${select(name("goals"), "goalId", options(d.goals), obj.goalId)}${select(name("tasks"), "taskId", options(d.tasks, "title"), obj.taskId)}</div>`;
