@@ -27,6 +27,7 @@
     busy = false,
     historyLimit = 50;
   const pendingSaves = new Map();
+  const currentEmail = () => localStorage.getItem(C.SESSION_KEY) || "";
   const ar = () => document.documentElement.lang === "ar";
   const L = (en, arabic) => (ar() ? arabic : en);
   const labels = {
@@ -241,8 +242,14 @@
     );
     $("#toast").setAttribute("role", "status");
     $("#toast").setAttribute("aria-live", "polite");
-    $("#lxDialog").addEventListener("close", () => {
-      $("#lxDialog").innerHTML = "";
+    $("#lxDialog").addEventListener("click", (e) => {
+      const rect = $("#lxDialog").getBoundingClientRect();
+      const inDialog =
+        rect.top <= e.clientY &&
+        e.clientY <= rect.top + rect.height &&
+        rect.left <= e.clientX &&
+        e.clientX <= rect.left + rect.width;
+      if (!inDialog) $("#lxDialog").close();
     });
     document.addEventListener("click", onClick, true);
     document.addEventListener("keydown", keys);
@@ -1289,9 +1296,16 @@
   }
   function modal(title, body) {
     const dialog = $("#lxDialog");
-    if (dialog.open) dialog.close();
-    dialog.innerHTML = `<div class="lx-dialog-head"><h2 id="lxDialogTitle">${title}</h2>${btn("×", "close", 'aria-label="' + L("Close", "إغلاق") + '"')}</div>${body}`;
-    dialog.showModal();
+    if (!dialog) return;
+    dialog.innerHTML = `<div class="lx-dialog-head"><h2 id="lxDialogTitle">${title}</h2><button type="button" class="lx-btn lx-close-btn" data-action="close" aria-label="${L("Close", "إغلاق")}">✕</button></div><div class="lx-dialog-body">${body}</div>`;
+    if (!dialog.open) {
+      try {
+        dialog.showModal();
+      } catch {
+        dialog.setAttribute("open", "");
+      }
+    }
+    dialog.scrollTop = 0;
     dialog.querySelector("input:not([type=hidden]),textarea,select")?.focus();
   }
   const endForm = (editing, kind, id) =>
@@ -1831,7 +1845,9 @@
     }
     const a = b.dataset.action;
     if (!a) return;
-    flushSaves();
+    if (!["close", "close-command", "menu", "pricing", "feedback", "language"].includes(a)) {
+      try { flushSaves(); } catch {}
+    }
     e.preventDefault();
     e.stopImmediatePropagation();
     const id = b.dataset.id,
@@ -2127,6 +2143,9 @@
             <button class="lx-btn lx-btn-ai" data-action="waitlist-ai" style="width:100%">${L("Join Priority Waitlist", "الانضمام لقائمة الانتظار المبكرة")}</button>
           </div>
         </div>
+        <div class="lx-dialog-footer" style="margin-top:22px;display:flex;justify-content:flex-end">
+          <button type="button" class="lx-btn wide" data-action="close">${L("Back / Close", "رجوع / إغلاق")}</button>
+        </div>
       </div>`
     );
   }
@@ -2141,7 +2160,9 @@
     const form = e.target;
     if (!form.id.startsWith("lx")) return;
     e.preventDefault();
-    flushSaves();
+    if (form.id !== "lxFeedbackForm") {
+      try { flushSaves(); } catch {}
+    }
     const data = Object.fromEntries(new FormData(form));
     const submitButton = form.querySelector("[type=submit]");
     if (submitButton) submitButton.disabled = true;
@@ -2153,12 +2174,19 @@
         const eml = String(data.fbEmail || "").trim();
         if (!msg) {
           notice(L("Please write your suggestion.", "يرجى كتابة فكرتك أو ملاحظتك."), true);
+          if (submitButton) submitButton.disabled = false;
           return;
         }
         try {
           const stored = JSON.parse(localStorage.getItem("thenorth_feedbacks") || "[]");
           stored.push({ id: C.id(), date: Date.now(), category: cat, message: msg, email: eml });
           localStorage.setItem("thenorth_feedbacks", JSON.stringify(stored));
+        } catch {}
+        try {
+          const client = window.NorthAuth?.client;
+          if (client) {
+            client.from("feedbacks").insert([{ category: cat, message: msg, email: eml, created_at: new Date().toISOString() }]).then(() => {}, () => {});
+          }
         } catch {}
         $("#lxDialog").close();
         notice(L("Thank you! Your feedback directly shapes the future of THE NORTH.", "شكراً لك! صوتك واقتراحك يبني معنا مستقبل THE NORTH."));
