@@ -41,7 +41,7 @@
     analytics: ["Analytics", "التحليلات"],
     notes: ["Notes", "الملاحظات"],
     inbox: ["Inbox", "الوارد"],
-    planning: ["Planning & review", "التخطيط والمراجعة"],
+    planning: ["Planning", "التخطيط"],
     finances: ["Finances", "المال"],
     health: ["Health", "الصحة"],
     learning: ["Learning & reading", "التعلم والقراءة"],
@@ -50,6 +50,8 @@
     notifications: ["Signals", "الإشارات"],
     account: ["Settings", "الإعدادات"],
   };
+  const primaryRoutes = ["home", "goals", "tasks", "focus", "analytics", "finances"];
+  const secondaryRoutes = Object.keys(labels).filter(k => !primaryRoutes.includes(k) && k !== "account");
   const name = (k) => (labels[k] ? L(...labels[k]) : k);
   const catName = (k) =>
     ({
@@ -271,22 +273,33 @@
     setInterval(tick, 500);
   }
   function chrome(d) {
-    const primary = ["home", "goals", "tasks", "focus", "analytics"];
-    const secondary = Object.keys(labels).filter(k => !primary.includes(k) && k !== "account");
+    const primary = primaryRoutes;
+    const secondary = secondaryRoutes;
     $(".side-nav").innerHTML = primary.map(navItem).join("") +
       `<details class="lx-nav-more" ${secondary.includes(route) ? "open" : ""}><summary>${L("More", "المزيد")}</summary>${secondary.map(navItem).join("")}</details>`;
-    $(".bottom-nav").innerHTML = ["home", "goals", "focus", "habits", "account"]
-      .map(
-        (k) =>
-          `<button class="bottom-item ${route === k ? "active" : ""}" data-route="${k}" aria-label="${name(k)}">${icon(k)}<small>${name(k)}</small></button>`,
-      )
-      .join("");
+    const dockIcon = (k) => {
+      const flat = {
+        home: '<path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1Z"/>',
+        goals: '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/><path d="M16.5 7.5 21 3"/>',
+        tasks: '<rect x="3" y="4" width="18" height="16" rx="3"/><path d="m8 12 2.5 2.5L16 9"/><path d="M8 8h8M8 16h4"/>',
+        focus: '<circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M10 2h4M12 2v2"/>',
+        more: '<path d="M5 6h14M5 12h14M5 18h14"/>'
+      };
+      if (flat[k]) return `<svg viewBox="0 0 24 24" aria-hidden="true">${flat[k]}</svg>`;
+      return `<svg viewBox="0 0 24 24" aria-hidden="true">${icon(k)}</svg>`;
+    };
+    const mobileRoutes = ["home", "goals", "tasks", "focus"];
+    $(".bottom-nav").innerHTML = mobileRoutes.map(k =>
+      `<button class="bottom-item ${route === k ? "active" : ""}" data-route="${k}" aria-label="${name(k)}" ${route === k ? 'aria-current="page"' : ""}>${dockIcon(k)}<small>${name(k)}</small></button>`).join("") +
+      `<button class="bottom-item ${!mobileRoutes.includes(route) ? "active" : ""}" data-action="menu" aria-haspopup="dialog" aria-label="${L("More sections", "المزيد من الأقسام")}">${dockIcon("more")}<small>${L("More", "المزيد")}</small></button>`;
     $("#lxTopbar").innerHTML =
-      `<div class="lx-breadcrumb">THE NORTH <span>/</span> ${name(route)}</div><div class="lx-top-actions"><button class="lx-btn lx-menu-button" data-action="menu">${icon("tasks")}${L("Explore", "الأقسام")}</button>${btn(icon("inbox") + L("Search", "بحث"), "command", 'aria-label="' + L("Search, Control K", "بحث، Control K") + '"')}${btn(ar() ? "EN" : "ع", "language")}${btn(icon("account"), "navigate", 'data-to="account" aria-label="' + name("account") + '"')}</div>`;
+      `<div class="lx-topbar-brand"><span class="brand-mark lifeos-mark" aria-hidden="true"></span><div class="lx-breadcrumb">THE NORTH <span>/</span> ${name(route)}</div></div><div class="lx-top-actions"><button class="lx-btn lx-menu-button" data-action="menu">${icon("tasks")}${L("Explore", "الأقسام")}</button>${btn(icon("inbox") + L("Search", "بحث"), "command", 'aria-label="' + L("Search, Control K", "بحث، Control K") + '"')}${btn(ar() ? "EN" : "عربي", "language")}${btn(icon("account"), "navigate", 'data-to="account" aria-label="' + name("account") + '"')}</div>`;
     $("#lxCommand").setAttribute(
       "aria-label",
       L("Global search", "البحث الشامل"),
     );
+    const top=$("#lxTopbar");
+    if(cloud){const state=document.createElement("small");state.dataset.cloudStatus="";state.setAttribute("role","status");state.textContent=cloudMessages()[cloudState];top.append(state);}
     theme(d);
   }
   function navItem(k) {
@@ -505,19 +518,155 @@
     );
   }
 
+  function momentumMap(d) {
+    const gs = d.goals.filter((g) => !g.archived);
+    if (!gs.length) {
+      return empty(L("Your momentum line begins with your first goal.", "تبدأ خريطة الزخم مع أول هدف لك."), "goals");
+    }
+    const th = d.profile?.threshold || 60;
+    const avgMom = Math.round(gs.reduce((acc, g) => acc + (g.momentum || 0), 0) / gs.length);
+    const onTrack = gs.filter((g) => (g.momentum || 0) >= th).length;
+    const sorted = [...gs].sort((a, b) => (b.momentum || 0) - (a.momentum || 0));
+    const leading = sorted[0];
+    const colors = ["#00D4FF", "#7B61FF", "#00E599", "#FFB800", "#FF4D6A", "#0099FF"];
+
+    const days = 14;
+    const dates = Array.from({ length: days }, (_, i) => {
+      const dt = new Date();
+      dt.setDate(dt.getDate() - (days - 1 - i));
+      return C.day(+dt);
+    });
+
+    const width = 800, height = 210, padTop = 18, padBottom = 28, padLeft = 40, padRight = 20;
+    const plotW = width - padLeft - padRight;
+    const plotH = height - padTop - padBottom;
+    const thY = padTop + plotH - (th / 100) * plotH;
+
+    const paths = gs.map((g, gi) => {
+      const col = colors[gi % colors.length];
+      const histMap = new Map((g.history || []).map((h) => [h.date, h.value]));
+      let lastVal = g.momentum || 0;
+      const pts = dates.map((dStr, idx) => {
+        if (histMap.has(dStr)) lastVal = histMap.get(dStr);
+        const x = padLeft + (idx / Math.max(1, days - 1)) * plotW;
+        const y = padTop + plotH - (Math.max(0, Math.min(100, lastVal)) / 100) * plotH;
+        return `${x.toFixed(1)},${y.toFixed(1)}`;
+      });
+      return {
+        id: g.id,
+        name: g.name,
+        momentum: g.momentum || 0,
+        progress: g.progress || 0,
+        color: col,
+        path: pts.join(" ")
+      };
+    });
+
+    return `<div class="lx-momentum-wrapper">
+      <div class="lx-stats">
+        ${stat(L("System Momentum", "مؤشر الزخم العام"), `${avgMom}%`, avgMom >= th ? L("Above baseline (Stable)", "فوق خط الاستقرار") : L("Needs attention", "دون خط الاستقرار"))}
+        ${stat(L("Goals on Track", "أهداف مستقرة"), `${onTrack} / ${gs.length}`, `${Math.round((onTrack / gs.length) * 100)}% ${L("stable", "مستقر")}`)}
+        ${stat(L("Stability Line", "خط الزخم الأدنى"), `${th}%`, L("Critical boundary", "الحد الأدنى المستهدف"))}
+        ${stat(L("Leading Goal", "الهدف الأسرع نمواً"), esc(leading?.name || "—"), `${leading?.momentum || 0}% ${L("momentum", "زخم")}`)}
+      </div>
+      <div class="lx-momentum-graph" role="img" aria-label="${L("Momentum Map chart", "رسم خريطة الزخم")}">
+        <svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="none">
+          <line x1="${padLeft}" y1="${padTop}" x2="${width - padRight}" y2="${padTop}" stroke="rgba(255,255,255,0.06)" stroke-dasharray="3,3"/>
+          <text x="${padLeft - 8}" y="${padTop + 4}" fill="var(--n-i3)" font-size="9" text-anchor="end">100</text>
+          
+          <line x1="${padLeft}" y1="${thY}" x2="${width - padRight}" y2="${thY}" stroke="rgba(0,212,255,0.5)" stroke-width="1.5" stroke-dasharray="4,4"/>
+          <text x="${padLeft - 8}" y="${thY + 4}" fill="var(--n-a)" font-size="9" font-weight="700" text-anchor="end">${th}%</text>
+
+          <line x1="${padLeft}" y1="${padTop + plotH}" x2="${width - padRight}" y2="${padTop + plotH}" stroke="rgba(255,255,255,0.08)"/>
+          <text x="${padLeft - 8}" y="${padTop + plotH + 4}" fill="var(--n-i3)" font-size="9" text-anchor="end">0</text>
+
+          ${paths.map((p) => `<polyline points="${p.path}" fill="none" stroke="${p.color}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>`).join("")}
+        </svg>
+      </div>
+      <div class="lx-momentum-legend">
+        ${paths.map((p) => `
+          <button class="lx-momentum-pill" data-route="goals" data-id="${esc(p.id)}">
+            <span class="lx-dot" style="background:${p.color}"></span>
+            <strong>${esc(p.name)}</strong>
+            <span class="lx-badge ${p.momentum >= th ? "good" : "warn"}">${p.momentum}%</span>
+          </button>
+        `).join("")}
+      </div>
+    </div>`;
+  }
+
   function home(d) {
-    const tt = totals(d), today = C.day();
-    const due = d.tasks.filter(t => !t.archived && !t.done && (!t.date || t.date <= today))
-      .sort((a,b) => ["high","medium","low"].indexOf(a.priority) - ["high","medium","low"].indexOf(b.priority));
-    return heading(L("Your next step", "خطوتك القادمة"),
-      L("See the goal. Choose the work. Begin.", "راجع هدفك. اختر عملك. ابدأ.")) + goalBoard(d) +
-      `<section class="lx-card"><div class="lx-card-head"><h2>${L("Focus today", "تركيز اليوم")}</h2><span>${hrs(tt.deep)} / ${d.settings.dailyHours} ${L("hours", "ساعات")}</span></div>
-      ${progress(percent(tt.deep, d.settings.dailyHours * 3600000))}
-      <p>${L("Choose a task on the next screen and give it your attention.", "اختر مهمة في الشاشة التالية وامنحها انتباهك.")}</p>
-      ${btn(L(d.activeSession ? "Resume focus" : "Start focus", d.activeSession ? "استأنف التركيز" : "ابدأ التركيز"), "navigate", 'data-to="focus"', true)}</section>
-      <section class="lx-card"><div class="lx-card-head"><h2>${L("Next priorities", "الأولويات القادمة")}</h2>${btn(L("All tasks", "كل المهام"), "navigate", 'data-to="tasks"')}</div>
-      ${due.slice(0,3).map(t=>`<p>${esc(t.title)}</p>`).join("") || `<p>${L("Add your next action in Tasks.", "أضف خطوتك القادمة في قسم المهام.")}</p>`}</section>
-      <details class="lx-card"><summary>${L("Today’s schedule", "جدول اليوم")}</summary>${schedule(d,today)}</details>`;
+    const tt = totals(d), today = C.day(), now = Date.now();
+    const deepWeek = C.duration(
+      tt.all,
+      C.week(now, d.settings.weekStart),
+      Infinity,
+      (s) => s.categoryId === "Deep Work"
+    );
+    const due = d.tasks.filter((t) => !t.archived && !t.done && (!t.date || t.date <= today))
+      .sort((a, b) => ["high", "medium", "low"].indexOf(a.priority) - ["high", "medium", "low"].indexOf(b.priority));
+
+    return heading(L("Executive Radar", "القيادة التنفيذية"),
+      L("Trajectory. Deep attention. Relentless execution.", "مسار الزخم. التركيز العميق. والوصول إلى أهدافك.")) +
+      /* 1. خريطة الزخم */
+      `<section class="lx-card lx-momentum-section">
+        <div class="lx-card-head">
+          <div>
+            <div class="lx-eyebrow">${L("SYSTEM TRAJECTORY", "مسار الزخم")}</div>
+            <h2>${L("Momentum Map", "خريطة الزخم")}</h2>
+            <p class="lx-muted">${L("Live trajectory of your goals against the stability baseline.", "المسار الحي لزخم أهدافك وموقعها مقارنة بخط الاستقرار.")}</p>
+          </div>
+          ${btn(L("Manage goals", "إدارة الأهداف"), "navigate", 'data-to="goals"')}
+        </div>
+        ${momentumMap(d)}
+      </section>` +
+      /* 2. وقت التركيز حسب اليوم + 3. العمل العميق الأسبوعي */
+      `<div class="lx-grid-two">
+        <section class="lx-card">
+          <div class="lx-card-head">
+            <div>
+              <div class="lx-eyebrow">${L("TODAY'S ATTENTION", "انتباه اليوم")}</div>
+              <h2>${L("Focus time by day", "وقت التركيز حسب اليوم")}</h2>
+            </div>
+            <div class="lx-badge">${hrs(tt.deep)} / ${d.settings.dailyHours} ${L("h", "س")}</div>
+          </div>
+          <div class="lx-big-number">${hrs(tt.deep)}</div>
+          <p class="lx-muted">${L("Daily target: ", "الهدف اليومي: ")} ${d.settings.dailyHours} ${L("hours of deep execution.", "ساعات من العمل العميق المتواصل.")}</p>
+          ${progress(percent(tt.deep, d.settings.dailyHours * 3600000))}
+          <div class="lx-actions" style="margin-top:16px;">
+            ${btn(L(d.activeSession ? "Resume focus" : "Start focus", d.activeSession ? "استأنف التركيز" : "ابدأ جلسة تركيز"), "navigate", 'data-to="focus"', true)}
+            ${btn(L("Log time", "تسجيل يدوي"), "manual")}
+          </div>
+        </section>
+        <section class="lx-card">
+          <div class="lx-card-head">
+            <div>
+              <div class="lx-eyebrow">${L("SEVEN-DAY EXECUTION", "إنجاز الأسبوع")}</div>
+              <h2>${L("Weekly deep work", "العمل العميق الأسبوعي")}</h2>
+            </div>
+            <div class="lx-badge">${hrs(deepWeek)} / ${d.settings.weeklyHours} ${L("h", "س")}</div>
+          </div>
+          <div class="lx-big-number">${hrs(deepWeek)}</div>
+          <p class="lx-muted">${L("of", "من")} ${d.settings.weeklyHours} ${L("hours", "ساعة")} · ${hrs(Math.max(0, d.settings.weeklyHours * 3600000 - deepWeek))} ${L("remaining", "متبقية هذا الأسبوع")}</p>
+          ${progress(percent(deepWeek, d.settings.weeklyHours * 3600000))}
+          ${dayChart(tt.all, d)}
+        </section>
+      </div>` +
+      /* 4. خطة الأهداف */
+      goalBoard(d) +
+      /* 5. أولويات التنفيذ (Next Actions) */
+      `<section class="lx-card">
+        <div class="lx-card-head">
+          <div>
+            <div class="lx-eyebrow">${L("HIGH LEVERAGE", "الخطوات القادمة")}</div>
+            <h2>${L("Execution priorities", "أولويات التنفيذ")}</h2>
+          </div>
+          ${btn(L("All tasks", "كل المهام"), "navigate", 'data-to="tasks"')}
+        </div>
+        <div class="lx-task-list">
+          ${due.slice(0, 4).map((t) => taskRow(t, d)).join("") || empty(L("Add your next action in Tasks.", "أضف خطوتك القادمة في قسم المهام."), "tasks")}
+        </div>
+      </section>`;
   }
   function linkFields(d, obj = {}) {
     return `<div class="lx-fields-three">${select(name("projects"), "projectId", options(d.projects), obj.projectId)}${select(name("goals"), "goalId", options(d.goals), obj.goalId)}${select(name("tasks"), "taskId", options(d.tasks, "title"), obj.taskId)}</div>`;
@@ -532,7 +681,7 @@
             "Choose the work. Set your intention. Begin.",
             "اختر عملك. حدد نيتك. وابدأ.",
           ),
-          btn(L("Add time manually", "إضافة وقت يدوي"), "manual"),
+          btn(L("Add time manually", "إضافة وقت يدوي"), "manual") + btn(L("Pomodoro settings", "إعدادات بومودورو"), "pomodoro-settings"),
         ) +
         `<div class="lx-focus-layout"><form id="lxFocusForm" class="lx-card">${select(
           L("Session type", "نوع الجلسة"),
@@ -548,7 +697,7 @@
           "categoryId",
           d.categories.map((c) => [c, catName(c)]),
           "Deep Work",
-        )}${field(L("Target minutes · 0 = open ended", "المدة بالدقائق · 0 = بلا حد"), "targetMinutes", 60, "number", 'min="0" max="1440"')}</div></details><div class="lx-info">${L("Pomodoro uses your saved focus and break settings. Time survives refresh and is calculated from real timestamps.", "يستخدم بومودورو مدد التركيز والراحة المحفوظة. الوقت يستمر بعد تحديث الصفحة ويُحسب من الطوابع الزمنية الفعلية.")}</div><button class="lx-btn lx-primary lx-wide" type="submit">${icon("focus")}${L("Start focus", "ابدأ التركيز")}</button></form><details class="lx-card"><summary>${L("Pomodoro settings and recent sessions", "إعدادات بومودورو والجلسات الأخيرة")}</summary><div class="lx-eyebrow">${L("YOUR RHYTHM", "إيقاعك")}</div><h2>${d.settings.focusMinutes} / ${d.settings.shortBreak}</h2><p>${L("Minutes of focus / short break", "دقائق تركيز / راحة قصيرة")}</p><p>${L("Long break every", "راحة طويلة كل")} ${d.settings.cycles} ${L("sessions", "جلسات")} · ${d.settings.longBreak} ${L("minutes", "دقيقة")}</p>${btn(L("Customize Pomodoro", "تخصيص بومودورو"), "navigate", 'data-to="account"')}<hr><h3>${L("Recent sessions", "الجلسات الأخيرة")}</h3>${
+        )}${field(L("Target minutes · 0 = open ended", "المدة بالدقائق · 0 = بلا حد"), "targetMinutes", 60, "number", 'min="0" max="1440"')}</div></details><div class="lx-info">${L("Pomodoro uses your saved focus and break settings. Time survives refresh and is calculated from real timestamps.", "يستخدم بومودورو مدد التركيز والراحة المحفوظة. الوقت يستمر بعد تحديث الصفحة ويُحسب من الطوابع الزمنية الفعلية.")}</div><button class="lx-btn lx-primary lx-wide" type="submit">${icon("focus")}${L("Start focus", "ابدأ التركيز")}</button></form><details class="lx-card"><summary>${L("Session rhythm and history", "إيقاع الجلسات وسجلها")}</summary><div class="lx-eyebrow">${L("YOUR RHYTHM", "إيقاعك")}</div><h2>${d.settings.focusMinutes} / ${d.settings.shortBreak}</h2><p>${L("Minutes of focus / short break", "دقائق تركيز / راحة قصيرة")}</p><p>${L("Long break every", "راحة طويلة كل")} ${d.settings.cycles} ${L("sessions", "جلسات")} · ${d.settings.longBreak} ${L("minutes", "دقيقة")}</p><hr><h3>${L("Recent sessions", "الجلسات الأخيرة")}</h3>${
           d.sessions
             .slice(0, 4)
             .map((s) => sessionRow(s, d))
@@ -672,7 +821,8 @@
   function goals(d) {
     const g = d.goals.find((g) => g.id === detail);
     if (g) {
-      const ts = d.tasks.filter((t) => t.goalId === g.id),
+      const ts = d.tasks.filter((t) => t.goalId === g.id && !t.archived),
+        hs = (d.habits || []).filter((h) => h.goalId === g.id && !h.archived),
         time = C.duration(
           C.reportSessions(d),
           0,
@@ -688,10 +838,20 @@
               L("Edit goal", "تعديل الهدف"),
               "edit",
               `data-kind="goals" data-id="${g.id}"`,
+            ) +
+            btn(
+              "+ " + L("Add habit", "إضافة عادة"),
+              "new",
+              `data-kind="habits" data-goal="${g.id}"`,
+            ) +
+            btn(
+              "+ " + L("Add task", "إضافة مهمة"),
+              "new",
+              `data-kind="tasks" data-goal="${g.id}"`,
             ),
         ) +
         entityTime(d, "goalId", g.id) +
-        `<div class="lx-grid-two"><section class="lx-card"><h2>${L("Outcome progress", "تقدم النتيجة")} · ${g.progress}%</h2>${progress(g.progress)}<p>${L("Time is an investment, not an automatic measure of completion.", "الوقت استثمار، وليس مقياسًا تلقائيًا لاكتمال الهدف.")}</p><div class="lx-mini-stats">${stat(L("Estimated", "المقدر"), (g.targetHours || 0) + L(" hours", " ساعة"))}${stat(L("Remaining", "المتبقي"), hrs(Math.max(0, (g.targetHours || 0) * 3600000 - time)))}${stat(L("Days left", "الأيام المتبقية"), g.deadline ? Math.max(0, Math.ceil((+new Date(g.deadline + "T23:59:59") - Date.now()) / 86400000)) : "—")}</div><h3>${L("Milestones", "المراحل")}</h3>${["m6", "m3", "month", "week"].map((key, i) => `<div class="lx-list-line"><span>${L(["6 months", "Quarter", "Month", "Week"][i], ["ستة أشهر", "ربع سنة", "شهر", "أسبوع"][i])}</span><strong>${esc(g.plan?.[key] || "—")}</strong></div>`).join("")}<p class="lx-pre">${esc(g.notes || "")}</p></section><section class="lx-card"><h2>${name("tasks")}</h2>${ts.map((t) => taskRow(t, d)).join("") || empty(L("Connect actions to this outcome.", "اربط التنفيذ بهذه النتيجة."), "tasks")}</section></div>`
+        `<div class="lx-grid-two"><section class="lx-card"><h2>${L("Outcome progress", "تقدم النتيجة")} · ${g.progress}%</h2>${progress(g.progress)}<p>${L("Time is an investment, not an automatic measure of completion.", "الوقت استثمار، وليس مقياسًا تلقائيًا لاكتمال الهدف.")}</p><div class="lx-mini-stats">${stat(L("Estimated", "المقدر"), (g.targetHours || 0) + L(" hours", " ساعة"))}${stat(L("Remaining", "المتبقي"), hrs(Math.max(0, (g.targetHours || 0) * 3600000 - time)))}${stat(L("Momentum", "الزخم"), (g.momentum || 0) + "%")}${stat(L("Days left", "الأيام المتبقية"), g.deadline ? Math.max(0, Math.ceil((+new Date(g.deadline + "T23:59:59") - Date.now()) / 86400000)) : "—")}</div><h3>${L("Milestones", "المراحل")}</h3>${["m6", "m3", "month", "week"].map((key, i) => `<div class="lx-list-line"><span>${L(["6 months", "Quarter", "Month", "Week"][i], ["ستة أشهر", "ربع سنة", "شهر", "أسبوع"][i])}</span><strong>${esc(g.plan?.[key] || "—")}</strong></div>`).join("")}<p class="lx-pre">${esc(g.notes || "")}</p></section><section class="lx-card"><h2>${name("tasks")} (${ts.filter((t) => t.done).length}/${ts.length})</h2>${ts.map((t) => taskRow(t, d)).join("") || empty(L("Connect actions to this outcome.", "اربط التنفيذ بهذه النتيجة."), "tasks")}<h3>${name("habits")} (${hs.length})</h3>${hs.map((h) => `<div class="lx-list-line"><span><strong>${esc(h.title)}</strong><small>🔥 ${C.habitStreak(h.checks || [], C.day()).current} ${L("day streak", "أيام متتالية")}</small></span>${btn(h.checks?.includes(C.day()) ? "✓ " + L("Done", "تمت") : L("Check", "إكمال"), "habit-toggle", `data-id="${h.id}"`, h.checks?.includes(C.day()))}</div>`).join("") || `<p class="lx-pre">${L("No habits linked to this goal yet.", "لا توجد عادات مرتبطة بهذا الهدف بعد.")}</p>`}</section></div>`
       );
     }
     return (
@@ -713,10 +873,12 @@
       `<div class="lx-grid-three">${
         d.goals
           .filter((g) => !g.archived)
-          .map(
-            (g) =>
-              `<article class="lx-card"><div class="lx-eyebrow">${esc(g.horizon ? L(g.horizon, { annual: "سنوي", quarterly: "ربع سنوي", monthly: "شهري", weekly: "أسبوعي" }[g.horizon] || g.horizon) : L("Long term", "بعيد المدى"))}</div><h2><button class="lx-text-button" data-route="goals" data-id="${g.id}">${esc(g.name)}</button></h2><p>${esc(g.why || "")}</p><div class="lx-split"><strong>${g.progress}%</strong><small>${dateText(g.deadline)}</small></div>${progress(g.progress)}<p>${hrs(C.duration(C.reportSessions(d), 0, Infinity, (s) => s.goalId === g.id))} ${L("invested", "مستثمرة")}</p></article>`,
-          )
+          .map((g) => {
+            const ts = d.tasks.filter((t) => t.goalId === g.id && !t.archived);
+            const hs = (d.habits || []).filter((h) => h.goalId === g.id && !h.archived);
+            const doneTs = ts.filter((t) => t.done).length;
+            return `<article class="lx-card"><div class="lx-eyebrow">${esc(g.horizon ? L(g.horizon, { annual: "سنوي", quarterly: "ربع سنوي", monthly: "شهري", weekly: "أسبوعي" }[g.horizon] || g.horizon) : L("Long term", "بعيد المدى"))}</div><h2><button class="lx-text-button" data-route="goals" data-id="${g.id}">${esc(g.name)}</button></h2><p>${esc(g.why || "")}</p><div class="lx-split"><strong>${g.progress}%</strong><small>${dateText(g.deadline)}</small></div>${progress(g.progress)}<p>${hrs(C.duration(C.reportSessions(d), 0, Infinity, (s) => s.goalId === g.id))} ${L("invested", "مستثمرة")}</p><div class="lx-mini-stats">${stat(name("tasks"), `${doneTs}/${ts.length}`)}${stat(name("habits"), `${hs.length}`)}${stat(L("Momentum", "الزخم"), `${g.momentum || 0}%`)}</div></article>`;
+          })
           .join("") ||
         empty(
           L(
@@ -805,7 +967,7 @@
         })
         .join(
           "",
-        )}</section><section class="lx-card"><h2>${L("Projects · this week", "المشاريع · هذا الأسبوع")}</h2>${d.projects.map((p) => `<div class="lx-list-line"><span>${esc(p.name)}</span><strong>${hrs(C.duration(tt.all, C.week(now, d.settings.weekStart), Infinity, (s) => s.projectId === p.id))}</strong></div>`).join("") || "<p>—</p>"}</section><section class="lx-card"><h2>${L("Your rhythm", "إيقاعك")}</h2><p>${L("Most tracked hour", "الساعة الأكثر تسجيلًا")}: <b dir="ltr">${hours[bestHour] ? String(bestHour).padStart(2, "0") + ":00 – " + String(bestHour + 1).padStart(2, "0") + ":00" : "—"}</b></p><p>${L("Best day · last 30 days", "أفضل يوم · آخر 30 يومًا")}: ${best?.[1] ? dateText(best[0]) : "—"}</p><p>${L("Average daily deep work · 7 days", "متوسط العمل العميق اليومي · 7 أيام")}: ${hrs(C.duration(tt.all, C.midnight(now) - 6 * 86400000, Infinity, (s) => s.categoryId === "Deep Work") / 7)}</p><p>${L("Time tracked describes effort, not quality.", "الوقت المسجل يصف الجهد، وليس جودته.")}</p></section></div><div class="lx-grid-two"><section class="lx-card"><h2>${L("Execution", "التنفيذ")}</h2><p>${L("Tasks completed", "المهام المكتملة")}: ${d.tasks.filter((t) => t.done).length} / ${d.tasks.length}</p>${progress(percent(d.tasks.filter((t) => t.done).length, d.tasks.length))}<p>${L("Habits today", "عادات اليوم")}: ${d.habits.filter((h) => h.checks?.includes(C.day())).length} / ${d.habits.length}</p>${progress(percent(d.habits.filter((h) => h.checks?.includes(C.day())).length, d.habits.length))}</section><section class="lx-card"><h2>${L("Goals progress", "تقدم الأهداف")}</h2>${d.goals.map((g) => `<div class="lx-list-line"><span>${esc(g.name)}</span><strong>${g.progress}%</strong></div>${progress(g.progress)}`).join("") || "<p>—</p>"}</section></div><div class="lx-grid-two"><section class="lx-card"><h2>${L("Focus time by week", "وقت التركيز حسب الأسبوع")}</h2>${weeklyChart(tt.all, d)}</section><section class="lx-card"><h2>${L("Time per goal · this month", "الوقت لكل هدف · هذا الشهر")}</h2>${d.goals.map((g) => `<button class="lx-list-button" data-route="goals" data-id="${g.id}">${esc(g.name)}<strong>${hrs(C.duration(tt.all, +new Date(new Date().getFullYear(), new Date().getMonth(), 1), Infinity, (s) => s.goalId === g.id))}</strong></button>`).join("") || "<p>—</p>"}</section></div><section class="lx-card"><h2>${L("Session history", "سجل الجلسات")}</h2>${
+        )}</section><section class="lx-card"><h2>${L("Projects · this week", "المشاريع · هذا الأسبوع")}</h2>${d.projects.map((p) => `<div class="lx-list-line"><span>${esc(p.name)}</span><strong>${hrs(C.duration(tt.all, C.week(now, d.settings.weekStart), Infinity, (s) => s.projectId === p.id))}</strong></div>`).join("") || "<p>—</p>"}</section><section class="lx-card"><h2>${L("Your rhythm", "إيقاعك")}</h2><p>${L("Most tracked hour", "الساعة الأكثر تسجيلًا")}: <b dir="ltr">${hours[bestHour] ? String(bestHour).padStart(2, "0") + ":00 – " + String(bestHour + 1).padStart(2, "0") + ":00" : "—"}</b></p><p>${L("Best day · last 30 days", "أفضل يوم · آخر 30 يومًا")}: ${best?.[1] ? dateText(best[0]) : "—"}</p><p>${L("Average daily deep work · 7 days", "متوسط العمل العميق اليومي · 7 أيام")}: ${hrs(C.duration(tt.all, C.midnight(now) - 6 * 86400000, Infinity, (s) => s.categoryId === "Deep Work") / 7)}</p><p>${L("Time tracked describes effort, not quality.", "الوقت المسجل يصف الجهد، وليس جودته.")}</p></section></div><div class="lx-grid-two"><section class="lx-card"><h2>${L("Execution", "التنفيذ")}</h2><p>${L("Tasks completed", "المهام المكتملة")}: ${d.tasks.filter((t) => !t.archived && t.done).length} / ${d.tasks.filter((t) => !t.archived).length}</p>${progress(percent(d.tasks.filter((t) => !t.archived && t.done).length, d.tasks.filter((t) => !t.archived).length))}<p>${L("Habits today", "عادات اليوم")}: ${d.habits.filter((h) => !h.archived && h.checks?.includes(C.day())).length} / ${d.habits.filter((h) => !h.archived).length}</p>${progress(percent(d.habits.filter((h) => !h.archived && h.checks?.includes(C.day())).length, d.habits.filter((h) => !h.archived).length))}</section><section class="lx-card"><h2>${L("Goals progress", "تقدم الأهداف")}</h2>${d.goals.filter((g) => !g.archived).map((g) => `<div class="lx-list-line"><span>${esc(g.name)}</span><strong>${g.progress}%</strong></div>${progress(g.progress)}`).join("") || "<p>—</p>"}</section></div><div class="lx-grid-two"><section class="lx-card"><h2>${L("Focus time by week", "وقت التركيز حسب الأسبوع")}</h2>${weeklyChart(tt.all, d)}</section><section class="lx-card"><h2>${L("Time per goal · this month", "الوقت لكل هدف · هذا الشهر")}</h2>${d.goals.map((g) => `<button class="lx-list-button" data-route="goals" data-id="${g.id}">${esc(g.name)}<strong>${hrs(C.duration(tt.all, +new Date(new Date().getFullYear(), new Date().getMonth(), 1), Infinity, (s) => s.goalId === g.id))}</strong></button>`).join("") || "<p>—</p>"}</section></div><section class="lx-card"><h2>${L("Session history", "سجل الجلسات")}</h2>${
         d.sessions
           .slice(0, historyLimit)
           .map((s) => sessionRow(s, d))
@@ -1025,30 +1187,34 @@
       `<div class="lx-grid-three">${
         d.habits
           .filter((h) => !h.archived)
-          .map(
-            (h) =>
-              `<article class="lx-card"><div class="lx-card-head"><h2>${esc(h.title)}</h2>${btn(L("Edit", "تعديل"), "edit", `data-kind="habits" data-id="${h.id}"`)}</div><p>${esc(h.description || "")}</p><p>${L("Last 7 days", "آخر 7 أيام")}: ${Array.from(
-                { length: 7 },
-                (_, i) => {
-                  const dt = new Date();
-                  dt.setDate(dt.getDate() - i);
-                  return h.checks?.includes(C.day(+dt)) ? 1 : 0;
-                },
-              ).reduce(
-                (a, b) => a + b,
-                0,
-              )} / 7</p><div class="lx-habit-days">${Array.from(
-                { length: 7 },
-                (_, i) => {
-                  const dt = new Date();
-                  dt.setDate(dt.getDate() - 6 + i);
-                  const key = C.day(+dt);
-                  return `<span class="${h.checks?.includes(key) ? "checked" : ""}" title="${key}">${dt.getDate()}</span>`;
-                },
-              ).join(
-                "",
-              )}</div>${btn(h.checks?.includes(C.day()) ? L("Completed today ✓", "تمت اليوم ✓") : L("Mark today complete", "إكمال عادة اليوم"), "habit-toggle", `data-id="${h.id}"`, true)}<p>${esc(h.time || "")} · ${L("Daily", "يوميًا")}</p></article>`,
-          )
+          .map((h) => {
+            const strk = C.habitStreak(h.checks || [], C.day());
+            const goal = h.goalId ? d.goals.find((g) => g.id === h.goalId) : null;
+            const isTodayChecked = h.checks?.includes(C.day());
+            const weekDays = Array.from({ length: 7 }, (_, i) => {
+              const dt = new Date();
+              dt.setDate(dt.getDate() - 6 + i);
+              const key = C.day(+dt);
+              const isChk = h.checks?.includes(key);
+              const isToday = key === C.day();
+              const dayName = new Intl.DateTimeFormat(ar() ? "ar-MA" : "en-GB", { weekday: "narrow" }).format(dt);
+              return `<button type="button" class="lx-habit-day-btn ${isChk ? "checked" : ""} ${isToday ? "is-today" : ""}" data-action="habit-toggle-day" data-id="${h.id}" data-date="${key}" title="${key}: ${isChk ? L("Done", "مكتمل") : L("Not done", "غير مكتمل")}"><small>${dayName}</small><span>${dt.getDate()}</span></button>`;
+            }).join("");
+            const past7Count = Array.from({ length: 7 }, (_, i) => {
+              const dt = new Date();
+              dt.setDate(dt.getDate() - i);
+              return h.checks?.includes(C.day(+dt)) ? 1 : 0;
+            }).reduce((a, b) => a + b, 0);
+
+            const freqMap = {
+              daily: L("Daily", "يوميًا"),
+              weekdays: L("Weekdays (Sun-Thu)", "أيام العمل"),
+              weekly: L("Weekly", "أسبوعيًا"),
+            };
+            const freqText = freqMap[h.frequency] || L("Daily", "يوميًا");
+
+            return `<article class="lx-card"><div class="lx-card-head"><div><span class="lx-streak-badge" title="${L("Current streak / Best streak", "التتابع الحالي / أفضل تتابع")}">🔥 ${strk.current} <small>(${L("Best", "الأفضل")}: ${strk.best})</small></span><h2>${esc(h.title)}</h2></div>${btn(L("Edit", "تعديل"), "edit", `data-kind="habits" data-id="${h.id}"`)}</div><p>${esc(h.description || "")}</p>${goal ? `<div class="lx-habit-goal-pill"><button class="lx-text-button" data-route="goals" data-id="${goal.id}">🎯 ${esc(goal.name)}</button><small>+${h.impact || 5}% ${L("momentum", "زخم")}</small></div>` : ""}<p class="lx-habit-meta"><span>${L("Last 7 days", "آخر 7 أيام")}: <strong>${past7Count} / 7</strong></span><span>${esc(h.time || "")} · ${freqText}</span></p><div class="lx-habit-days">${weekDays}</div>${btn(isTodayChecked ? L("Completed today ✓", "تمت اليوم ✓") : L("Mark today complete", "إكمال عادة اليوم"), "habit-toggle", `data-id="${h.id}"`, isTodayChecked)}</article>`;
+          })
           .join("") ||
         empty(
           L(
@@ -1107,57 +1273,46 @@
       "text",
       'required maxlength="180"',
     );
-    if (kind === "tasks")
+    if (kind === "tasks") {
       body +=
-        area(L("Description", "الوصف"), "description", o.description || "") +
-        `<div class="lx-fields-two">${select(name("projects"), "projectId", options(d.projects), o.projectId)}${select(name("goals"), "goalId", options(d.goals), o.goalId)}${select(
-          L("Priority", "الأولوية"),
-          "priority",
-          [
-            ["high", L("High", "عالية")],
-            ["medium", L("Medium", "متوسطة")],
-            ["low", L("Low", "منخفضة")],
-          ],
-          o.priority || "medium",
-        )}${select(
-          L("Status", "الحالة"),
-          "status",
-          [
-            ["todo", L("To do", "للتنفيذ")],
-            ["doing", L("In progress", "قيد التنفيذ")],
-            ["done", L("Done", "مكتملة")],
-          ],
-          o.status || "todo",
-        )}${field(L("Due date", "تاريخ الاستحقاق"), "date", o.date || C.day(), "date", "required")}${field(L("Start date", "تاريخ البداية"), "startDate", o.startDate || C.day(), "date")}${field(L("Scheduled time", "الوقت المخطط"), "startTime", o.startTime || "", "time")}${field(L("Estimated hours", "الوقت المقدر بالساعات"), "estimatedHours", o.estimatedHours || 0, "number", 'min="0" max="10000" step="0.25"')}${field(L("Momentum impact", "أثر الزخم"), "impact", o.impact ?? 10, "number", 'min="0" max="100"')}${field(L("Goal progress impact (%)", "أثر تقدم الهدف (%)"), "progressImpact", o.progressImpact ?? 1, "number", 'min="0" max="100" step="0.5"')}${select(
-          L("Repeat after completion", "تكرار بعد الإكمال"),
-          "recurring",
-          [
-            ["none", L("No repeat", "بلا تكرار")],
-            ["daily", L("Daily", "يومي")],
-            ["weekly", L("Weekly", "أسبوعي")],
-            ["monthly", L("Monthly", "شهري")],
-          ],
-          o.recurring || "none",
-        )}</div>` +
-        field(
-          L("Tags · comma separated", "الوسوم · مفصولة بفواصل"),
-          "tags",
-          o.tags || "",
-        ) +
-        area(
-          L(
-            "Subtasks · one per line, prefix completed items with [x]",
-            "المهام الفرعية · سطر لكل مهمة، ابدأ المكتملة بـ [x]",
-          ),
-          "subtaskText",
-          (o.subtasks || [])
-            .map((s) => (s.done ? "[x] " : "") + s.title)
-            .join("\n"),
-        ) +
-        area(L("Notes", "ملاحظات"), "notes", o.notes || "") +
+        `<div class="lx-fields-two">
+          ${select(name("goals"), "goalId", options(d.goals), o.goalId)}
+          ${field(L("Due date", "تاريخ الاستحقاق"), "date", o.date || C.day(), "date", "required")}
+        </div>
+        <div class="lx-fields-two">
+          ${select(
+            L("Priority", "الأولوية"),
+            "priority",
+            [
+              ["high", L("High", "عالية")],
+              ["medium", L("Medium", "متوسطة")],
+              ["low", L("Low", "منخفضة")],
+            ],
+            o.priority || "medium",
+          )}
+          ${select(name("projects"), "projectId", options(d.projects), o.projectId)}
+        </div>
+        <details class="lx-details" style="margin-top:12px">
+          <summary>${L("Advanced options · optional", "خيارات إضافية · اختياري")}</summary>
+          <div class="lx-fields-two" style="margin-top:10px">
+            ${select(
+              L("Status", "الحالة"),
+              "status",
+              [
+                ["todo", L("To do", "للتنفيذ")],
+                ["doing", L("In progress", "قيد التنفيذ")],
+                ["done", L("Done", "مكتملة")],
+              ],
+              o.status || "todo",
+            )}
+            ${field(L("Estimated hours", "الوقت المقدر بالساعات"), "estimatedHours", o.estimatedHours || 0, "number", 'min="0" max="10000" step="0.25"')}
+          </div>
+          ${area(L("Notes", "ملاحظات"), "notes", o.notes || "")}
+        </details>` +
         (existing
           ? `<div class="lx-info">${L("Actual time", "الوقت الفعلي")}: ${hrs(C.duration(C.reportSessions(d), 0, Infinity, (s) => s.taskId === id))} · ${L("Difference from estimate", "الفرق عن التقدير")}: ${(C.duration(C.reportSessions(d), 0, Infinity, (s) => s.taskId === id) / 3600000 - (o.estimatedHours || 0)).toFixed(2)} ${L("hours", "ساعة")}</div>`
           : "");
+    }
     if (kind === "projects")
       body +=
         area(
@@ -1256,6 +1411,29 @@
       body += area(L("Details", "التفاصيل"), "body", o.body || "");
     if (kind === "habits")
       body +=
+        select(
+          name("goals"),
+          "goalId",
+          options(d.goals),
+          o.goalId || seed.goalId || "",
+        ) +
+        select(
+          L("Frequency", "التكرار"),
+          "frequency",
+          [
+            ["daily", L("Daily", "يوميًا")],
+            ["weekdays", L("Weekdays (Sun-Thu)", "أيام العمل")],
+            ["weekly", L("Weekly", "أسبوعيًا")],
+          ],
+          o.frequency || "daily",
+        ) +
+        field(
+          L("Goal momentum impact (+%)", "أثر الزخم على الهدف (+%)"),
+          "impact",
+          o.impact !== undefined ? o.impact : 5,
+          "number",
+          'min="0" max="50" step="1"',
+        ) +
         area(
           L("Intention / routine steps", "النية / خطوات الروتين"),
           "description",
@@ -1393,6 +1571,65 @@
       )}${select(L("Focus quality · 1 to 5", "جودة التركيز · من 1 إلى 5"), "focusScore", [1, 2, 3, 4, 5], 4)}</div><div class="lx-dialog-footer">${btn(L("Back to session", "العودة للجلسة"), "close")}<button type="submit" class="lx-btn lx-primary">${L("Save session", "حفظ الجلسة")}</button></div></form>`,
     );
   }
+  function pomodoroSettings() {
+    const d = db.read();
+    modal(L("Pomodoro settings", "إعدادات بومودورو"), `<form id="lxPomodoroForm"><h3>Pomodoro</h3><div class="lx-fields-two">${field(L("Focus minutes", "دقائق التركيز"), "focusMinutes", d.settings.focusMinutes, "number", 'min="1" max="240" required')}${field(L("Short break minutes", "دقائق الراحة القصيرة"), "shortBreak", d.settings.shortBreak, "number", 'min="1" max="60" required')}${field(L("Long break minutes", "دقائق الراحة الطويلة"), "longBreak", d.settings.longBreak, "number", 'min="1" max="120" required')}${field(L("Sessions before long break", "جلسات قبل الراحة الطويلة"), "cycles", d.settings.cycles, "number", 'min="1" max="12" step="1" required')}</div><div class="lx-fields-two">${[
+      ["autoBreak", L("Auto-start breaks", "بدء الراحة تلقائيًا")],
+      ["autoFocus", L("Auto-start next focus", "بدء التركيز التالي تلقائيًا")],
+      ["sound", L("Completion sound", "صوت الاكتمال")],
+      ["notifications", L("In-app notifications", "تنبيهات داخل التطبيق")],
+    ]
+      .map(
+        ([k, t]) =>
+          `<label class="lx-switch"><input type="checkbox" name="${k}" ${d.settings[k] ? "checked" : ""}>${t}</label>`,
+      )
+      .join(
+        "",
+      )}</div><p class="lx-muted">${L("Changes apply to the next session. Automatic cycles include elapsed time while the device sleeps. Notifications and sound are delivered when the app is awake.", "تطبق التغييرات على الجلسة التالية. الدورات التلقائية تشمل الوقت المنقضي أثناء سكون الجهاز. تصل التنبيهات والأصوات عندما يكون التطبيق نشطًا.")}</p><button class="lx-btn lx-primary" type="submit">${L("Save Pomodoro settings", "حفظ إعدادات بومودورو")}</button></form>`);
+  }
+  let cloudState = "disconnected";
+  const supabase = window.NorthAuth?.client;
+  const cloudMessages = () => ({
+    disconnected:L("Restoring account…", "جارٍ استرجاع الحساب…"),
+    syncing:L("Syncing…", "جارٍ الحفظ والمزامنة…"), connecting:L("Connecting…", "جارٍ الاتصال…"),
+    saved:L("Workspace saved", "تم حفظ مساحة العمل"),
+    conflict:L("Changes exist on both devices. Choose which copy to keep; local recovery backup is retained.", "توجد تغييرات محلية وسحابية. اختر النسخة المعتمدة؛ نحتفظ بنسخة استعادة محلية."),
+    schema:L("Run supabase-setup.sql in Supabase first.", "شغّل ملف supabase-setup.sql في Supabase أولًا."),
+    offline:L("Cloud unavailable. Changes remain local; reconnect or retry.", "تعذر الحفظ السحابي. التغييرات محفوظة محليًا؛ أعد الاتصال أو المحاولة."),
+    auth:L("Sign-in failed. Check your cloud account and confirmed email.", "تعذر الدخول. تحقق من الحساب السحابي وتأكيد البريد."),
+    confirm:L("Confirm your email, then sign in here.", "أكد بريدك من الرسالة، ثم سجّل الدخول هنا."),
+    identity:L("Cloud email must match the current local account.", "يجب أن يطابق البريد السحابي بريد الحساب المحلي الحالي."),
+    active:L("Finish the active session before downloading cloud changes.", "أنهِ الجلسة النشطة قبل استرجاع التغييرات السحابية.")
+  });
+  const cloud = supabase && window.NorthCloud ? window.NorthCloud.create({
+    client:supabase, read:()=>db.read(), storage:localStorage,
+    email:()=>localStorage.getItem(C.SESSION_KEY),
+    apply:payload=>{
+      const validated=C.validateImport({...db.read(),...payload});
+      db.update(d=>{for(const k of Object.keys(payload)) if(k!=="activeSession") d[k]=validated[k];});
+      window.LifeLegacy?.renderAll?.(); render();
+    },
+    status:state=>{cloudState=state; for(const el of document.querySelectorAll("[data-cloud-status]")) el.textContent=cloudMessages()[state];}
+  }) : null;
+  function cloudPanel() {
+    return `<details class="lx-card"><summary>${L("Sync and recovery", "المزامنة والاستعادة")}</summary><p id="lxCloudStatus" data-cloud-status role="status">${cloudMessages()[cloudState]}</p><p>${L("Your workspace saves automatically. If both devices change the same workspace, choose the copy to retain. Export a backup before replacing a copy.", "تُحفظ مساحة عملك تلقائيًا. إذا عُدّلت على جهازين، اختر النسخة المعتمدة. صدّر نسخة احتياطية قبل استبدال نسخة.")}</p>${btn(L("Retry sync", "إعادة المزامنة"),"cloud-sync")}<details><summary>${L("Resolve conflict", "حل تعارض")}</summary>${btn(L("Use cloud copy", "اعتماد النسخة السحابية"),"cloud-remote")}${btn(L("Use this device’s copy", "اعتماد نسخة هذا الجهاز"),"cloud-local")}</details></details>`;
+  }
+  document.addEventListener("click", async e=>{
+    const action=e.target.closest("[data-action]")?.dataset.action;
+    if(!cloud || !action?.startsWith("cloud-"))return;
+    if(action==="cloud-sync")await cloud.resume();
+
+    if(action==="cloud-remote" || action==="cloud-local")await cloud.resolve(action.slice(6));
+  });
+  if(cloud){
+    const update=db.update;
+    let pending;
+    db.update=fn=>{const result=update(fn);clearTimeout(pending);pending=setTimeout(()=>cloud.sync(),700);return result;};
+    setInterval(()=>cloud.resume(),15000);
+    window.addEventListener("online",()=>cloud.resume());
+    window.addEventListener("north:local-change",()=>{clearTimeout(pending);pending=setTimeout(()=>cloud.sync(),700);});
+    window.NorthBoot={prepare:()=>cloud.resume(),flush:async()=>{flushSaves();await cloud.sync();}};
+  }
   function settingsPanel(d) {
     let panel = $("#lxSettings");
     if (!panel) {
@@ -1401,7 +1638,7 @@
       panel.className = "lx-card lx-margin";
       document.querySelector('[data-view-panel="account"]').prepend(panel);
     }
-    panel.innerHTML = `<h2>${L("Your operating preferences", "تفضيلات نظامك")}</h2><form id="lxSettingsForm"><div class="lx-fields-three">${select(
+    panel.innerHTML = cloudPanel() + `<h2>${L("Your operating preferences", "تفضيلات نظامك")}</h2><form id="lxSettingsForm"><div class="lx-fields-three">${select(
       L("Theme", "المظهر"),
       "theme",
       [
@@ -1427,23 +1664,11 @@
         [6, L("Saturday", "السبت")],
       ],
       d.settings.weekStart,
-    )}${field(L("Daily deep work (hours)", "العمل العميق اليومي (ساعات)"), "dailyHours", d.settings.dailyHours, "number", 'min="0.5" max="24" step="0.5" required')}${field(L("Weekly deep work (hours)", "العمل العميق الأسبوعي (ساعات)"), "weeklyHours", d.settings.weeklyHours, "number", 'min="1" max="168" step="0.5" required')}${field(L("Daily summary time · in-app", "موعد ملخص اليوم · داخل التطبيق"), "summaryTime", d.settings.summaryTime || "20:00", "time")}${field(L("Currency", "العملة"), "currency", d.settings.currency, "text", 'required minlength="3" maxlength="3"')}</div><h3>Pomodoro</h3><div class="lx-fields-two">${field(L("Focus minutes", "دقائق التركيز"), "focusMinutes", d.settings.focusMinutes, "number", 'min="1" max="240" required')}${field(L("Short break minutes", "دقائق الراحة القصيرة"), "shortBreak", d.settings.shortBreak, "number", 'min="1" max="60" required')}${field(L("Long break minutes", "دقائق الراحة الطويلة"), "longBreak", d.settings.longBreak, "number", 'min="1" max="120" required')}${field(L("Sessions before long break", "جلسات قبل الراحة الطويلة"), "cycles", d.settings.cycles, "number", 'min="1" max="12" step="1" required')}</div><div class="lx-fields-two">${[
-      ["autoBreak", L("Auto-start breaks", "بدء الراحة تلقائيًا")],
-      ["autoFocus", L("Auto-start next focus", "بدء التركيز التالي تلقائيًا")],
-      ["sound", L("Completion sound", "صوت الاكتمال")],
-      ["notifications", L("In-app notifications", "تنبيهات داخل التطبيق")],
-    ]
-      .map(
-        ([k, t]) =>
-          `<label class="lx-switch"><input type="checkbox" name="${k}" ${d.settings[k] ? "checked" : ""}>${t}</label>`,
-      )
-      .join(
-        "",
-      )}</div><p class="lx-muted">${L("Changes apply to the next session. Automatic cycles include elapsed time while the device sleeps. Notifications and sound are delivered when the app is awake.", "تطبق التغييرات على الجلسة التالية. الدورات التلقائية تشمل الوقت المنقضي أثناء سكون الجهاز. تصل التنبيهات والأصوات عندما يكون التطبيق نشطًا.")}</p>${area(L("Time categories · one per line", "تصنيفات الوقت · تصنيف في كل سطر"), "categories", d.categories.join("\n"))}<button class="lx-btn lx-primary" type="submit">${L("Save preferences", "حفظ التفضيلات")}</button></form><hr><p>${L("Local workspace. Your data stays in this browser; no cloud sync or remote account protection. Export regularly. Import preserves your login and saves a recovery copy first.", "مساحة عمل محلية. بياناتك في هذا المتصفح؛ لا توجد مزامنة سحابية أو حماية حساب على خادم. صدّر بياناتك دوريًا. الاستيراد يحفظ بيانات الدخول وينشئ نسخة استعادة أولًا.")}</p>${btn(L("Restore previous import", "استعادة ما قبل الاستيراد"), "restore-import")}`;
+    )}${field(L("Daily deep work (hours)", "العمل العميق اليومي (ساعات)"), "dailyHours", d.settings.dailyHours, "number", 'min="0.5" max="24" step="0.5" required')}${field(L("Weekly deep work (hours)", "العمل العميق الأسبوعي (ساعات)"), "weeklyHours", d.settings.weeklyHours, "number", 'min="1" max="168" step="0.5" required')}${field(L("Daily summary time · in-app", "موعد ملخص اليوم · داخل التطبيق"), "summaryTime", d.settings.summaryTime || "20:00", "time")}${field(L("Currency", "العملة"), "currency", d.settings.currency, "text", 'required minlength="3" maxlength="3"')}</div><details class="lx-card"><summary>${L("Time categories", "تصنيفات الوقت")}</summary>${area(L("Time categories · one per line", "تصنيفات الوقت · تصنيف في كل سطر"), "categories", d.categories.join("\n"))}</details><button class="lx-btn lx-primary" type="submit">${L("Save preferences", "حفظ التفضيلات")}</button></form><details class="lx-card"><summary>${L("Data and recovery", "البيانات والاستعادة")}</summary><p>${L("Your workspace syncs automatically with your account. A local copy supports offline work. Export backups regularly. Imports preserve your login and create a recovery copy first.", "تُزامَن مساحة عملك تلقائيًا مع حسابك. تدعم النسخة المحلية العمل دون اتصال. صدّر نسخًا احتياطية دوريًا؛ يحافظ الاستيراد على دخولك ويحفظ نسخة استعادة أولًا.")}</p>${btn(L("Restore previous import", "استعادة ما قبل الاستيراد"), "restore-import")}</details>`;
   }
-  function command(quick = false) {
+  function command() {
     const dialog = $("#lxCommand");
-    dialog.innerHTML = `<div class="lx-dialog-head"><h2>${quick ? L("Quick add", "إضافة سريعة") : L("Search & commands", "البحث والأوامر")}</h2>${btn("×", "close-command", 'aria-label="' + L("Close", "إغلاق") + '"')}</div><label class="lx-field"><span>${L("Find tasks, projects, goals, notes, events or sessions", "ابحث في المهام والمشاريع والأهداف والملاحظات والأحداث والجلسات")}</span><input id="lxSearch" autocomplete="off" placeholder="${L("Type to search…", "اكتب للبحث…")}"></label><div id="lxSearchResults"></div>`;
+    dialog.innerHTML = `<div class="lx-dialog-head"><h2>${L("Search & commands", "البحث والأوامر")}</h2>${btn("×", "close-command", 'aria-label="' + L("Close", "إغلاق") + '"')}</div><label class="lx-field"><span>${L("Find tasks, projects, goals, notes, events or sessions", "ابحث في المهام والمشاريع والأهداف والملاحظات والأحداث والجلسات")}</span><input id="lxSearch" autocomplete="off" placeholder="${L("Type to search…", "اكتب للبحث…")}"></label><div id="lxSearchResults"></div>`;
     dialog.showModal();
     commandResults("");
     $("#lxSearch").focus();
@@ -1574,18 +1799,17 @@
       $("#lxCommand").close();
     if (a === "navigate") navigate(b.dataset.to);
     if (a === "language") window.LifeLegacy.toggleLang();
-    if (a === "new") editor(kind, "", { projectId: b.dataset.project || "" });
+    if (a === "new") editor(kind, "", { projectId: b.dataset.project || "", goalId: b.dataset.goal || "" });
     if (a === "edit") editor(kind, id);
     if (a === "close") $("#lxDialog").close();
     if (a === "close-command") $("#lxCommand").close();
-    if (a === "command" || a === "quick") command(a === "quick");
+    if (a === "command") command();
     if (a === "menu")
       modal(
         L("Your workspace", "مساحة عملك"),
-        `<div class="lx-menu-grid">${["home", "goals", "tasks", "focus", "analytics"]
+        `<div class="lx-menu-grid">${primaryRoutes
           .map(k => btn(icon(k) + name(k), "navigate", `data-to="${k}"`)).join("")}</div>
-          <details class="lx-nav-more"><summary>${L("More", "المزيد")}</summary><div class="lx-menu-grid">${Object.keys(labels)
-          .filter(k => !["home", "goals", "tasks", "focus", "analytics", "account"].includes(k))
+          <details class="lx-nav-more"><summary>${L("More", "المزيد")}</summary><div class="lx-menu-grid">${secondaryRoutes
           .map(k => btn(icon(k) + name(k), "navigate", `data-to="${k}"`)).join("")}</div></details>
           ${btn(name("account"), "navigate", 'data-to="account"')}`,
       );
@@ -1594,6 +1818,7 @@
       render();
     }
     if (a === "manual") manualDialog();
+    if (a === "pomodoro-settings") pomodoroSettings();
     if (a === "filter") {
       taskFilter = b.dataset.filter;
       render();
@@ -1603,8 +1828,6 @@
       render();
     }
     if (a === "planning-mode") navigate("planning", b.dataset.mode);
-    if (a === "preset")
-      $("#lxFocusForm [name=targetMinutes]").value = b.dataset.minutes;
     if (a === "pomodoro") {
       navigate("focus");
       if ($("#lxFocusForm")) $("#lxFocusForm [name=type]").value = "pomodoro";
@@ -1687,14 +1910,14 @@
         const t = d.settings.moneyTodos?.find((t) => t.id === id);
         if (t) t.done = !t.done;
       });
-    if (a === "habit-toggle")
-      await mutate((d) => {
-        const h = d.habits.find((h) => h.id === id);
-        h.checks = h.checks || [];
-        h.checks = h.checks.includes(C.day())
-          ? h.checks.filter((x) => x !== C.day())
-          : [...h.checks, C.day()];
-      });
+    if (a === "habit-toggle") {
+      await mutate((d) => C.toggleHabit(d, id, C.day()));
+      window.LifeLegacy?.renderAll?.();
+    }
+    if (a === "habit-toggle-day") {
+      await mutate((d) => C.toggleHabit(d, id, b.dataset.date));
+      window.LifeLegacy?.renderAll?.();
+    }
     if (a === "convert") {
       const target = document.querySelector(`[name="convert-${id}"]`).value;
       const item = db.read().inbox.find((x) => x.id === id);
@@ -1854,7 +2077,7 @@
           "amount",
           "value",
         ])
-          if (k in data) data[k] = Number(data[k]);
+          if (k in data) if (form.elements[k]) data[k] = Number(data[k]);
         if (!String(data.name || data.title || "").trim()) {
           notice(L("Enter a title.", "أدخل عنوانًا."), true);
           return;
@@ -1897,6 +2120,12 @@
             item.history = item.history || [{ date: C.day(), value: 0 }];
             item.momentum = item.momentum || 0;
             item.color = item.color || "#789b8b";
+          }
+          if (kind === "habits") {
+            item.checks = item.checks || [];
+            item.frequency = data.frequency || "daily";
+            item.goalId = data.goalId || "";
+            item.impact = Number(data.impact) >= 0 ? Number(data.impact) : 5;
           }
           if (kind === "tasks") {
             item.subtasks = data.subtaskText
@@ -1983,7 +2212,7 @@
           );
         }
       }
-      if (form.id === "lxSettingsForm") {
+      if (["lxSettingsForm", "lxPomodoroForm"].includes(form.id)) {
         for (const k of [
           "dailyHours",
           "weeklyHours",
@@ -1993,11 +2222,11 @@
           "cycles",
           "weekStart",
         ])
-          data[k] = Number(data[k]);
+          if (form.elements[k]) data[k] = Number(data[k]);
         for (const k of ["autoBreak", "autoFocus", "sound", "notifications"])
-          data[k] = form.elements[k].checked;
+          if (form.elements[k]) data[k] = form.elements[k].checked;
         result = await mutate((d) => {
-          d.categories = [
+          if (typeof data.categories === "string") d.categories = [
             ...new Set([
               ...C.categories,
               ...data.categories
@@ -2010,7 +2239,7 @@
           delete data.categories;
           Object.assign(d.settings, data);
         });
-        if (result) notice(L("Preferences saved", "تم حفظ التفضيلات"));
+        if (result) { if (form.id === "lxPomodoroForm") $("#lxDialog").close(); render(); notice(L("Preferences saved", "تم حفظ التفضيلات")); }
       }
     } catch (err) {
       if (err.message === "fileTooLarge")
@@ -2259,6 +2488,18 @@
           "اكتمل هدف العمل العميق اليومي",
         ),
       });
+    d.habits.forEach((habit) => {
+      if (habit.archived || !habit.time) return;
+      const doneToday = habit.checks?.includes(today);
+      if (doneToday) return;
+      const at = +new Date(today + "T" + habit.time);
+      if (Date.now() >= at && Date.now() - at <= 3600000) {
+        alerts.push({
+          id: "habit-" + habit.id + "-" + today,
+          title: L("Habit reminder: ", "تذكير بالعادة: ") + habit.title,
+        });
+      }
+    });
     d.events.forEach((event) => {
       const at = +new Date(event.date + "T" + (event.startTime || "00:00"));
       if (at - Date.now() > 0 && at - Date.now() <= 600000)

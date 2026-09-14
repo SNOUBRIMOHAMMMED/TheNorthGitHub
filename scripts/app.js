@@ -1,5 +1,6 @@
 (() => {
 const APP_KEY="lifeos_v11_accounts", SESSION_KEY="lifeos_v11_session";
+localStorage.removeItem(SESSION_KEY); // Restore only after Supabase establishes the identity.
 const palette=["#5B8CFF","#37C98A","#FF6A64","#A57BFF","#FF9A4D","#39C7D2","#E7B94B","#F06CB5","#7D91FF"];
 const $=(s,p=document)=>p.querySelector(s), $$=(s,p=document)=>[...p.querySelectorAll(s)];
 const iso=()=>window.LifeCore.day();
@@ -20,7 +21,7 @@ startNow:"Start now",heroPill:"YOUR PERSONAL EXECUTION SYSTEM",landingHeadline:"
 authKicker:"YOUR PERSONAL EXECUTION SYSTEM",authHeadline:"Lead your life with the same clarity you expect from your business.",authSub:"Goals, signals, execution and recovery — one private operating system for people who refuse to run on noise.",
 authPoint1:"One board for the direction of every goal",authPoint2:"Know where your attention has the highest return",authPoint3:"Turn execution into visible momentum",
 signIn:"Sign in",createAccount:"Create account",welcomeBack:"Welcome back to your command center",loginHint:"Continue from the exact point where your execution stopped.",email:"Email",password:"Password",
-localAccountNote:"Trial account: your data is stored on this browser until cloud sync is connected.",buildYourSystem:"Create your private operating system",signupHint:"Start with your identity. Your workspace stays intentionally empty until you define what matters.",
+localAccountNote:"Your account saves automatically. Confirm your email to begin.",buildYourSystem:"Create your private operating system",signupHint:"Start with your identity. Your workspace stays intentionally empty until you define what matters.",
 yourName:"Your name",createMyAccount:"Create my account",dashboard:"Dashboard",goals:"Goals",today:"Today",planner:"Planner",notifications:"Notifications",account:"Account",accountSettings:"Account & settings",
 addTask:"Add task",momentum:"Momentum",startHere:"START HERE",emptyHeadline:"What do you want to move forward first?",emptySub:"Create your first big goal. THE NORTH will build its line from zero and connect your daily actions to it.",
 createFirstGoal:"Create my first goal",todaySignals:"TODAY'S SIGNALS",whatMatters:"Executive signals",goalMarket:"GOAL MARKET",momentumDashboard:"Goal momentum map",
@@ -49,7 +50,7 @@ startNow:"ابدأ الآن",heroPill:"نظامك الشخصي للتنفيذ",l
 authKicker:"نظامك الشخصي للتنفيذ",authHeadline:"قُد حياتك بالوضوح نفسه الذي تقود به أعمالك.",authSub:"أهداف، إشارات، تنفيذ، واستعادة للمسار — في نظام خاص لمن يرفض أن يدير حياته بالارتجال.",
 authPoint1:"لوحة واحدة ترى فيها اتجاه كل هدف",authPoint2:"اعرف أين يحقق انتباهك أعلى عائد",authPoint3:"حوّل التنفيذ اليومي إلى زخم تراه بوضوح",
 signIn:"تسجيل الدخول",createAccount:"إنشاء حساب",welcomeBack:"مرحبًا بعودتك إلى مركز قيادتك",loginHint:"أكمل التنفيذ من النقطة التي توقفت عندها، دون ضوضاء أو تشتيت.",email:"البريد الإلكتروني",password:"كلمة المرور",
-localAccountNote:"حساب تجريبي: بياناتك محفوظة في هذا المتصفح إلى أن نربط المزامنة السحابية.",buildYourSystem:"أنشئ نظامك التنفيذي الخاص",signupHint:"ابدأ بهويتك فقط. ستبقى مساحة العمل فارغة حتى تحدد أنت ما يستحق أن يدخلها.",
+localAccountNote:"حسابك يحفظ بياناتك تلقائيًا. أكّد بريدك للبدء.",buildYourSystem:"أنشئ نظامك التنفيذي الخاص",signupHint:"ابدأ بهويتك فقط. ستبقى مساحة العمل فارغة حتى تحدد أنت ما يستحق أن يدخلها.",
 yourName:"اسمك",createMyAccount:"إنشاء حسابي",dashboard:"القيادة",goals:"الأهداف",today:"التنفيذ",planner:"الخطة",notifications:"الإشارات",account:"الحساب",accountSettings:"الملف الشخصي والتحكم",
 addTask:"إضافة مهمة",momentum:"الزخم",startHere:"ابدأ من هنا",emptyHeadline:"حدّد أول نتيجة تستحق أن تتحرك الآن.",emptySub:"ابدأ بهدف واحد مهم. سيبدأ من الصفر، ثم تبني تقدمه بما تنفذه كل يوم.",
 createFirstGoal:"تحديد أول هدف",todaySignals:"إشارات اليوم",whatMatters:"الإشارات التنفيذية الآن",goalMarket:"مؤشر الأهداف",momentumDashboard:"خريطة زخم الأهداف",
@@ -71,150 +72,176 @@ accountExists:"يوجد حساب بهذا البريد بالفعل.",accountCre
 Object.assign(dict.en, {
   "nlSkip": "Skip to content",
   "nlProduct": "The system",
+  "nlScienceNav": "The Science",
   "nlApproach": "The approach",
   "nlQuestions": "Questions",
   "nlStart": "Get started",
-  "nlEyebrow": "A PERSONAL OPERATING SYSTEM FOR FOUNDERS",
-  "nlHero1": "A clear direction.",
-  "nlHero2": "A deliberate day.",
-  "nlIntro": "Keep your goals in sight, give your priorities focused time, and see what moved forward. One workspace for the person behind the business.",
-  "nlCreate": "Create your workspace",
-  "nlExplore": "Explore the system",
-  "nlTrust": "Arabic & English. Desktop & mobile. Your own pace.",
-  "nlSample": "ILLUSTRATIVE WORKSPACE · SAMPLE DATA",
+  "nlEyebrow": "EXECUTIVE COGNITIVE ARCHITECTURE FOR BUILDERS",
+  "nlHero1": "Stop hoarding tasks.",
+  "nlHero2": "Build unstoppable momentum.",
+  "nlIntro": "Cognitive neuroscience confirms: conventional to-do lists trigger dopamine for trivia while starving strategic outcomes. THE NORTH is an executive execution architecture that eliminates cognitive friction and connects your daily hours directly to visible goal velocity.",
+  "nlCreate": "Launch your workspace",
+  "nlExplore": "The Science & System",
+  "nlTrust": "Validated by neuroscience. Arabic & English. Desktop & mobile.",
+  "nlSample": "LIVE EXECUTIVE RADAR · ACTIVE PROJECTION",
   "nlToday": "Today",
   "nlGoals": "Goals",
   "nlFocus": "Focus",
   "nlHabits": "Habits",
   "nlMoney": "Finances",
-  "nlDirection": "YOUR DIRECTION, AT A GLANCE",
-  "nlPreviewTitle": "Move the work that matters.",
+  "nlDirection": "EXECUTIVE RADAR, AT A GLANCE",
+  "nlPreviewTitle": "Visible trajectory over task fatigue.",
   "nlThisWeek": "This week",
-  "nlLaunch": "Launch the next product",
-  "nlProgress": "Goal progress",
-  "nlRemain32": "32% remaining",
-  "nlOperations": "Build a stronger operation",
-  "nlRemain58": "58% remaining",
-  "nlDeepWork": "DEEP WORK",
-  "nlStrategy": "Product strategy",
+  "nlLaunch": "Strategic expansion",
+  "nlProgress": "Goal trajectory",
+  "nlRemain32": "On-track · 32% to finish",
+  "nlOperations": "Autonomous operations",
+  "nlRemain58": "Recovering · 58% to finish",
+  "nlDeepWork": "PROTECTED DEEP WORK",
+  "nlStrategy": "Cognitive architecture",
   "nlSession": "Focus session",
-  "nlEveryMinute": "Every minute linked to a meaningful goal.",
-  "nlPriorities": "TODAY’S PRIORITIES",
-  "nlProposal": "Review the launch proposal",
-  "nlInterviews": "Prepare customer interviews",
-  "nlTracked": "FOCUS TIME TODAY",
-  "nlPreviewCaption": "Goals, focused work and daily priorities — in one view.",
-  "nlBuiltFor": "BUILT AROUND HOW YOU WORK",
-  "nlFoundation": "Direction → Focus → Execution → Review",
-  "nlSystemLabel": "01 / YOUR PERSONAL SYSTEM",
-  "nlSystemTitle": "Less switching. More perspective.",
-  "nlSystemSub": "Connect the long-term goal to the work on your calendar today. Then measure the effort behind your progress.",
-  "nlGoalsTitle": "Keep the destination visible.",
-  "nlGoalsBody": "See your goals, their momentum and the distance left to go. Choose your next task with the bigger picture in view.",
-  "nlGoalDetail": "Goals · Projects · Daily priorities",
-  "nlFocusTitle": "Give important work its time.",
-  "nlFocusBody": "Use a stopwatch, countdown or Pomodoro session. Track actual focus time against your task, project and goal.",
-  "nlFocusDetail": "Focus · Breaks · Time reports",
-  "nlLifeTitle": "Build a rhythm you can sustain.",
-  "nlLifeBody": "Review your habits, plan your week and give your income a clear purpose. Keep the essentials close without crowding your day.",
-  "nlLifeDetail": "Habits · Planning · Finances",
-  "nlPhotoCaption": "Space for deliberate work.",
-  "nlApproachLabel": "02 / A MORE DELIBERATE WAY TO WORK",
-  "nlApproachTitle": "Your business has a strategy. Your day deserves one too.",
-  "nlApproachBody": "A full calendar can hide an unclear direction. THE NORTH brings your attention back to what you chose to build, and the next action that will move it forward.",
-  "nlPrinciple1": "Choose the outcome before the task.",
-  "nlPrinciple2": "Protect the time you need to execute.",
-  "nlPrinciple3": "Review the work. Adjust the direction.",
-  "nlFaqLabel": "03 / BEFORE YOU BEGIN",
-  "nlFaqTitle": "A few clear answers.",
-  "nlQ1": "Who is THE NORTH for?",
-  "nlA1": "Founders, entrepreneurs and professionals who want to connect their goals with daily execution. This is your personal workspace, not a shared team management platform.",
+  "nlEveryMinute": "Zero cognitive residue. Every minute linked to a destination.",
+  "nlPriorities": "EXECUTION PRIORITIES (4 FIELDS ONLY)",
+  "nlProposal": "Close Series A term sheet",
+  "nlInterviews": "Deploy customer retention engine",
+  "nlTracked": "DEEP WORK TODAY",
+  "nlPreviewCaption": "Momentum radar, focused execution and real trajectory — in one view.",
+  "nlBuiltFor": "ENGINEERED FOR HUMAN COGNITION",
+  "nlFoundation": "Direction → Protected Focus → Momentum Velocity → Review",
+  "nlScienceLabel": "01 / THE COGNITIVE NEUROSCIENCE OF EXECUTION",
+  "nlScienceTitle": "Why conventional productivity apps fail high performers.",
+  "nlScienceSub": "Your brain is an executive decision engine, not a bucket for infinite to-do lists. Decades of cognitive science confirm three fatal traps:",
+  "nlTrap1Title": "Attention Residue (Dr. Sophie Leroy)",
+  "nlTrap1Body": "Context switching leaves fragments of attention stuck in prior tasks. Multitasking or managing bloated 15-field task lists degrades cognitive capacity by up to 40%.",
+  "nlTrap1Sol": "THE NORTH ANTIDOTE: Single-task Deep Work Capsule with zero interruptions and a strict 4-field execution protocol.",
+  "nlTrap2Title": "The Cheap Dopamine Trap (Dr. Cal Newport)",
+  "nlTrap2Body": "Checking off 10 easy, trivial to-dos produces artificial dopamine, tricking you into feeling accomplished while your existential core goals stall.",
+  "nlTrap2Sol": "THE NORTH ANTIDOTE: Radar Momentum Map; only focused hours on core strategic outcomes move your trajectory line above the 60% stability threshold.",
+  "nlTrap3Title": "Hyperbolic Discounting (George Ainslie)",
+  "nlTrap3Body": "The human brain heavily discounts future milestones in favor of immediate gratification, generating chronic executive procrastination.",
+  "nlTrap3Sol": "THE NORTH ANTIDOTE: Immediate visual velocity feedback; decay mechanisms turn distant goals into an active, urgent daily trajectory.",
+  "nlSystemLabel": "02 / THE 4-PILLAR OPERATING SYSTEM",
+  "nlSystemTitle": "Zero clutter. Pure executive velocity.",
+  "nlSystemSub": "Strip away unnecessary fields and busywork. Connect long-term destinations directly to daily focus.",
+  "nlGoalsTitle": "Visual Momentum Radar",
+  "nlGoalsBody": "All your goals on a single trajectory chart. Know instantly which outcomes are thriving, plateauing, or slipping below stability.",
+  "nlGoalDetail": "Trajectory · Velocity · 60% Stability Line",
+  "nlFocusTitle": "Protected Deep Work",
+  "nlFocusBody": "Measure actual focused minutes with stopwatch, countdown or Pomodoro. Every second is credited directly to your strategic goals.",
+  "nlFocusDetail": "Deep Work · Breaks · Attention Audit",
+  "nlLifeTitle": "Cognitive Simplicity",
+  "nlLifeBody": "Exactly 4 essential fields per task. No bloated descriptions, no decision paralysis, no endless forms.",
+  "nlLifeDetail": "Action · Goal · Date · Priority",
+  "nlPhotoCaption": "A private space for deliberate execution.",
+  "nlApproachLabel": "03 / A MORE DELIBERATE WAY TO OPERATE",
+  "nlApproachTitle": "Your business has a strategy. Your attention deserves one too.",
+  "nlApproachBody": "A full calendar often conceals an unclear direction. THE NORTH brings your attention back to what you chose to build, and the next single action that will move it forward.",
+  "nlPrinciple1": "Choose the strategic outcome before the action.",
+  "nlPrinciple2": "Protect deep work from context switching.",
+  "nlPrinciple3": "Monitor momentum trajectory, not task hoarding.",
+  "nlFaqLabel": "04 / FREQUENTLY ANSWERED",
+  "nlFaqTitle": "Clarity before you begin.",
+  "nlQ1": "Who is THE NORTH engineered for?",
+  "nlA1": "Founders, executives and high-performers who need to translate high-level vision into daily focused momentum without administrative bloat.",
   "nlQ2": "Where is my data stored?",
-  "nlA2": "The current version saves your workspace in this browser. Export backups regularly. Moving to another browser or device requires exporting and importing your data; automatic cloud sync is not included.",
-  "nlQ3": "Can I use it in Arabic and on my phone?",
-  "nlA3": "Yes. Switch between Arabic and English, with right-to-left layouts for Arabic and responsive navigation for mobile, tablet and desktop.",
-  "nlQ4": "How does focus tracking work?",
-  "nlA4": "Choose a task or goal, start your session, pause when needed and save when finished. Your reports count recorded focus time and exclude breaks and pauses. Active sessions are recovered after refresh.",
-  "nlClosingLabel": "FIND YOUR NORTH.",
+  "nlA2": "Securely in your cloud account powered by Supabase. Accessible across all your devices with offline sync support.",
+  "nlQ3": "Does it support Arabic and mobile natively?",
+  "nlA3": "Yes. Built ground-up with native RTL Arabic and LTR English, featuring an ultra-ergonomic floating mobile dock.",
+  "nlQ4": "How does momentum tracking differ from a to-do list?",
+  "nlA4": "To-do lists count quantity; THE NORTH measures trajectory. If you stop executing on a goal, its line decays below the 60% threshold, making drift immediately visible.",
+  "nlClosingLabel": "FIND YOUR TRUE NORTH.",
   "nlClosingTitle": "Make your next move count.",
-  "nlClosingBody": "Start with one goal. Give it focused time. Build from there.",
-  "nlFooter": "A clearer direction. A more intentional life."
+  "nlClosingBody": "Start with one vital goal. Protect its focused time. Build unbreakable momentum.",
+  "nlFooter": "Cognitive clarity. Relentless execution. True North."
 });
 Object.assign(dict.ar, {
   "nlSkip": "انتقل إلى المحتوى",
   "nlProduct": "النظام",
-  "nlApproach": "المنهج",
+  "nlScienceNav": "الأساس العلمي",
+  "nlApproach": "المنهج التنفيذي",
   "nlQuestions": "أسئلة شائعة",
   "nlStart": "ابدأ الآن",
-  "nlEyebrow": "نظام شخصي لحياة رائد الأعمال",
-  "nlHero1": "وجهتك واضحة.",
-  "nlHero2": "ويومك له معنى.",
-  "nlIntro": "أبقِ أهدافك أمامك، وامنح أولوياتك وقتًا للتركيز، واعرف ما أنجزته بالفعل. مساحة واحدة لتنظيم حياتك خلف كل ما تبنيه.",
-  "nlCreate": "أنشئ مساحتك",
-  "nlExplore": "اكتشف النظام",
-  "nlTrust": "بالعربية والإنجليزية. على الحاسوب والهاتف. بإيقاعك أنت.",
-  "nlSample": "معاينة توضيحية · بيانات تجريبية",
+  "nlEyebrow": "بنية عصبية وإدراكية لتنفيذ القادة والمبتكرين",
+  "nlHero1": "توقّف عن تكديس المهام.",
+  "nlHero2": "ابنِ زخمًا حقيقيًا لا يتوقف.",
+  "nlIntro": "تؤكد أبحاث العلوم الإدراكية والعصبية: قوائم المهام التقليدية تمنح الدماغ دوبامين رخيصًا ومزيفًا عند إنجاز التوافه، بينما تُجوّع الأهداف الاستراتيجية الكبرى. THE NORTH هو معمارية تنفيذية مصممة لتدمير التشتت، وربط ساعات تركيزك اليومية مباشرة بسرعة زخم أهدافك.",
+  "nlCreate": "أطلق مساحة عملك",
+  "nlExplore": "الأساس العلمي والنظام",
+  "nlTrust": "مبني على علم الأعصاب الإدراكي. عربي وإنجليزي. حاسوب وهاتف.",
+  "nlSample": "رادار الزخم التنفيذي المباشر · مسار حي",
   "nlToday": "اليوم",
   "nlGoals": "الأهداف",
   "nlFocus": "التركيز",
   "nlHabits": "العادات",
   "nlMoney": "المال",
-  "nlDirection": "وجهتك، بنظرة واحدة",
-  "nlPreviewTitle": "تقدّم فيما يستحق وقتك.",
+  "nlDirection": "رادار الزخم التنفيذي، بنظرة واحدة",
+  "nlPreviewTitle": "رؤية المسار الحقيقي بدل إرهاق المهام اللانهائية.",
   "nlThisWeek": "هذا الأسبوع",
-  "nlLaunch": "إطلاق المنتج القادم",
-  "nlProgress": "تقدّم الهدف",
-  "nlRemain32": "متبقٍّ 32٪",
-  "nlOperations": "تطوير منظومة العمل",
-  "nlRemain58": "متبقٍّ 58٪",
-  "nlDeepWork": "العمل العميق",
-  "nlStrategy": "استراتيجية المنتج",
+  "nlLaunch": "التوسع الاستراتيجي للشركة",
+  "nlProgress": "مسار الزخم",
+  "nlRemain32": "على المسار · متبقٍّ 32٪ للهدف",
+  "nlOperations": "أتمتة العمليات الأساسية",
+  "nlRemain58": "في طور الاستعادة · متبقٍّ 58٪",
+  "nlDeepWork": "جلسة عمل عميق محميّة",
+  "nlStrategy": "المعمارية الإدراكية",
   "nlSession": "جلسة تركيز",
-  "nlEveryMinute": "كل دقيقة مرتبطة بهدف يستحقها.",
-  "nlPriorities": "أولويات اليوم",
-  "nlProposal": "مراجعة خطة الإطلاق",
-  "nlInterviews": "التحضير لمقابلات العملاء",
-  "nlTracked": "وقت التركيز اليوم",
-  "nlPreviewCaption": "أهدافك وتركيزك وأولويات يومك، في مكان واحد.",
-  "nlBuiltFor": "مصمّم حول طريقة عملك",
-  "nlFoundation": "وجهة ← تركيز ← تنفيذ ← مراجعة",
-  "nlSystemLabel": "01 / نظامك الشخصي",
-  "nlSystemTitle": "تنقّل أقل. رؤية أشمل.",
-  "nlSystemSub": "اربط هدفك البعيد بما تعمل عليه اليوم، ثم قِس الجهد الذي يقود تقدّمك.",
-  "nlGoalsTitle": "أبقِ الوجهة أمامك.",
-  "nlGoalsBody": "تابع أهدافك وتقدّمها والمسافة المتبقية. اختر مهمتك التالية وأنت ترى الصورة الكاملة.",
-  "nlGoalDetail": "أهداف · مشاريع · أولويات يومية",
-  "nlFocusTitle": "امنح العمل المهم وقته.",
-  "nlFocusBody": "اختر ساعة إيقاف أو عدًّا تنازليًا أو جلسة بومودورو. اربط وقت تركيزك الفعلي بالمهمة والمشروع والهدف.",
-  "nlFocusDetail": "تركيز · استراحات · تقارير الوقت",
-  "nlLifeTitle": "ابنِ إيقاعًا يدوم.",
-  "nlLifeBody": "راجع عاداتك، وخطّط لأسبوعك، وحدّد وجهة دخلك. أبقِ الأساسيات قريبة دون أن تزدحم تفاصيل يومك.",
-  "nlLifeDetail": "عادات · تخطيط · مال",
-  "nlPhotoCaption": "مساحة للعمل بوضوح.",
-  "nlApproachLabel": "02 / عمل أكثر وعيًا",
-  "nlApproachTitle": "لعملك استراتيجية. ويومك يستحق واحدة.",
-  "nlApproachBody": "قد يخفي الجدول المزدحم وجهة غير واضحة. يعيدك الشمال إلى ما اخترت بناءه، وإلى الخطوة التالية التي تقرّبك منه.",
-  "nlPrinciple1": "حدّد النتيجة قبل اختيار المهمة.",
-  "nlPrinciple2": "خصّص وقتًا محميًا للتنفيذ.",
-  "nlPrinciple3": "راجع ما أنجزت، وعدّل اتجاهك.",
-  "nlFaqLabel": "03 / قبل أن تبدأ",
-  "nlFaqTitle": "إجابات واضحة.",
-  "nlQ1": "لمن صُمّم الشمال؟",
-  "nlA1": "لرواد الأعمال والمؤسسين والمهنيين الذين يريدون ربط أهدافهم بالتنفيذ اليومي. هذه مساحتك الشخصية، وليست منصة مشتركة لإدارة فريق العمل.",
-  "nlQ2": "أين تُحفظ بياناتي؟",
-  "nlA2": "تحفظ النسخة الحالية بياناتك داخل هذا المتصفح. صدّر نسخة احتياطية بانتظام. الانتقال إلى جهاز أو متصفح آخر يتطلب تصدير البيانات واستيرادها؛ المزامنة السحابية التلقائية غير متاحة.",
-  "nlQ3": "هل يعمل بالعربية وعلى الهاتف؟",
-  "nlA3": "نعم. يمكنك التبديل بين العربية والإنجليزية، مع واجهة عربية من اليمين إلى اليسار وتصميم يناسب الهاتف والجهاز اللوحي والحاسوب.",
-  "nlQ4": "كيف يُحسب وقت التركيز؟",
-  "nlA4": "اختر مهمة أو هدفًا، وابدأ الجلسة، وأوقفها مؤقتًا عند الحاجة، ثم احفظها عند الانتهاء. تحسب التقارير وقت التركيز المسجّل دون الاستراحات والتوقفات المؤقتة، وتُستعاد الجلسة النشطة بعد تحديث الصفحة.",
-  "nlClosingLabel": "اعرف وجهتك.",
-  "nlClosingTitle": "اجعل خطوتك القادمة مؤثرة.",
-  "nlClosingBody": "ابدأ بهدف واحد. امنحه وقتًا للتركيز. ثم ابنِ عليه.",
-  "nlFooter": "وجهة أوضح. وحياة أكثر وعيًا."
+  "nlEveryMinute": "صفر بقايا انتباه مشتت. كل دقيقة مصبوبة في وجهتك الكبرى.",
+  "nlPriorities": "أولويات التنفيذ (4 خانات جوهرية فقط)",
+  "nlProposal": "إغلاق جولة التمويل الاستثماري",
+  "nlInterviews": "نشر محرك استبقاء العملاء",
+  "nlTracked": "ساعات العمل العميق اليوم",
+  "nlPreviewCaption": "رادار الزخم، والعمل العميق المحمي، والمسار الاستراتيجي الحقيقي — في شاشة واحدة.",
+  "nlBuiltFor": "مصمّم وفق الهندسة الإدراكية للدماغ البشري",
+  "nlFoundation": "وجهة استراتيجية ← تركيز محمي ← زخم تنفيذي ← مراجعة دورية",
+  "nlScienceLabel": "01 / العلوم العصبية والإدراكية للتنفيذ",
+  "nlScienceTitle": "لماذا تفشل تطبيقات الإنتاجية التقليدية مع أصحاب الإنجاز العالي؟",
+  "nlScienceSub": "دماغك محرك لاتخاذ القرارات الاستراتيجية، وليس سلة مهملات لتكديس المهام. تكشف عقود من أبحاث علم الأعصاب 3 أفخاخ قاتلة للإنتاجية:",
+  "nlTrap1Title": "بقايا الانتباه (Attention Residue - د. صوفي ليروي)",
+  "nlTrap1Body": "الانتقال السريع بين المهام المتعددة يترك شظايا عصبية من انتباهك عالقة في المهمة السابقة. ملء استمارات المهام المكتظة بـ 15 خانة يدمر طاقتك الإدراكية بنسبة تصل إلى 40%.",
+  "nlTrap1Sol": "ترياق THE NORTH: كبسولة عمل عميق بمهمة واحدة، صفر مشتتات، وبروتوكول تنفيذي لا يتجاوز 4 خانات جوهرية.",
+  "nlTrap2Title": "فخ الدوبامين الرخيص (The Cheap Dopamine Trap - د. كال نيوبورت)",
+  "nlTrap2Body": "شطب 10 مهام تافهة وسريعة يُفرز دوبامين زائفًا يوهمك بالإنجاز، بينما تظل أهدافك المصيرية متجمدة ومؤجلة لأسابيع.",
+  "nlTrap2Sol": "ترياق THE NORTH: رادار الزخم الذكي؛ ساعات التركيز على النتائج الاستراتيجية فقط هي ما يرفع منحنى تقدمك فوق خط الأمان (60%).",
+  "nlTrap3Title": "الخصم الزمني المفرط (Hyperbolic Discounting - جورج إينزلي)",
+  "nlTrap3Body": "العقل البشري يقلل بيولوجياً من قيمة المكافآت المستقبلية البعيدة مفضلاً المتعة اللحظية، ما يولد التسويف المزمن لدى القادة والمطورين.",
+  "nlTrap3Sol": "ترياق THE NORTH: تغذية بصرية راجعة فورية لسرعة الإنجاز؛ نظام الانحدار الديناميكي يحول الهدف البعيد إلى مسار حي يستنفر انتباهك يومياً.",
+  "nlSystemLabel": "02 / ركائز النظام التنفيذي الأربعة",
+  "nlSystemTitle": "صفر فوضى. كفاءة وسرعة تنفيذية مطلقة.",
+  "nlSystemSub": "جردنا النظام من كل الخانات الإدارية المرهقة التي تستهلك طاقتك. اربط وجهتك الكبرى بتركيز يومك مباشرة.",
+  "nlGoalsTitle": "رادار الزخم البصري",
+  "nlGoalsBody": "جميع أهدافك على رسم بياني حي واحد. اعرف بنظرة خاطفة أي الأهداف يزدهر، وأيها يتباطأ، وأيها يواجه خطر الهبوط تحت الخط الحرج.",
+  "nlGoalDetail": "مسار الزخم · سرعة الإنجاز · خط استقرار 60٪",
+  "nlFocusTitle": "العمل العميق المحمي",
+  "nlFocusBody": "سجّل دقائق التركيز الحقيقية بساعة إيقاف، أو عدّ تنازلي، أو بومودورو. كل ثانية تُقيد وتُحتسب مباشرة لصالح أهدافك الاستراتيجية.",
+  "nlFocusDetail": "عمل عميق · فترات راحة محسوبة · تدقيق الانتباه",
+  "nlLifeTitle": "البساطة الإدراكية القصوى",
+  "nlLifeBody": "4 خانات أساسية فقط لكل مهمة. لا أوصاف طويلة، لا شلل في اتخاذ القرار، ولا استمارات تملؤها وتضيع وقتك.",
+  "nlLifeDetail": "العمل المطلوب · الهدف المرتبط · الموعد · الأولوية",
+  "nlPhotoCaption": "مساحة خاصة للتنفيذ الواعي الحاسم.",
+  "nlApproachLabel": "03 / منهج تنفيذي حاسم للأعمال",
+  "nlApproachTitle": "لمشروعك استراتيجية واضحة. وانتباهك يستحق استراتيجية تحميه.",
+  "nlApproachBody": "الجدول المزدحم بالاجتماعات غالبًا ما يخفي غياب الوجهة الحقيقية. THE NORTH يعيد توجيه طاقتك العصبية نحو ما اخترت بناءه، والخطوة التالية الحاسمة لتحقيقه.",
+  "nlPrinciple1": "حدّد النتيجة الاستراتيجية قبل اختيار المهمة.",
+  "nlPrinciple2": "احمِ ساعات العمل العميق من شتات التبديل بين المهام.",
+  "nlPrinciple3": "راقب منحنى الزخم الحقيقي، لا عدد المهام المتراكمة.",
+  "nlFaqLabel": "04 / إجابات حاسمة",
+  "nlFaqTitle": "وضوح تام قبل أن تبدأ.",
+  "nlQ1": "لمن صُمّم نظام THE NORTH خصيصًا؟",
+  "nlA1": "للمؤسسين، والمديرين التنفيذيين، والمطورين، وأصحاب الإنجازات العالية الذين يحتاجون لتحويل الرؤى الكبرى إلى تركيز يومي دون قيود إدارية مشتتة.",
+  "nlQ2": "أين تُحفظ وتُشفر بياناتي؟",
+  "nlA2": "تُحفظ بأمان مشفر عبر حسابك السحابي المدعوم بقواعد بيانات Supabase، وتتزامن فورياً عبر جميع أجهزتك مع دعم كامل للعمل دون إنترنت.",
+  "nlQ3": "هل يدعم التطبيق اللغة العربية والهاتف بشكل أصيل؟",
+  "nlA3": "نعم بالكامل. تم تصميمه من الصفر بدعم واجهة عربية RTL أصيلة وإنجليزية LTR، مع شريط عائم سفلي ذكي ومريح للغاية على شاشات الهواتف.",
+  "nlQ4": "كيف يختلف تتبع الزخم عن قوائم المهام التقليدية؟",
+  "nlA4": "قوائم المهام تعد الكميات السطحية؛ أما THE NORTH فيقيس الزخم الرياضي. إذا توقفت عن العمل على هدف، يبدأ خط الزخم في الانحدار تلقائياً تحت خط 60٪، مما يكشف الانحراف فوراً ويعيدك للتركيز.",
+  "nlClosingLabel": "اكتشف وجهتك الحقيقية.",
+  "nlClosingTitle": "اجعل كل دقيقة من يومك ذات وزن وتأثير.",
+  "nlClosingBody": "اختر هدفك الاستراتيجي الأهم. احمِ ساعات تركيزك. وابنِ زخمًا لا يقبل التراجع.",
+  "nlFooter": "وضوح إدراكي. تنفيذ بلا هوادة. وجهتك نحو القمة."
 });
 function t(k){return dict[currentLang()][k]||k}
 function getAccounts(){try{return JSON.parse(localStorage.getItem(APP_KEY)||"{}")}catch{return {}}}
-function setAccounts(v){try{localStorage.setItem(APP_KEY,JSON.stringify(v))}catch(e){toast(currentLang()==="ar"?"تعذر الحفظ. تحقق من مساحة التخزين وصدّر نسخة احتياطية.":"Could not save. Check storage and export a backup.");throw e}}
+function setAccounts(v){try{localStorage.setItem(APP_KEY,JSON.stringify(v));window.dispatchEvent(new Event("north:local-change"))}catch(e){toast(currentLang()==="ar"?"تعذر الحفظ. تحقق من مساحة التخزين وصدّر نسخة احتياطية.":"Could not save. Check storage and export a backup.");throw e}}
 function currentEmail(){return localStorage.getItem(SESSION_KEY)||""}
 function account(){return getAccounts()[currentEmail()]||null}
 function currentLang(){return account()?.data?.profile?.lang === "ar" ? "ar" : account()?.data?.profile?.lang === "en" ? "en" : document.documentElement.lang === "ar" ? "ar" : "en"}
@@ -289,29 +316,65 @@ $$("[data-go-signup]").forEach(b=>b.onclick=()=>openAuth("signup"));
 $$("[data-go-login]").forEach(b=>b.onclick=()=>openAuth("login"));
 $("#backToLandingBtn").onclick=showLanding;
 $("#landingLogo").onclick=(e)=>{e.preventDefault();showLanding()};
-$$("[data-scroll-how]").forEach(b=>b.onclick=()=>$("#howItWorks").scrollIntoView({behavior:"smooth"}));
+$$("[data-scroll-how]").forEach(b=>b.onclick=()=>($("#the-science")||$("#howItWorks")).scrollIntoView({behavior:"smooth"}));
 $("#authLangBtn").onclick=toggleLang;$("#landingLangBtn").onclick=toggleLang;$("#langBtn").onclick=toggleLang;$("#mobileLangBtn").onclick=toggleLang;$("#accountLangBtn").onclick=toggleLang;
 
-$("#signupForm").addEventListener("submit",async e=>{
-  e.preventDefault(); const name=$("#signupName").value.trim(), email=$("#signupEmail").value.trim().toLowerCase(), pw=$("#signupPassword").value;
-  const all=getAccounts(); if(all[email])return toast(t("accountExists"));
-  const lang=document.documentElement.lang==="ar"?"ar":"en";
-  all[email]={passwordHash:await hash(pw),data:freshData(name,email,lang)};setAccounts(all);localStorage.setItem(SESSION_KEY,email);
-  toast(t("accountCreated"));showApp();
-});
-$("#loginForm").addEventListener("submit",async e=>{
-  e.preventDefault(); const email=$("#loginEmail").value.trim().toLowerCase(), pw=$("#loginPassword").value; const a=getAccounts()[email];
-  if(!a || a.passwordHash!==await hash(pw))return toast(t("wrongLogin"));localStorage.setItem(SESSION_KEY,email);showApp();
-});
+let authBusy=false;
+async function enterCloud(user) {
+  const email=user.email.toLowerCase(), all=getAccounts();
+  if(all[email]?.cloudUserId && all[email].cloudUserId!==user.id){
+    localStorage.setItem("north_identity_recovery_"+Date.now(),JSON.stringify(all[email]));
+    delete all[email];
+  }
+  if(!all[email])all[email]={data:freshData(user.user_metadata?.name||email.split("@")[0],email,user.user_metadata?.lang||document.documentElement.lang)};
+  all[email].cloudUserId=user.id;
+  delete all[email].passwordHash;
+  setAccounts(all);localStorage.setItem(SESSION_KEY,email);
+  if(window.NorthBoot)await window.NorthBoot.prepare();
+  showApp();
+}
+async function authSubmit(e,signup) {
+  e.preventDefault();if(authBusy)return;authBusy=true;
+  const form=e.target, buttons=[...form.querySelectorAll("button")];buttons.forEach(b=>b.disabled=true);
+  const email=$(signup?"#signupEmail":"#loginEmail").value.trim().toLowerCase();
+  const password=$(signup?"#signupPassword":"#loginPassword");
+  const pw=password.value;
+  try{
+    const result=signup?await window.NorthAuth.signup(email,pw,$("#signupName").value.trim(),document.documentElement.lang):await window.NorthAuth.login(email,pw);
+    if(result.session){await enterCloud(result.user);}
+    else if(signup){
+      // Supabase sometimes returns no session on first signup even with confirm=off.
+      // Immediately attempt sign-in with the same credentials.
+      try{
+        const loginResult=await window.NorthAuth.login(email,pw);
+        if(loginResult.session){await enterCloud(loginResult.user);}
+        else{toast(currentLang()==="ar"?"تم إنشاء الحساب. سجّل الدخول الآن.":"Account created. Please sign in.");authTab("login");$("#loginEmail").value=email;}
+      }catch(loginErr){
+        // If login fails after signup, the account was created but email confirmation may still be pending.
+        const msg=loginErr?.code==="email_not_confirmed"
+          ?(currentLang()==="ar"?"تم إنشاء الحساب. افتح بريدك الإلكتروني للتأكيد ثم سجّل الدخول.":"Account created. Check your email to confirm, then sign in.")
+          :window.NorthAuth.errorMessage(loginErr,currentLang(),false);
+        toast(msg);authTab("login");$("#loginEmail").value=email;
+      }
+    }
+    else{toast(currentLang()==="ar"?"أرسلنا رسالة لتأكيد بريدك. أكّد البريد ثم سجّل الدخول.":"Check your email to confirm your account, then sign in.");authTab("login");$("#loginEmail").value=email;}
+  }catch(err){
+    toast(window.NorthAuth.errorMessage(err,currentLang(),signup));
+  }finally{password.value="";authBusy=false;buttons.forEach(b=>b.disabled=false);}
+}
+
+$("#signupForm").addEventListener("submit",e=>authSubmit(e,true));
+$("#loginForm").addEventListener("submit",e=>authSubmit(e,false));
 
 function rollover(){
   const d=data(); if(!d)return; const today=iso(), last=d.lastOpened||today;if(last===today){ensureToday();return}
   const start=new Date(last+"T12:00:00"), end=new Date(today+"T12:00:00");
   const diff=Math.max(1,Math.round((end-start)/86400000));
   d.goals.forEach(g=>{
+    if(g.archived||g.progress>=100)return;
     for(let i=1;i<=diff;i++){
       const dt=new Date(start);dt.setDate(dt.getDate()+i);const day=window.LifeCore.day(+dt);
-      const hadAction=d.tasks.some(x=>x.goalId===g.id&&x.done&&x.completedDate===day);
+      const hadAction=d.tasks.some(x=>x.goalId===g.id&&x.done&&x.completedDate===day)||d.habits.some(h=>h.goalId===g.id&&h.checks?.includes(day))||(d.sessions||[]).some(s=>s.goalId===g.id&&window.LifeCore.day(s.startedAt)===day);
       if(!hadAction)g.momentum=clamp(g.momentum-5);
       if(!g.history.some(h=>h.date===day))g.history.push({date:day,value:g.momentum});
     }
@@ -356,9 +419,10 @@ function setAvatar(el){if(!el)return;const p=data().profile;if(p.avatar){el.styl
 function renderSummary(){
   const d=data(); if(!d)return;
   const th=d.profile.threshold||60;
-  const total=d.goals.length;
-  const onTrack=d.goals.filter(g=>g.momentum>=th).length;
-  const risk=d.goals.filter(g=>g.momentum<th).length;
+  const activeGoals=d.goals.filter(g=>!g.archived);
+  const total=activeGoals.length;
+  const onTrack=activeGoals.filter(g=>g.momentum>=th).length;
+  const risk=activeGoals.filter(g=>g.momentum<th).length;
   const todays=d.tasks.filter(x=>x.date===iso());
   const done=todays.filter(x=>x.done).length;
   const execution=todays.length?Math.round(done/todays.length*100):0;
@@ -369,25 +433,25 @@ function renderSummary(){
 }
 
 function renderChart(){
-  const svg=$("#marketChart"), d=data();if(!svg||!d.goals.length){if(svg)svg.innerHTML="";return}
+  const svg=$("#marketChart"), d=data();const activeGoals=d.goals.filter(g=>!g.archived);if(!svg||!activeGoals.length){if(svg)svg.innerHTML="";return}
   const W=1100,H=430,p={l:55,r:24,t:25,b:42},iw=W-p.l-p.r,ih=H-p.t-p.b,n=d.range||7;
-  const dates=[...new Set(d.goals.flatMap(g=>g.history.map(h=>h.date)))].sort().slice(-n);if(!dates.length)return;
+  const dates=[...new Set(activeGoals.flatMap(g=>g.history.map(h=>h.date)))].sort().slice(-n);if(!dates.length)return;
   const x=i=>p.l+(dates.length===1?iw/2:i/(dates.length-1)*iw), y=v=>p.t+(1-v/100)*ih;
   let out="";
   for(let v=0;v<=100;v+=20){out+=`<line x1="${p.l}" y1="${y(v)}" x2="${W-p.r}" y2="${y(v)}" stroke="#252b36"/><text x="${p.l-11}" y="${y(v)+4}" text-anchor="end" font-size="11" fill="#7e8798">${v}</text>`}
   const th=d.profile.threshold||60;out+=`<line x1="${p.l}" y1="${y(th)}" x2="${W-p.r}" y2="${y(th)}" stroke="#d8dce5" stroke-width="2" stroke-dasharray="9 7" opacity=".72"/><rect x="${W-190}" y="${y(th)-16}" width="145" height="22" rx="8" fill="#e9e6df"/><text x="${W-118}" y="${y(th)-1}" text-anchor="middle" font-size="10" font-weight="800" fill="#17191e">${t("onTrackChart")} ${th}</text>`;
   dates.forEach((dt,i)=>{if(dates.length<=8||i%Math.ceil(dates.length/7)===0||i===dates.length-1){const label=new Intl.DateTimeFormat(currentLang()==="ar"?"ar-MA":"en-GB",{month:"short",day:"numeric"}).format(new Date(dt+"T12:00:00"));out+=`<text x="${x(i)}" y="${H-15}" text-anchor="middle" font-size="10" fill="#7e8798">${label}</text>`}});
-  d.goals.forEach(g=>{
+  activeGoals.forEach(g=>{
     const map=new Map(g.history.map(h=>[h.date,h.value]));let last=0;const pts=dates.map((dt,i)=>{if(map.has(dt))last=map.get(dt);return[x(i),y(last)]});
     const path=pts.map((pt,i)=>`${i?"L":"M"} ${pt[0].toFixed(1)} ${pt[1].toFixed(1)}`).join(" ");out+=`<path d="${path}" fill="none" stroke="#0d1016" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" opacity=".92"/><path d="${path}" fill="none" stroke="${g.color}" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/>`;
     const end=pts[pts.length-1];out+=`<circle cx="${end[0]}" cy="${end[1]}" r="8" fill="${g.color}" stroke="white" stroke-width="4"/>`;
   });svg.innerHTML=out;
 }
-function renderLegend(){const el=$("#marketLegend"),d=data();if(!el)return;el.innerHTML=d.goals.map(g=>`<div class="legend-pill"><i class="dot" style="background:${g.color}"></i>${esc(g.name)} <b>${Math.round(g.momentum)}</b></div>`).join("")}
+function renderLegend(){const el=$("#marketLegend"),d=data();if(!el)return;el.innerHTML=d.goals.filter(g=>!g.archived).map(g=>`<div class="legend-pill"><i class="dot" style="background:${g.color}"></i>${esc(g.name)} <b>${Math.round(g.momentum)}</b></div>`).join("")}
 function smallGoal(g){const [label,cls]=status(g);return `<div class="goal-row"><div class="goal-row-top"><div class="goal-title"><i class="dot" style="background:${g.color}"></i>${esc(g.name)}</div><div class="momentum-score">${Math.round(g.momentum)}</div></div><div class="goal-status ${cls}">${label}</div><div class="goal-foot"><span>${t("goalProgress")}</span><b>${Number(g.progress||0).toFixed(1)}%</b></div><div class="progress-line"><i style="width:${clamp(g.progress||0)}%;background:${g.color}"></i></div></div>`}
 function renderGoalLists(){
-  const d=data();$("#dashboardGoals").innerHTML=d.goals.length?d.goals.map(smallGoal).join(""):`<div class="empty-block">${t("noGoals")}</div>`;
-  $("#goalsPage").innerHTML=d.goals.length?d.goals.map(g=>{const [label,cls]=status(g);return `<article class="goal-large"><div class="goal-large-head"><div><div class="goal-title"><i class="dot" style="background:${g.color}"></i><h3>${esc(g.name)}</h3></div><div class="goal-status ${cls}">${label}</div></div><div class="goal-actions"><button class="icon-btn" data-delete-goal="${g.id}" title="${t("delete")}">🗑</button></div></div><div class="goal-big-score">${Math.round(g.momentum)} <small>${t("momentum")}</small></div><div class="goal-foot"><span>${t("goalProgress")}</span><b>${Number(g.progress||0).toFixed(1)}%</b></div><div class="progress-line"><i style="width:${clamp(g.progress||0)}%;background:${g.color}"></i></div><div class="why-box">${esc(g.why||"—")}</div><div class="goal-foot"><span>${esc(g.category||"")}</span><span>${g.deadline?esc(g.deadline):t("noDeadline")}</span></div></article>`}).join(""):`<div class="empty-block">${t("noGoals")}</div>`;
+  const d=data(),activeGoals=d.goals.filter(g=>!g.archived);$("#dashboardGoals").innerHTML=activeGoals.length?activeGoals.map(smallGoal).join(""):`<div class="empty-block">${t("noGoals")}</div>`;
+  $("#goalsPage").innerHTML=activeGoals.length?activeGoals.map(g=>{const [label,cls]=status(g);return `<article class="goal-large"><div class="goal-large-head"><div><div class="goal-title"><i class="dot" style="background:${g.color}"></i><h3>${esc(g.name)}</h3></div><div class="goal-status ${cls}">${label}</div></div><div class="goal-actions"><button class="icon-btn" data-delete-goal="${g.id}" title="${t("delete")}">🗑</button></div></div><div class="goal-big-score">${Math.round(g.momentum)} <small>${t("momentum")}</small></div><div class="goal-foot"><span>${t("goalProgress")}</span><b>${Number(g.progress||0).toFixed(1)}%</b></div><div class="progress-line"><i style="width:${clamp(g.progress||0)}%;background:${g.color}"></i></div><div class="why-box">${esc(g.why||"—")}</div><div class="goal-foot"><span>${esc(g.category||"")}</span><span>${g.deadline?esc(g.deadline):t("noDeadline")}</span></div></article>`}).join(""):`<div class="empty-block">${t("noGoals")}</div>`;
   $$("[data-delete-goal]").forEach(b=>b.onclick=()=>deleteGoal(b.dataset.deleteGoal));
 }
 function taskHtml(tk){const g=data().goals.find(g=>g.id===tk.goalId);return `<div class="task-row ${tk.done?"done":""}"><button class="task-check" data-task="${tk.id}">${tk.done?"✓":""}</button><div><div class="task-name">${esc(tk.title)}</div><div class="task-meta"><i class="dot" style="display:inline-block;background:${g?.color||"#aaa"}"></i> ${esc(g?.name||"")} · +${tk.progressImpact}%</div></div><span class="impact-chip">+${tk.impact}</span></div>`}
@@ -396,7 +460,7 @@ function renderTasks(){
   $("#dashboardTasks").innerHTML=html;$("#todayPageTasks").innerHTML=html;$$("[data-task]").forEach(b=>b.onclick=()=>toggleTask(b.dataset.task));
 }
 function renderPlanner(){
-  const d=data();$("#plannerPage").innerHTML=d.goals.length?d.goals.map(g=>`<article class="plan-card"><div class="plan-title"><i class="dot" style="background:${g.color}"></i>${esc(g.name)}</div><div class="cascade">${step(t("sixMonths"),g.plan.m6)}${step(t("threeMonths"),g.plan.m3)}${step(t("thisMonth"),g.plan.month)}${step(t("thisWeek"),g.plan.week)}</div></article>`).join(""):`<div class="empty-block">${t("noGoals")}</div>`;
+  const d=data(),activeGoals=d.goals.filter(g=>!g.archived);$("#plannerPage").innerHTML=activeGoals.length?activeGoals.map(g=>`<article class="plan-card"><div class="plan-title"><i class="dot" style="background:${g.color}"></i>${esc(g.name)}</div><div class="cascade">${step(t("sixMonths"),g.plan.m6)}${step(t("threeMonths"),g.plan.m3)}${step(t("thisMonth"),g.plan.month)}${step(t("thisWeek"),g.plan.week)}</div></article>`).join(""):`<div class="empty-block">${t("noGoals")}</div>`;
 }
 function step(label,text){return `<div class="cascade-step"><b>${label.toUpperCase()}</b><span>${esc(text||t("noPlan"))}</span></div>`}
 function renderInsights(){
@@ -413,7 +477,7 @@ $$("[data-view]").forEach(b=>b.onclick=()=>showView(b.dataset.view));$("#profile
 
 const goalDialog=$("#goalDialog"),taskDialog=$("#taskDialog");
 $$("[data-add-goal]").forEach(b=>b.onclick=()=>goalDialog.showModal());
-$$("[data-add-task]").forEach(b=>b.onclick=()=>{if(!data().goals.length)return toast(t("createGoalFirst"));$("#taskGoal").innerHTML=data().goals.map(g=>`<option value="${g.id}">${esc(g.name)}</option>`).join("");taskDialog.showModal()});
+$$("[data-add-task]").forEach(b=>b.onclick=()=>{const ag=data().goals.filter(g=>!g.archived);if(!ag.length)return toast(t("createGoalFirst"));$("#taskGoal").innerHTML=ag.map(g=>`<option value="${g.id}">${esc(g.name)}</option>`).join("");taskDialog.showModal()});
 $$(".close-dialog").forEach(b=>b.onclick=()=>b.closest("dialog").close());
 
 $("#goalForm").addEventListener("submit",e=>{
@@ -424,19 +488,46 @@ $("#taskForm").addEventListener("submit",e=>{
   e.preventDefault();const tk={id:uid(),title:$("#taskTitle").value.trim(),goalId:$("#taskGoal").value,impact:Number($("#taskImpact").value),progressImpact:Number($("#taskProgress").value||0),date:iso(),done:false,completedDate:""};saveData(d=>d.tasks.push(tk));taskDialog.close();e.target.reset();renderAll();toast(t("taskAdded"));
 });
 function toggleTask(id){
-  saveData(d=>{const tk=d.tasks.find(x=>x.id===id);if(!tk)return;const g=d.goals.find(x=>x.id===tk.goalId);if(!g)return;if(!tk.done){tk.done=true;tk.completedDate=iso();g.momentum=clamp(g.momentum+tk.impact);g.progress=clamp(g.progress+tk.progressImpact);updateHistory(g);d.notifications.unshift({id:"done-"+id+"-"+Date.now(),type:"success",title:`${g.name} ${t("movedUp")}`,body:`${t("completed")}: ${tk.title}. ${t("momentum")}: ${Math.round(g.momentum)}.`,ts:Date.now()})}else{tk.done=false;tk.completedDate="";g.momentum=clamp(g.momentum-tk.impact);g.progress=clamp(g.progress-tk.progressImpact);updateHistory(g)}});generateSignals();renderAll();
+  saveData(d=>{
+    if(window.LifeCore?.completeTask){
+      window.LifeCore.completeTask(d,id);
+      const tk=d.tasks.find(x=>x.id===id);
+      const g=d.goals.find(x=>x.id===tk?.goalId);
+      if(tk&&g&&tk.done){
+        d.notifications.unshift({id:"done-"+id+"-"+Date.now(),type:"success",title:`${g.name} ${t("movedUp")}`,body:`${t("completed")}: ${tk.title}. ${t("momentum")}: ${Math.round(g.momentum)}.`,ts:Date.now()});
+      }
+      return;
+    }
+    const tk=d.tasks.find(x=>x.id===id);if(!tk)return;const g=d.goals.find(x=>x.id===tk.goalId);if(!g)return;if(!tk.done){tk.done=true;tk.completedDate=iso();g.momentum=clamp(g.momentum+tk.impact);g.progress=clamp(g.progress+tk.progressImpact);updateHistory(g);d.notifications.unshift({id:"done-"+id+"-"+Date.now(),type:"success",title:`${g.name} ${t("movedUp")}`,body:`${t("completed")}: ${tk.title}. ${t("momentum")}: ${Math.round(g.momentum)}.`,ts:Date.now()})}else{tk.done=false;tk.completedDate="";g.momentum=clamp(g.momentum-tk.impact);g.progress=clamp(g.progress-tk.progressImpact);updateHistory(g)}
+  });generateSignals();renderAll();
 }
-function deleteGoal(id){if(!confirm(t("delete")+"?"))return;saveData(d=>{d.goals=d.goals.filter(g=>g.id!==id);d.tasks=d.tasks.filter(t=>t.goalId!==id)});renderAll()}
+function deleteGoal(id){
+  if(!confirm(t("delete")+"?"))return;
+  saveData(d=>{
+    const g=d.goals.find(x=>x.id===id);
+    if(g)g.archived=true;
+    d.tasks.forEach(t=>{if(t.goalId===id)t.goalId="";});
+    d.habits.forEach(h=>{if(h.goalId===id)h.goalId="";});
+  });
+  renderAll();
+}
 $$(".range-btn").forEach(b=>b.onclick=()=>{saveData(d=>d.range=Number(b.dataset.range));$$(".range-btn").forEach(x=>x.classList.toggle("active",x===b));renderChart()});
 $("#clearNotifications").onclick=()=>{saveData(d=>{d.notifications=[];d.dismissed={}});renderAll()};
 $("#saveProfileBtn").onclick=()=>{saveData(d=>{d.profile.name=$("#accountNameInput").value.trim()||d.profile.name;d.profile.threshold=clamp(Number($("#thresholdInput").value||60),10,90)});renderAll();toast(t("saved"))};
 $("#thresholdInput").addEventListener("change",()=>{saveData(d=>d.profile.threshold=clamp(Number($("#thresholdInput").value||60),10,90));renderAll()});
 $("#avatarInput").addEventListener("change",e=>{const f=e.target.files?.[0];if(!f)return;const r=new FileReader();r.onload=()=>{saveData(d=>d.profile.avatar=r.result);renderAll()};r.readAsDataURL(f)});
-$("#logoutBtn").onclick=()=>{localStorage.removeItem(SESSION_KEY);showLanding()};
+$("#logoutBtn").onclick=async()=>{try{await window.NorthBoot?.flush();await window.NorthAuth.logout();localStorage.removeItem(SESSION_KEY);showLanding();}catch{toast(currentLang()==="ar"?"تعذر تسجيل الخروج. تحقق من الاتصال وأعد المحاولة.":"Could not sign out. Check your connection and retry.");}};
 $("#exportBtn").onclick=()=>{const blob=new Blob([JSON.stringify({schemaVersion:4,exportedAt:Date.now(),data:data()},null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=`lifeos-backup-${iso()}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),400)};
 $("#importInput").addEventListener("change",e=>{const f=e.target.files?.[0];if(!f)return;if(f.size>10000000){toast(currentLang()==="ar"?"الملف كبير جدًا":"File is too large");return;}const r=new FileReader();r.onload=()=>{try{window.LifeWorkspace.importData(JSON.parse(r.result));}catch{toast(currentLang()==="ar"?"ملف غير صالح. لم تتغير بياناتك.":"Invalid file. Your data was not changed.");}e.target.value="";};r.onerror=()=>toast(currentLang()==="ar"?"تعذر قراءة الملف":"Could not read file");r.readAsText(f)});
 
 window.LifeLegacy={renderAll,applyLang,toggleLang};
-if(currentEmail()&&account())showApp();else showLanding();
+showLanding();
+window.addEventListener("load",async()=>{
+ try{const session=await window.NorthAuth.session();if(session)await enterCloud(session.user);}catch{toast(currentLang()==="ar"?"تعذر الاتصال. أعد تحميل الصفحة عند عودة الإنترنت.":"Unable to connect. Reload when online.");}
+});
+window.NorthAuth?.client?.auth.onAuthStateChange((event)=>{
+ if(event==="SIGNED_OUT"){localStorage.removeItem(SESSION_KEY);showLanding();}
+});
 if("serviceWorker" in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
 })();
+
