@@ -238,7 +238,8 @@ html[dir=rtl] .north-2026 .lx-eyebrow::before{display:none}
 .north-2026 .mini-market{background:var(--n-glass);border-color:var(--n-b)}
 .north-2026 .visual-copy h1{color:var(--n-i1)}
 .north-2026 .visual-copy>p{color:var(--n-i2)}
-.north-2026 .life-workspace .mobile-header{display:none!important}
+/* TOPBAR: hide duplicate mobile-header, keep single unified topbar */
+body.north-2026 .mobile-header{display:none!important}
 .north-2026 .page-head #langBtn{display:none!important}
 .north-2026 .lx-topbar{display:flex;align-items:center;justify-content:space-between;height:60px;padding:0 28px;background:rgba(8,10,12,.85);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid var(--n-b);position:sticky;top:0;z-index:40}
 .north-2026 .lx-topbar-brand{display:flex;align-items:center;gap:12px;min-width:0}
@@ -248,7 +249,7 @@ html[dir=rtl] .north-2026 .lx-eyebrow::before{display:none}
 .north-2026 .lx-topbar .lx-breadcrumb span{color:var(--n-i4);padding:0 4px}
 @media(max-width:1150px){
 .north-2026{--n-sidebar:220px}
-.north-2026 .life-workspace .content{padding:28px 28px 100px}
+.north-2026 .content{padding:28px 28px 100px}
 .north-2026 .lx-topbar{padding:0 24px}
 .north-2026 .lx-grid-three{grid-template-columns:1fr 1fr}
 .north-2026 .lx-stats{gap:10px}
@@ -256,19 +257,19 @@ html[dir=rtl] .north-2026 .lx-eyebrow::before{display:none}
 .north-2026 .lx-stat strong{font-size:24px}
 }
 @media(max-width:980px){
-.north-2026 .life-workspace .sidebar{display:none}
-.north-2026 .life-workspace .app-main,html[dir=rtl] .north-2026 .life-workspace .app-main{margin:0!important}
-.north-2026 .life-workspace .content{padding:22px 20px 120px!important}
+body.north-2026 .sidebar{display:none}
+body.north-2026 .app-main,html[dir=rtl] body.north-2026 .app-main{margin:0!important}
+body.north-2026 .content{padding:22px 20px 120px!important}
 .north-2026 .lx-topbar{height:56px;padding:0 16px}
 .north-2026 .lx-top-actions>[data-action="language"]{display:inline-flex!important}
 .north-2026 .lx-top-actions>[data-to="account"]{display:inline-flex!important}
 .north-2026 .lx-top-actions .lx-menu-button{display:none!important}
-.north-2026 .life-workspace .bottom-nav{left:14px!important;right:14px!important;bottom:calc(14px + env(safe-area-inset-bottom,0px))!important;border-radius:28px!important;border:1px solid var(--n-b2)!important;background:rgba(14,17,20,.95)!important;backdrop-filter:blur(28px) saturate(200%)!important;-webkit-backdrop-filter:blur(28px) saturate(200%)!important;box-shadow:0 8px 40px rgba(0,0,0,.5)!important;padding:8px!important;gap:4px}
-.north-2026 .life-workspace .bottom-nav .bottom-item{border-radius:20px!important;min-height:56px!important;color:var(--n-i3)!important;background:transparent!important;transition:background .2s,color .2s,transform .2s var(--n-spring)!important}
-.north-2026 .life-workspace .bottom-nav .bottom-item:active{transform:scale(.94)!important}
-.north-2026 .life-workspace .bottom-nav .bottom-item.active{color:var(--n-a)!important;background:var(--n-ad)!important}
-.north-2026 .life-workspace .bottom-nav .bottom-item small{font-size:10px!important;font-weight:600!important}
-.north-2026 .life-workspace .content{padding-bottom:calc(120px + env(safe-area-inset-bottom,0px))!important}
+body.north-2026 .bottom-nav{left:14px!important;right:14px!important;bottom:calc(14px + env(safe-area-inset-bottom,0px))!important;border-radius:28px!important;border:1px solid var(--n-b2)!important;background:rgba(14,17,20,.95)!important;backdrop-filter:blur(28px) saturate(200%)!important;-webkit-backdrop-filter:blur(28px) saturate(200%)!important;box-shadow:0 8px 40px rgba(0,0,0,.5)!important;padding:8px!important;gap:4px}
+body.north-2026 .bottom-nav .bottom-item{border-radius:20px!important;min-height:56px!important;color:var(--n-i3)!important;background:transparent!important;transition:background .2s,color .2s,transform .2s var(--n-spring)!important}
+body.north-2026 .bottom-nav .bottom-item:active{transform:scale(.94)!important}
+body.north-2026 .bottom-nav .bottom-item.active{color:var(--n-a)!important;background:var(--n-ad)!important}
+body.north-2026 .bottom-nav .bottom-item small{font-size:10px!important;font-weight:600!important}
+body.north-2026 .content{padding-bottom:calc(120px + env(safe-area-inset-bottom,0px))!important}
 .north-2026 .lx-mini{bottom:calc(100px + env(safe-area-inset-bottom,0px))}
 .north-2026 .lx-notice{bottom:calc(100px + env(safe-area-inset-bottom,0px))}
 }
