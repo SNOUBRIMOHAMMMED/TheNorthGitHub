@@ -19,21 +19,22 @@
   <!-- PUBLIC LANDING PAGE -->
   <section id="landingScreen" class="landing-screen north-landing">
     <a class="nl-skip" href="#north-main" data-i18n="nlSkip">Skip to content</a>
-    <header class="nl-header glass">
+    <header class="nl-header">
       <div class="nl-shell nl-nav">
         <a class="nl-brand" href="#" id="landingLogo" aria-label="THE NORTH / الشمال">
           <img src="brand-mark.svg" width="44" height="44" alt=""/>
           <span dir="ltr"><strong>THE NORTH</strong><small lang="ar" dir="rtl">الشمال</small></span>
         </a>
         <nav class="nl-links" aria-label="Product">
-          <a href="#problem" data-i18n="nlProblemNav">The Problem</a>
-          <a href="#bento-features" data-i18n="nlFeaturesNav">Features</a>
-          <a href="#finance-engine" data-i18n="nlFinanceNav">Finance Engine</a>
+          <a href="#the-science" data-i18n="nlScienceNav">The Science</a>
+          <a href="#howItWorks" data-i18n="nlProduct">The system</a>
+          <a href="#north-principles" data-i18n="nlApproach">The approach</a>
           <a href="#north-pricing" data-i18n="nlPricingNav">Pricing</a>
+          <a href="#north-questions" data-i18n="nlQuestions">Questions</a>
         </nav>
         <div class="nl-nav-actions">
           <button id="landingLangBtn" class="nl-language">العربية</button>
-          <button class="nl-login glass-btn" data-go-login data-i18n="signIn">Sign in</button>
+          <button class="nl-login" data-go-login data-i18n="signIn">Sign in</button>
           <button class="nl-button nl-button-small" data-go-signup data-i18n="nlStart">Get started</button>
         </div>
       </div>
@@ -42,46 +43,86 @@
       <section class="nl-hero nl-shell">
         <div class="nl-hero-copy">
           <div>
-            <p class="nl-eyebrow"><span class="glow-dot"></span><span data-i18n="nlEyebrow">A PERSONAL OPERATING SYSTEM FOR FOUNDERS</span></p>
+            <p class="nl-eyebrow"><span></span><span data-i18n="nlEyebrow">A PERSONAL OPERATING SYSTEM FOR FOUNDERS</span></p>
             <h1><span data-i18n="nlHero1">A clear direction.</span><br/><span class="nl-soft-text" data-i18n="nlHero2">A deliberate day.</span></h1>
+          </div>
+          <div class="nl-hero-aside">
             <p class="nl-lead" data-i18n="nlIntro">Keep your goals in sight, give your priorities focused time, and see what moved forward. One workspace for the person behind the business.</p>
-            <div class="nl-actions"><button class="nl-button glow" data-go-signup><span data-i18n="nlCreate">Start your 14-day reverse trial</span><span aria-hidden="true">↗</span></button></div>
+            <div class="nl-actions"><button class="nl-button" data-go-signup><span data-i18n="nlCreate">Create your workspace</span><span aria-hidden="true">↗</span></button><button class="nl-text-button" data-scroll-how data-i18n="nlExplore">Explore the system</button></div>
+            <p class="nl-micro" data-i18n="nlTrust">Arabic & English. Desktop & mobile. Your own pace.</p>
           </div>
         </div>
+        <figure class="nl-preview">
+          <div class="nl-preview-bar"><span class="nl-preview-brand"><img src="brand-mark.svg" width="24" height="24" alt=""/>THE NORTH</span><span class="nl-sample"><i></i><span data-i18n="nlSample">ILLUSTRATIVE WORKSPACE · SAMPLE DATA</span></span><span class="nl-preview-dot" aria-hidden="true">M</span></div>
+          <div class="nl-preview-body">
+            <aside class="nl-preview-menu" aria-hidden="true"><span class="nl-menu-active" data-i18n="nlToday">Today</span><span data-i18n="nlGoals">Goals</span><span data-i18n="nlFocus">Focus</span><span data-i18n="nlHabits">Habits</span><span data-i18n="nlMoney">Finances</span><span class="nl-menu-bottom">N / 01</span></aside>
+            <div class="nl-preview-content">
+              <div class="nl-preview-title"><div><p class="nl-eyebrow" data-i18n="nlDirection">YOUR DIRECTION, AT A GLANCE</p><h2 data-i18n="nlPreviewTitle">Move the work that matters.</h2></div><span class="nl-chip" data-i18n="nlThisWeek">This week</span></div>
+              <div class="nl-goal-cards">
+                <article class="nl-goal-card"><div class="nl-card-label"><span data-i18n="nlLaunch">Launch the next product</span><span aria-hidden="true">↗</span></div><div class="nl-goal-number">68<small>%</small></div><svg viewBox="0 0 260 66" aria-hidden="true"><path class="nl-gridline" d="M0 62H260M0 32H260"/><path class="nl-chart-main" d="M0 58 26 56 52 48 78 50 104 35 130 38 156 29 182 30 208 17 234 20 260 8"/></svg><div class="nl-goal-foot"><span data-i18n="nlProgress">Goal progress</span><b data-i18n="nlRemain32">32% remaining</b></div></article>
+                <article class="nl-goal-card"><div class="nl-card-label"><span data-i18n="nlOperations">Build a stronger operation</span><span aria-hidden="true">↗</span></div><div class="nl-goal-number">42<small>%</small></div><svg viewBox="0 0 260 66" aria-hidden="true"><path class="nl-gridline" d="M0 62H260M0 32H260"/><path class="nl-chart-secondary" d="M0 61 26 59 52 60 78 51 104 48 130 50 156 39 182 40 208 31 234 34 260 25"/></svg><div class="nl-goal-foot"><span data-i18n="nlProgress">Goal progress</span><b data-i18n="nlRemain58">58% remaining</b></div></article>
+                <article class="nl-focus-card"><p class="nl-eyebrow" data-i18n="nlDeepWork">DEEP WORK</p><h3 data-i18n="nlStrategy">Product strategy</h3><p class="nl-clock" dir="ltr">00:47:32</p><div class="nl-focus-status"><i></i><span data-i18n="nlSession">Focus session</span></div><p class="nl-focus-note" data-i18n="nlEveryMinute">Every minute linked to a meaningful goal.</p></article>
+              </div>
+              <div class="nl-preview-bottom"><div><span data-i18n="nlPriorities">TODAY’S PRIORITIES</span><p><i aria-hidden="true">✓</i><span data-i18n="nlProposal">Review the launch proposal</span></p><p><i aria-hidden="true">○</i><span data-i18n="nlInterviews">Prepare customer interviews</span></p></div><div class="nl-time-total"><span data-i18n="nlTracked">FOCUS TIME TODAY</span><strong dir="ltr">3h 24m <small>/ 6h</small></strong><div class="nl-meter"><i></i></div></div></div>
+            </div>
+          </div>
+          <figcaption><span data-i18n="nlPreviewCaption">Goals, focused work and daily priorities — in one view.</span><span aria-hidden="true">01 / THE OVERVIEW</span></figcaption>
+        </figure>
+        <div class="nl-foundation"><span data-i18n="nlBuiltFor">ENGINEERED FOR HUMAN COGNITION</span><p data-i18n="nlFoundation">Direction → Protected Focus → Momentum Velocity → Review</p></div>
       </section>
-
-      <section id="problem" class="nl-section nl-shell">
-         <div class="pas-container glass-panel">
-            <h2 data-i18n="nlProblemTitle">The Problem</h2>
-            <p data-i18n="nlProblemText">You are running your life on disjointed to-do lists, leading to scattered focus and burnout.</p>
-            <h2 data-i18n="nlAgitationTitle">The Cost</h2>
-            <p data-i18n="nlAgitationText">Every day you lose momentum. Important goals are overshadowed by trivial tasks.</p>
-            <h2 data-i18n="nlSolutionTitle">The Solution</h2>
-            <p data-i18n="nlSolutionText">THE NORTH provides cognitive clarity and protected deep work, translating vision into visible velocity.</p>
-         </div>
-      </section>
-
-      <section id="bento-features" class="nl-section nl-shell">
-        <h2 class="section-title" data-i18n="nlBentoTitle">The 4-Pillar Operating System</h2>
-        <div class="bento-grid">
-          <div class="bento-card span-2 glass-panel">
-            <h3 data-i18n="nlGoalsTitle">Visual Momentum Radar</h3>
-            <p data-i18n="nlGoalsBody">All your goals on a single trajectory chart. Know instantly which outcomes are thriving, plateauing, or slipping below stability.</p>
-          </div>
-          <div class="bento-card glass-panel">
-            <h3 data-i18n="nlFocusTitle">Protected Deep Work</h3>
-            <p data-i18n="nlFocusBody">Measure actual focused minutes with stopwatch, countdown or Pomodoro.</p>
-          </div>
-          <div class="bento-card glass-panel">
-            <h3 data-i18n="nlLifeTitle">Cognitive Simplicity</h3>
-            <p data-i18n="nlLifeBody">Exactly 4 essential fields per task. No bloated descriptions, no decision paralysis, no endless forms.</p>
-          </div>
-          <div class="bento-card span-2 glass-panel" id="finance-engine">
-            <h3 data-i18n="nlFinanceTitle">The Finance Engine</h3>
-            <p data-i18n="nlFinanceBody">Take full control of your income streams, budget percentage allocations, and capital expenditures to support your strategic goals.</p>
-          </div>
+      <section class="nl-section nl-shell" id="the-science">
+        <div class="nl-section-heading">
+          <div><p class="nl-eyebrow" data-i18n="nlScienceLabel">01 / THE COGNITIVE NEUROSCIENCE OF EXECUTION</p><h2 data-i18n="nlScienceTitle">Why conventional productivity apps fail high performers.</h2></div>
+          <p data-i18n="nlScienceSub">Your brain is an executive decision engine, not a bucket for infinite to-do lists. Decades of cognitive science confirm three fatal traps:</p>
+        </div>
+        <div class="nl-science-grid">
+          <article class="nl-science-card">
+            <div class="nl-science-badge">TRAP 01</div>
+            <h3 data-i18n="nlTrap1Title">Attention Residue (Dr. Sophie Leroy)</h3>
+            <p data-i18n="nlTrap1Body">Context switching leaves fragments of attention stuck in prior tasks. Multitasking or managing bloated 15-field task lists degrades cognitive capacity by up to 40%.</p>
+            <div class="nl-science-sol">
+              <span class="sol-tag">ANTIDOTE</span>
+              <p data-i18n="nlTrap1Sol">THE NORTH ANTIDOTE: Single-task Deep Work Capsule with zero interruptions and a strict 4-field execution protocol.</p>
+            </div>
+          </article>
+          <article class="nl-science-card">
+            <div class="nl-science-badge">TRAP 02</div>
+            <h3 data-i18n="nlTrap2Title">The Cheap Dopamine Trap (Dr. Cal Newport)</h3>
+            <p data-i18n="nlTrap2Body">Checking off 10 easy, trivial to-dos produces artificial dopamine, tricking you into feeling accomplished while your existential core goals stall.</p>
+            <div class="nl-science-sol">
+              <span class="sol-tag">ANTIDOTE</span>
+              <p data-i18n="nlTrap2Sol">THE NORTH ANTIDOTE: Radar Momentum Map; only focused hours on core strategic outcomes move your trajectory line above the 60% stability threshold.</p>
+            </div>
+          </article>
+          <article class="nl-science-card">
+            <div class="nl-science-badge">TRAP 03</div>
+            <h3 data-i18n="nlTrap3Title">Hyperbolic Discounting (George Ainslie)</h3>
+            <p data-i18n="nlTrap3Body">The human brain heavily discounts future milestones in favor of immediate gratification, generating chronic executive procrastination.</p>
+            <div class="nl-science-sol">
+              <span class="sol-tag">ANTIDOTE</span>
+              <p data-i18n="nlTrap3Sol">THE NORTH ANTIDOTE: Immediate visual velocity feedback; decay mechanisms turn distant goals into an active, urgent daily trajectory.</p>
+            </div>
+          </article>
         </div>
       </section>
+      <section class="nl-section nl-shell" id="howItWorks">
+        <div class="nl-section-heading"><div><p class="nl-eyebrow" data-i18n="nlSystemLabel">02 / THE 4-PILLAR OPERATING SYSTEM</p><h2 data-i18n="nlSystemTitle">Zero clutter. Pure executive velocity.</h2></div><p data-i18n="nlSystemSub">Strip away unnecessary fields and busywork. Connect long-term destinations directly to daily focus.</p></div>
+        <div class="nl-feature-grid">
+          <article class="nl-feature"><span class="nl-feature-index">01</span><h3 data-i18n="nlGoalsTitle">Visual Momentum Radar</h3><p data-i18n="nlGoalsBody">All your goals on a single trajectory chart. Know instantly which outcomes are thriving, plateauing, or slipping below stability.</p><div class="nl-feature-detail"><span data-i18n="nlGoalDetail">Trajectory · Velocity · 60% Stability Line</span><span aria-hidden="true">↗</span></div></article>
+          <article class="nl-feature"><span class="nl-feature-index">02</span><h3 data-i18n="nlFocusTitle">Protected Deep Work</h3><p data-i18n="nlFocusBody">Measure actual focused minutes with stopwatch, countdown or Pomodoro. Every second is credited directly to your strategic goals.</p><div class="nl-feature-detail"><span data-i18n="nlFocusDetail">Deep Work · Breaks · Attention Audit</span><span aria-hidden="true">↗</span></div></article>
+          <article class="nl-feature"><span class="nl-feature-index">03</span><h3 data-i18n="nlLifeTitle">Cognitive Simplicity</h3><p data-i18n="nlLifeBody">Exactly 4 essential fields per task. No bloated descriptions, no decision paralysis, no endless forms.</p><div class="nl-feature-detail"><span data-i18n="nlLifeDetail">Action · Goal · Date · Priority</span><span aria-hidden="true">↗</span></div></article>
+        </div>
+      </section>
+      <section class="nl-editorial" id="north-principles"><div class="nl-shell nl-editorial-grid">
+        <figure class="nl-photo"><img src="north-workspace.jpg" width="1536" height="1024" loading="lazy" decoding="async" alt=""/><figcaption data-i18n="nlPhotoCaption">A private space for deliberate execution.</figcaption></figure>
+        <div class="nl-editorial-copy"><p class="nl-eyebrow" data-i18n="nlApproachLabel">03 / A MORE DELIBERATE WAY TO OPERATE</p><h2 data-i18n="nlApproachTitle">Your business has a strategy. Your attention deserves one too.</h2><p data-i18n="nlApproachBody">A full calendar often conceals an unclear direction. THE NORTH brings your attention back to what you chose to build, and the next single action that will move it forward.</p><div class="nl-principle"><span>01</span><p data-i18n="nlPrinciple1">Choose the strategic outcome before the action.</p></div><div class="nl-principle"><span>02</span><p data-i18n="nlPrinciple2">Protect deep work from context switching.</p></div><div class="nl-principle"><span>03</span><p data-i18n="nlPrinciple3">Monitor momentum trajectory, not task hoarding.</p></div></div>
+      </div></section>
+      <section class="nl-section nl-shell nl-faq" id="north-questions"><div><p class="nl-eyebrow" data-i18n="nlFaqLabel">04 / FREQUENTLY ANSWERED</p><h2 data-i18n="nlFaqTitle">Clarity before you begin.</h2></div><div class="nl-faq-list">
+        <details><summary data-i18n="nlQ1">Who is THE NORTH engineered for?</summary><p data-i18n="nlA1">Founders, executives and high-performers who need to translate high-level vision into daily focused momentum without administrative bloat.</p></details>
+        <details><summary data-i18n="nlQ2">Where is my data stored?</summary><p data-i18n="nlA2">Securely in your cloud account powered by Supabase. Accessible across all your devices with offline sync support.</p></details>
+        <details><summary data-i18n="nlQ3">Does it support Arabic and mobile natively?</summary><p data-i18n="nlA3">Yes. Built ground-up with native RTL Arabic and LTR English, featuring an ultra-ergonomic floating mobile dock.</p></details>
+        <details><summary data-i18n="nlQ4">How does momentum tracking differ from a to-do list?</summary><p data-i18n="nlA4">To-do lists count quantity; THE NORTH measures trajectory. If you stop executing on a goal, its line decays below the 60% threshold, making drift immediately visible.</p></details>
+      </div></section>
 
       <!-- 05: PRICING TIERS -->
       <section id="north-pricing" class="nl-pricing nl-shell">
@@ -93,9 +134,10 @@
 
         <div class="nl-pricing-grid">
           <!-- TIER 1: CORE -->
-          <div class="nl-tier-card glass-panel">
+          <div class="nl-tier-card">
             <div class="nl-tier-head">
               <h3 data-i18n="tierCore">Core</h3>
+              <p class="nl-tier-desc" data-i18n="tierCoreDesc">For individuals establishing their baseline execution rhythm.</p>
               <div class="nl-tier-price">
                 <span class="price-val" data-i18n="tierCorePrice">Free</span>
                 <span class="price-period" data-i18n="tierCorePeriod">forever</span>
@@ -111,10 +153,11 @@
           </div>
 
           <!-- TIER 2: PRO -->
-          <div class="nl-tier-card is-pro glass-panel glow-border">
+          <div class="nl-tier-card is-pro">
             <div class="nl-tier-badge" data-i18n="tierProBadge">MOST POPULAR</div>
             <div class="nl-tier-head">
               <h3 data-i18n="tierPro">Pro</h3>
+              <p class="nl-tier-desc" data-i18n="tierProDesc">For founders and executives who execute across multiple machines.</p>
               <div class="nl-tier-price">
                 <span class="price-val" data-i18n="tierProPrice">$2.99</span>
                 <span class="price-period" data-i18n="tierProPeriod">/ month</span>
@@ -125,16 +168,17 @@
               <li data-i18n="tierProF2">✓ Real-time encrypted multi-device cloud sync (Supabase)</li>
               <li data-i18n="tierProF3">✓ Advanced momentum audits & 30-day velocity analytics</li>
               <li data-i18n="tierProF4">✓ Unlimited goal portfolios & executive capital budget tracker</li>
-              <li class="feature-highlight" data-i18n="tierProFinance">✓ Advanced Finance Engine to allocate capital</li>
+              <li data-i18n="tierProF5">✓ Exportable executive audit reports (PDF/JSON)</li>
             </ul>
-            <button class="nl-button wide glow" data-go-signup data-i18n="tierProCta">Upgrade to Pro</button>
+            <button class="nl-button wide" data-go-signup data-i18n="tierProCta">Upgrade to Pro</button>
           </div>
 
           <!-- TIER 3: EXECUTIVE AI COACH -->
-          <div class="nl-tier-card is-ai glass-panel">
+          <div class="nl-tier-card is-ai">
             <div class="nl-tier-badge is-soon" data-i18n="tierAiBadge">COMING SOON</div>
             <div class="nl-tier-head">
               <h3 data-i18n="tierAi">Executive AI</h3>
+              <p class="nl-tier-desc" data-i18n="tierAiDesc">An autonomous AI accountability coach that studies your performance data.</p>
               <div class="nl-tier-price">
                 <span class="price-val" data-i18n="tierAiPrice">$24.99</span>
                 <span class="price-period" data-i18n="tierAiPeriod">/ month</span>
@@ -144,20 +188,17 @@
               <li class="feature-lead" data-i18n="tierAiF1">Everything in Pro, plus:</li>
               <li data-i18n="tierAiF2">🧠 Autonomous AI Coach studying your focus patterns & velocity decay</li>
               <li data-i18n="tierAiF3">🧠 Automated detection of procrastination & strategic misalignment</li>
+              <li data-i18n="tierAiF4">🧠 Weekly executive audio/text briefings to calibrate your week</li>
+              <li data-i18n="tierAiF5">🧠 Dynamic habit calibration matched to your biological peak hours</li>
             </ul>
             <button class="nl-button nl-button-ai wide" data-waitlist-ai data-i18n="tierAiCta">Join Priority Waitlist</button>
           </div>
         </div>
       </section>
+
+      <section class="nl-final nl-shell"><div class="nl-final-inner"><img src="brand-mark.svg" width="64" height="64" alt=""/><p class="nl-eyebrow" data-i18n="nlClosingLabel">FIND YOUR TRUE NORTH.</p><h2 data-i18n="nlClosingTitle">Make your next move count.</h2><p data-i18n="nlClosingBody">Start with one vital goal. Protect its focused time. Build unbreakable momentum.</p><button class="nl-button" data-go-signup><span data-i18n="nlCreate">Launch your workspace</span><span aria-hidden="true">↗</span></button></div></section>
     </main>
-    <footer class="nl-footer nl-shell glass">
-      <a class="nl-brand" href="#north-main">
-        <img src="brand-mark.svg" width="36" height="36" alt=""/>
-        <span dir="ltr"><strong>THE NORTH</strong><small lang="ar" dir="rtl">الشمال</small></span>
-      </a>
-      <span data-i18n="nlFooter">Cognitive clarity. Relentless execution. True North.</span>
-      <small>© 2026 THE NORTH</small>
-    </footer>
+    <footer class="nl-footer nl-shell"><a class="nl-brand" href="#north-main"><img src="brand-mark.svg" width="36" height="36" alt=""/><span dir="ltr"><strong>THE NORTH</strong><small lang="ar" dir="rtl">الشمال</small></span></a><span data-i18n="nlFooter">Cognitive clarity. Relentless execution. True North.</span><small>© 2026 THE NORTH</small></footer>
   </section>
 
   <!-- STEP 2: CHOOSE PLAN (ONBOARDING) -->
