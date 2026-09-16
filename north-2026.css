@@ -1184,3 +1184,189 @@ dialog.lx-dialog[open]{
 
 
 
+/* Finance Engine Styles */
+.north-2026 .lx-finance-dashboard {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 24px;
+  background: var(--n-ui-bg);
+  border: 1px solid var(--n-border);
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+.north-2026 .lx-safe-spend {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  border-right: 1px solid var(--n-border);
+  padding-right: 24px;
+}
+[dir="rtl"] .north-2026 .lx-safe-spend {
+  border-right: none;
+  border-left: 1px solid var(--n-border);
+  padding-right: 0;
+  padding-left: 24px;
+}
+.north-2026 .lx-safe-spend small {
+  font-size: 13px;
+  color: var(--n-text-muted);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.north-2026 .lx-safe-spend strong {
+  font-size: 32px;
+  font-weight: 600;
+  color: var(--n-text);
+  line-height: 1;
+}
+.north-2026 .lx-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+.north-2026 .lx-burn-bar {
+  grid-column: 1 / -1;
+  height: 8px;
+  background: var(--n-bg-alt);
+  border-radius: 4px;
+  position: relative;
+  margin-top: 16px;
+  overflow: hidden;
+}
+.north-2026 .lx-burn-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.5s ease;
+}
+.north-2026 .lx-burn-marker {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: #fff;
+  box-shadow: 0 0 4px rgba(0,0,0,0.5);
+  z-index: 2;
+}
+.north-2026 .lx-advice-card {
+  padding: 16px;
+  border-radius: 8px;
+  margin-bottom: 24px;
+  font-size: 14px;
+  line-height: 1.5;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.north-2026 .lx-advice-card.warning {
+  background: rgba(244, 63, 94, 0.1);
+  border: 1px solid rgba(244, 63, 94, 0.2);
+  color: #fb7185;
+}
+.north-2026 .lx-advice-card.info {
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.2);
+  color: #fbbf24;
+}
+.north-2026 .lx-advice-card.good {
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  color: #34d399;
+}
+.north-2026 .lx-cat-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+}
+.north-2026 .lx-budget-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.north-2026 .lx-budget-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  background: var(--n-bg-alt);
+  border-radius: 8px;
+}
+.north-2026 .lx-budget-name {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.north-2026 .lx-budget-numbers {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  min-width: 120px;
+}
+.north-2026 .lx-budget-track {
+  width: 100%;
+  height: 6px;
+  background: var(--n-border);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.north-2026 .lx-budget-fill {
+  height: 100%;
+  border-radius: 3px;
+}
+.north-2026 .lx-badge {
+  background: var(--n-border);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+}
+.north-2026 .lx-tx-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.north-2026 .lx-tx-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  text-align: left;
+}
+[dir="rtl"] .north-2026 .lx-tx-item {
+  text-align: right;
+}
+.north-2026 .lx-tx-details {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+.north-2026 .lx-tx-amt {
+  font-family: var(--n-font-mono);
+  font-size: 15px;
+}
+
+@media (max-width: 768px) {
+  .north-2026 .lx-finance-dashboard {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .north-2026 .lx-safe-spend {
+    border-right: none;
+    border-bottom: 1px solid var(--n-border);
+    padding-right: 0;
+    padding-bottom: 16px;
+  }
+  [dir="rtl"] .north-2026 .lx-safe-spend {
+    border-left: none;
+    padding-left: 0;
+  }
+  .north-2026 .lx-stats-grid {
+    grid-template-columns: 1fr;
+  }
+}
+

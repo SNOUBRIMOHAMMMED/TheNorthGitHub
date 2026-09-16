@@ -27,9 +27,16 @@
     busy = false,
     historyLimit = 50;
   const pendingSaves = new Map();
+  const ADMIN_EMAILS = ["mohamedsnobri5@gmail.com"];
   const currentEmail = () => localStorage.getItem(C.SESSION_KEY) || "";
+  const isAdmin = () => {
+    const email = currentEmail().toLowerCase();
+    if (ADMIN_EMAILS.includes(email)) return true;
+    try { const s = window.NorthAuth?.cachedUser; if (s && ADMIN_EMAILS.includes(s.email?.toLowerCase())) return true; } catch {}
+    return false;
+  };
   const userTier = () => {
-    if (currentEmail().toLowerCase() === "mohamedsnobri5@gmail.com") return "pro";
+    if (isAdmin()) return "pro";
     return localStorage.getItem("thenorth_tier") || "core";
   };
   const ar = () => document.documentElement.lang === "ar";
@@ -487,6 +494,25 @@
   function budgetRows(d) {
     return Array.isArray(d.settings.budget) ? d.settings.budget : [];
   }
+  const financeCategories = [
+    { id: "food", icon: "🍽️", en: "Food & Dining", ar: "طعام ومطاعم", color: "#F59E0B" },
+    { id: "housing", icon: "🏠", en: "Housing", ar: "سكن وإيجار", color: "#3B82F6" },
+    { id: "transport", icon: "🚗", en: "Transport", ar: "مواصلات ونقل", color: "#8B5CF6" },
+    { id: "bills", icon: "💡", en: "Bills & Utilities", ar: "فواتير وخدمات", color: "#14B8A6" },
+    { id: "shopping", icon: "🛍️", en: "Shopping", ar: "تسوق", color: "#EC4899" },
+    { id: "health", icon: "🏥", en: "Health", ar: "صحة", color: "#EF4444" },
+    { id: "entertainment", icon: "🎮", en: "Entertainment", ar: "ترفيه", color: "#A855F7" },
+    { id: "education", icon: "📚", en: "Education", ar: "تعليم", color: "#6366F1" },
+    { id: "savings", icon: "💰", en: "Savings & Invest", ar: "ادخار واستثمار", color: "#10B981" },
+    { id: "debt", icon: "💳", en: "Debt & Loans", ar: "ديون وقروض", color: "#F43F5E" },
+    { id: "gifts", icon: "🎁", en: "Gifts & Charity", ar: "هدايا وتبرعات", color: "#FBBF24" },
+    { id: "other", icon: "📋", en: "Other", ar: "أخرى", color: "#64748B" }
+  ];
+
+  function getCategoryInfo(catName) {
+    return financeCategories.find(c => c.en === catName || c.ar === catName) || financeCategories[11];
+  }
+
   function finance(d) {
     if (userTier() === "core") {
       return (
@@ -498,95 +524,128 @@
         `<section class="lx-card lx-paywall-card">
           <div class="lx-paywall-badge">👑 ${L("EXCLUSIVE TO PRO TIER", "ميزة حصرية لباقة PRO")}</div>
           <h2>${L("Executive Capital & Finance Management", "إدارة التدفقات المالية وتوزيع رأس المال الذكي")}</h2>
-          <p class="lx-paywall-sub">${L(
-            "Take full control of your income streams, budget percentage allocations, and capital expenditures to support your strategic goals.",
-            "تحكم في دخلك الشهري، توزيع نسب الميزانية، وتتبع النفقات الرأسمالية لتحقيق أهدافك بوضوح تنفيذي."
-          )}</p>
+          <p class="lx-paywall-sub">${L("Take full control of your income streams, budget percentage allocations, and capital expenditures to support your strategic goals.", "تحكم في دخلك الشهري، توزيع نسب الميزانية، وتتبع النفقات الرأسمالية لتحقيق أهدافك بوضوح تنفيذي.")}</p>
           <div class="lx-paywall-features">
-            <div class="lx-pw-item">
-              <span class="lx-pw-icon">💎</span>
-              <div>
-                <strong>${L("Dynamic Percentage Budgeting", "توزيع آلي للدخل بالنسب المئوية")}</strong>
-                <p>${L("Targets, not just records. Real-time distribution across business, investments, and personal buffers.", "حدد نسباً واضحة للادخار والاستثمار ومصاريف التشغيل تتوزع تلقائياً مع كل دخل مسجل.")}</p>
-              </div>
-            </div>
-            <div class="lx-pw-item">
-              <span class="lx-pw-icon">💎</span>
-              <div>
-                <strong>${L("Runway & Payment Checklist", "قائمة متابعة الالتزامات والتوقعات المستقبلية")}</strong>
-                <p>${L("Anticipate upcoming obligations, rent, and software expenses before they impact execution.", "توقع الالتزامات المالية ومصاريف الشهر القادمة قبل أن تؤثر على زخم تنفيذ أهدافك.")}</p>
-              </div>
-            </div>
-            <div class="lx-pw-item">
-              <span class="lx-pw-icon">💎</span>
-              <div>
-                <strong>${L("Capital-to-Goal Direct Alignment", "ربط وثيق بين رأس المال وأهداف المشاريع")}</strong>
-                <p>${L("Connect monetary investment directly to your milestones and high-value project outcomes.", "اربط كل استثمار مالي بمشاريعك الكبرى لقياس العائد على تركيزك ووقتك.")}</p>
-              </div>
-            </div>
+            <div class="lx-pw-item"><span class="lx-pw-icon">💎</span><div><strong>${L("Dynamic Percentage Budgeting", "توزيع آلي للدخل بالنسب المئوية")}</strong><p>${L("Real-time distribution across business, investments, and personal buffers.", "حدد نسباً واضحة للادخار والاستثمار ومصاريف التشغيل تتوزع تلقائياً.")}</p></div></div>
+            <div class="lx-pw-item"><span class="lx-pw-icon">📊</span><div><strong>${L("Smart Categorization & Insights", "تصنيف ذكي وتحليلات عميقة")}</strong><p>${L("Track 12 core categories with weekly velocity reports.", "تتبع 12 فئة مالية مع تقارير أسبوعية تفصيلية.")}</p></div></div>
+            <div class="lx-pw-item"><span class="lx-pw-icon">📥</span><div><strong>${L("Data Portability", "تصدير البيانات")}</strong><p>${L("Export all financial records to CSV/Excel.", "تصدير كل المعاملات إلى ملفات Excel/CSV للمحاسبة.")}</p></div></div>
           </div>
           <div class="lx-paywall-cta">
             <button type="button" class="lx-btn lx-primary lx-paywall-btn" data-action="pricing">👑 ${L("Upgrade to Pro — $2.99 / month", "الترقية إلى باقة Pro — 2.99$ / شهرياً")}</button>
-            <button type="button" class="lx-btn" data-action="navigate" data-to="home">${L("← Back to Dashboard", "← العودة للرئيسية")}</button>
           </div>
-          <small class="lx-paywall-note">${L("Affordable velocity plan tailored for high-growth individuals (~30 MAD / month).", "سعر استثنائي في متناول الجميع (حوالي 30 درهم مغربي شهرياً). إلغاء في أي وقت.")}</small>
         </section>`
       );
     }
     const month = C.day().slice(0, 7),
       rows = d.finances.filter((x) => !x.archived && x.date?.startsWith(month)),
-      income = rows
-        .filter((x) => x.type === "income")
-        .reduce((n, x) => n + Math.round(Number(x.amount || 0) * 100), 0),
-      spent = rows
-        .filter((x) => x.type !== "income")
-        .reduce((n, x) => n + Math.round(Number(x.amount || 0) * 100), 0),
-      planned = (d.settings.moneyTodos || [])
-        .filter((t) => !t.done)
-        .reduce((n, t) => n + Math.round(Number(t.amount || 0) * 100), 0),
-      money = (n) =>
-        new Intl.NumberFormat(ar() ? "ar-MA" : "en-GB", {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2,
-        }).format(n / 100) +
-        " " +
-        esc(d.settings.currency),
+      income = rows.filter((x) => x.type === "income").reduce((n, x) => n + Math.round(Number(x.amount || 0) * 100), 0),
+      spent = rows.filter((x) => x.type !== "income").reduce((n, x) => n + Math.round(Number(x.amount || 0) * 100), 0),
+      planned = (d.settings.moneyTodos || []).filter((t) => !t.done).reduce((n, t) => n + Math.round(Number(t.amount || 0) * 100), 0),
+      money = (n) => new Intl.NumberFormat(ar() ? "ar-MA" : "en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n / 100) + " " + esc(d.settings.currency),
       budget = C.allocateBudget(income, budgetRows(d)),
       allocated = budget.reduce((n, b) => n + b.cents, 0);
+
+    const safeToSpend = Math.max(0, income - spent - planned);
+    const totalDays = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate();
+    const currentDay = new Date().getDate();
+    const monthProgress = currentDay / totalDays;
+    const spentRatio = income > 0 ? spent / income : 0;
+    
+    // Advice logic
+    let advice = "";
+    if (spentRatio > monthProgress + 0.15) {
+      advice = `<div class="lx-advice-card warning">⚠️ <strong>${L("Burn Rate Alert", "تنبيه سرعة الإنفاق")}</strong>: ${L("You are spending faster than the month is progressing. Consider slowing down discretionary purchases.", "سرعة إنفاقك أعلى من تقدم أيام الشهر. حاول تقليل المصاريف غير الضرورية.")}</div>`;
+    } else if (income > 0 && budget.filter(b => b.name.includes("Saving") || b.name.includes("ادخار")).length === 0) {
+      advice = `<div class="lx-advice-card info">💡 <strong>${L("Wealth Building", "بناء الثروة")}</strong>: ${L("You haven't set a Savings budget. The 50/30/20 rule suggests saving 20% of your income.", "لم تحدد بنداً للادخار. قاعدة 50/30/20 تنصح بادخار 20% من دخلك.")}</div>`;
+    } else if (income > 0 && spentRatio < monthProgress - 0.1) {
+      advice = `<div class="lx-advice-card good">✅ <strong>${L("On Track", "مسار ممتاز")}</strong>: ${L("Your spending velocity is well below your income. Great discipline this month.", "سرعة إنفاقك أقل بكثير من الدخل. انضباط مالي ممتاز هذا الشهر.")}</div>`;
+    }
+
     return (
       heading(
         name("finances"),
-        L(
-          "A home for every amount. This month: ",
-          "مكان واضح لكل مبلغ. هذا الشهر: ",
-        ) + month,
-        btn(
-          "+ " + L("Income / expense", "دخل / مصروف"),
-          "new",
-          'data-kind="finances"',
-          true,
-        ),
+        L("Executive Financial Command", "مركز القيادة المالية التنفيذية"),
+        btn("📥 " + L("Export CSV", "تصدير CSV"), "export-finance", 'class="lx-btn lx-secondary"') +
+        btn("+ " + L("Transaction", "معاملة"), "new", 'data-kind="finances"', true)
       ) +
-      `<div class="lx-stats">${stat(L("Income received", "الدخل المستلم"), money(income))}${stat(L("Actually spent", "المصروف الفعلي"), money(spent))}${stat(L("Remaining balance", "الرصيد المتبقي"), money(income - spent))}${stat(L("After planned payments", "بعد الدفعات المخططة"), money(income - spent - planned))}</div><section class="lx-card"><div class="lx-card-head"><div><h2>${L("Your income plan", "خطة توزيع دخلك")}</h2><p>${L("Targets, not transactions. Recording income updates these amounts.", "مبالغ مخططة وليست معاملات فعلية. تتحدث تلقائيًا عند تسجيل الدخل.")}</p></div>${btn(L("Edit percentages", "تعديل النسب"), "budget-edit")}</div>${
-        budget
-          .map((b) => {
-            const target = b.cents,
-              actual = rows
-                .filter((x) => x.type !== "income" && x.category === b.name)
-                .reduce((n, x) => n + Math.round(Number(x.amount) * 100), 0);
-            return `<div class="lx-budget-row"><strong>${esc(b.name)} <small>${b.percent}%</small></strong><span>${L("Planned", "المخطط")}: ${money(target)}</span><span>${L("Recorded", "المسجل")}: ${money(actual)}</span><span>${L("Available", "المتبقي للبند")}: ${money(target - actual)}</span></div>`;
-          })
-          .join("") ||
-        `<p>${L("Choose your own categories and percentages to begin.", "حدد بنودك ونسبك لتبدأ. يمكنك إضافة الادخار والمنزل والكراء والأدوات.")}</p>`
-      }<p>${L("Unallocated income", "الدخل غير الموزع")}: <b>${money(income - allocated)}</b></p><p class="lx-info">${L("Planning tip: leave room for irregular costs. A savings allocation is a target, not proof of a transfer. Choose percentages that fit your commitments.", "نصيحة تنظيمية: اترك مساحة للمصاريف غير المنتظمة. تخصيص مبلغ للادخار هو هدف وليس إثبات تحويل. اختر نسبًا تناسب التزاماتك.")}</p></section><div class="lx-grid-two"><section class="lx-card"><h2>${L("Money checklist", "قائمة متابعة المال")}</h2><form id="lxMoneyTodo"><div class="lx-fields-two">${field(L("Next action, e.g. pay rent", "الخطوة القادمة، مثل دفع الكراء"), "title", "", "text", 'required maxlength="160"')}${field(L("Planned amount · optional", "المبلغ المخطط · اختياري"), "amount", "", "number", 'min="0" step="0.01"')}<button class="lx-btn lx-primary" type="submit">${L("Add", "إضافة")}</button></div></form>${(d.settings.moneyTodos || []).map((t) => `<button class="lx-list-button" data-action="money-check" data-id="${esc(t.id)}" aria-pressed="${!!t.done}"><span>${t.done ? "✓" : "○"} ${esc(t.title)}</span><small>${money(Math.round(Number(t.amount || 0) * 100))}</small></button>`).join("")}<p class="lx-muted">${L("Forecast subtracts unchecked planned payments from this month’s balance. Record the expense when paid, then check its action.", "التوقع يخصم الدفعات غير المكتملة من رصيد الشهر. عند الدفع، سجّل المصروف ثم أكمل خطوته.")}</p></section><section class="lx-card"><h2>${L("This month’s transactions", "معاملات هذا الشهر")}</h2>${rows.map((x) => `<button class="lx-list-button" data-action="edit" data-kind="finances" data-id="${esc(x.id)}"><span>${esc(x.title)}<small>${dateText(x.date)} · ${esc(x.category || "")}</small></span><strong>${x.type === "income" ? "+" : "−"} ${money(Math.round(Number(x.amount) * 100))}</strong></button>`).join("") || empty(L("Record where money comes from and where it goes.", "سجل من أين يأتي المال وأين يُصرف."), "finances")}</section></div><details class="lx-card"><summary>${L("All transactions · previous months included", "كل المعاملات، بما فيها الأشهر السابقة")}</summary>${d.finances
-        .filter((x) => !x.archived)
-        .map(
-          (x) =>
-            `<button class="lx-list-button" data-action="edit" data-kind="finances" data-id="${esc(x.id)}">${esc(x.title)} · ${dateText(x.date)} · ${money(Math.round(Number(x.amount) * 100))}</button>`,
-        )
-        .join("")}</details>`
+      advice +
+      `<section class="lx-finance-dashboard">
+        <div class="lx-safe-spend">
+          <small>${L("Safe-to-Spend Balance", "المبلغ الآمن المتبقي للإنفاق")}</small>
+          <strong>${money(safeToSpend)}</strong>
+        </div>
+        <div class="lx-stats-grid">
+          ${stat(L("Total Income", "إجمالي الدخل"), money(income))}
+          ${stat(L("Total Spent", "المصروف الفعلي"), money(spent))}
+          ${stat(L("Planned Bills", "فواتير مجدولة"), money(planned))}
+        </div>
+        <div class="lx-burn-bar">
+          <div class="lx-burn-fill" style="width: ${Math.min(100, spentRatio * 100)}%; background: ${spentRatio > monthProgress ? '#F43F5E' : '#10B981'}"></div>
+          <div class="lx-burn-marker" style="left: ${monthProgress * 100}%" title="${L("Today", "اليوم")}"></div>
+        </div>
+      </section>
+      
+      <div class="lx-grid-two">
+        <section class="lx-card">
+          <div class="lx-card-head">
+            <div><h2>${L("Budget Allocation", "توزيع الميزانية")}</h2></div>
+            ${btn(L("Edit rules", "تعديل القواعد"), "budget-edit")}
+          </div>
+          <div class="lx-budget-list">
+          ${
+            budget.map((b) => {
+              const target = b.cents,
+                actual = rows.filter((x) => x.type !== "income" && x.category === b.name).reduce((n, x) => n + Math.round(Number(x.amount) * 100), 0),
+                catInfo = getCategoryInfo(b.name);
+              return `<div class="lx-budget-row">
+                <div class="lx-budget-name"><span class="lx-cat-icon" style="background:${catInfo.color}20">${catInfo.icon}</span> <strong>${esc(b.name)}</strong> <span class="lx-badge">${b.percent}%</span></div>
+                <div class="lx-budget-numbers">
+                  <div class="lx-budget-track"><div class="lx-budget-fill" style="width:${Math.min(100, (actual/(target||1))*100)}%;background:${catInfo.color}"></div></div>
+                  <small>${money(actual)} / ${money(target)}</small>
+                </div>
+              </div>`;
+            }).join("") || `<p>${L("Add your 50/30/20 allocation rules.", "أضف قواعد توزيع 50/30/20 الخاصة بك.")}</p>`
+          }
+          </div>
+        </section>
+
+        <section class="lx-card">
+          <h2>${L("Recent Transactions", "أحدث المعاملات")}</h2>
+          <div class="lx-tx-list">
+          ${rows.slice(0, 10).map((x) => {
+            const catInfo = getCategoryInfo(x.category || "");
+            return `<button class="lx-list-button lx-tx-item" data-action="edit" data-kind="finances" data-id="${esc(x.id)}">
+              <span class="lx-cat-icon" style="background:${catInfo.color}20">${catInfo.icon}</span>
+              <div class="lx-tx-details">
+                <strong>${esc(x.title)}</strong>
+                <small>${dateText(x.date)} · ${esc(x.category || "")}</small>
+              </div>
+              <strong class="lx-tx-amt" style="color:${x.type === 'income' ? '#10B981' : ''}">${x.type === "income" ? "+" : "−"} ${money(Math.round(Number(x.amount) * 100))}</strong>
+            </button>`;
+          }).join("") || empty(L("No transactions this month.", "لا توجد معاملات هذا الشهر."), "finances")}
+          </div>
+        </section>
+      </div>
+
+      <details class="lx-card">
+        <summary>${L("All Transactions History", "سجل كل المعاملات")}</summary>
+        <div class="lx-tx-list">
+        ${d.finances.filter((x) => !x.archived).map((x) => {
+          const catInfo = getCategoryInfo(x.category || "");
+          return `<button class="lx-list-button lx-tx-item" data-action="edit" data-kind="finances" data-id="${esc(x.id)}">
+            <span class="lx-cat-icon" style="background:${catInfo.color}20">${catInfo.icon}</span>
+            <div class="lx-tx-details">
+              <strong>${esc(x.title)}</strong>
+              <small>${dateText(x.date)} · ${esc(x.category || "")}</small>
+            </div>
+            <strong class="lx-tx-amt" style="color:${x.type === 'income' ? '#10B981' : ''}">${x.type === "income" ? "+" : "−"} ${money(Math.round(Number(x.amount) * 100))}</strong>
+          </button>`;
+        }).join("")}
+        </div>
+      </details>`
     );
   }
+
 
   function momentumMap(d) {
     const gs = d.goals.filter((g) => !g.archived);
@@ -1869,6 +1928,20 @@
     if (e.key.toLowerCase() === "t") editor("tasks");
     if (e.key.toLowerCase() === "n") editor("notes");
   }
+  function exportFinanceCSV(d) {
+    if (!d || !d.finances) return;
+    const header = "Date,Title,Amount,Type,Category,Notes\n";
+    const rows = d.finances.map(f => {
+      return `"${f.date || ""}","${esc(f.title || "")}","${f.amount || 0}","${f.type || "expense"}","${esc(f.category || "")}","${esc((f.notes || "").replace(/\n/g, " "))}"`;
+    }).join("\n");
+    const blob = new Blob(["\uFEFF" + header + rows], { type: "text/csv;charset=utf-8;" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `thenorth_finance_${C.day()}.csv`;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 400);
+  }
+
   async function onClick(e) {
     if (!db.read()) return;
     const b = e.target.closest("button,[data-route]");
@@ -1961,6 +2034,9 @@
       } catch {}
       $("#lxDialog").close();
       notice(L("✨ You are registered on the Executive AI Coach priority waitlist!", "✨ تم تسجيلك بنجاح في قائمة الانتظار ذات الأولوية للمدرب الذكي!"));
+    }
+    if (a === "export-finance") {
+      exportFinanceCSV(db.read());
     }
     if (a === "more-sessions") {
       historyLimit += 50;
