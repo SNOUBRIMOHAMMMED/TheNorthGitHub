@@ -1930,9 +1930,10 @@
   }
   function exportFinanceCSV(d) {
     if (!d || !d.finances) return;
+    const csvEsc = (s) => String(s || "").replace(/"/g, '""');
     const header = "Date,Title,Amount,Type,Category,Notes\n";
     const rows = d.finances.map(f => {
-      return `"${f.date || ""}","${esc(f.title || "")}","${f.amount || 0}","${f.type || "expense"}","${esc(f.category || "")}","${esc((f.notes || "").replace(/\n/g, " "))}"`;
+      return `"${f.date || ""}","${csvEsc(f.title)}","${f.amount || 0}","${f.type || "expense"}","${csvEsc(f.category)}","${csvEsc((f.notes || "").replace(/\n/g, " "))}"`;
     }).join("\n");
     const blob = new Blob(["\uFEFF" + header + rows], { type: "text/csv;charset=utf-8;" });
     const a = document.createElement("a");
