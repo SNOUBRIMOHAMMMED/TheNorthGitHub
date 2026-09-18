@@ -162,6 +162,12 @@
       t.priority = t.priority || "medium";
       t.subtasks = t.subtasks || [];
     });
+    d.habits.forEach((h) => {
+      h.checks = Array.isArray(h.checks) ? h.checks : [];
+      h.goalId = typeof h.goalId === "string" ? h.goalId : "";
+      h.impact = num(h.impact, 0, 50);
+      h.frequency = typeof h.frequency === "string" ? h.frequency : "daily";
+    });
     d.schemaVersion = VERSION;
     return d;
   }
@@ -650,8 +656,63 @@
     }
   }
 
+  function habitStreak(checks = [], todayStr = day()) {
+    const set = new Set((checks || []).filter(Boolean));
+    let current = 0,
+      cursor = new Date(todayStr + "T12:00:00");
+    if (!set.has(todayStr)) cursor.setDate(cursor.getDate() - 1);
+    while (set.has(day(+cursor))) {
+      current++;
+      cursor.setDate(cursor.getDate() - 1);
+    }
+    const sorted = [...set].filter((d) => /^\d{4}-\d{2}-\d{2}$/.test(d)).sort();
+    let best = 0,
+      temp = 0,
+      prev = null;
+    for (const dStr of sorted) {
+      const curDate = new Date(dStr + "T12:00:00");
+      if (prev) {
+        const diff = Math.round((curDate - prev) / 86400000);
+        if (diff === 1) temp++;
+        else if (diff > 1) temp = 1;
+      } else temp = 1;
+      if (temp > best) best = temp;
+      prev = curDate;
+    }
+    if (current > best) best = current;
+    return { current, best };
+  }
+
+  function toggleHabit(d, id, targetDate = day()) {
+    const h = d.habits.find((x) => x.id === id);
+    if (!h) return;
+    h.checks = Array.isArray(h.checks) ? h.checks : [];
+    const wasChecked = h.checks.includes(targetDate);
+    if (wasChecked) h.checks = h.checks.filter((x) => x !== targetDate);
+    else h.checks.push(targetDate);
+    if (h.goalId) {
+      const g = d.goals.find((g) => g.id === h.goalId);
+      if (g && !g.archived) {
+        const impact = num(h.impact, 0, 50) || 5;
+        if (!wasChecked) {
+          const added = Math.min(100 - g.momentum, impact);
+          g.momentum += added;
+          h.appliedMomentum = added;
+        } else {
+          g.momentum = Math.max(0, g.momentum - (h.appliedMomentum || impact));
+        }
+        let hist = g.history.find((x) => x.date === targetDate);
+        if (hist) hist.value = g.momentum;
+        else g.history.push({ date: targetDate, value: g.momentum });
+      }
+    }
+    return h;
+  }
+
   return {
     completeTask,
+    habitStreak,
+    toggleHabit,
     VERSION,
     ACCOUNT_KEY,
     SESSION_KEY,

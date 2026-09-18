@@ -37,7 +37,7 @@ goodMorning:"Good morning",goodAfternoon:"Good afternoon",goodEvening:"Good even
 keepRhythm:"Keep the rhythm. This is currently your strongest goal.",belowLine:"is below the on-track line. Complete one linked task today to start the recovery.",protectSystem:"Protect the system by completing today's key actions.",
 noTasks:"No tasks yet. Add a concrete action linked to one of your goals.",noGoals:"No goals yet.",noNotifications:"No notifications yet.",noPlan:"Not defined yet",goalProgress:"Goal progress",noDeadline:"No deadline",
 strong:"Strong",onTrack:"On track",attention:"Needs attention",atRisk:"At risk",delete:"Delete",viewGoal:"View goal",created:"Goal created",taskAdded:"Task added",saved:"Saved",wrongLogin:"Email or password is incorrect.",
-accountExists:"An account with this email already exists.",accountCreated:"Account created.",createGoalFirst:"Create a goal first.",completed:"Completed",movedUp:"moved up",below:"Below on-track",historyEmpty:"Your line will grow as you execute."
+accountExists:"An account with this email already exists.",accountCreated:"Account created.",createGoalFirst:"Create a goal first.",completed:"Completed",movedUp:"moved up",below:"Below on-track",historyEmpty:"Your line will grow as you execute.",tasks:"Tasks",focus:"Focus",optionalPlanning:"Optional planning",priority:"Priority",high:"High",medium:"Medium",low:"Low",date:"Due date"
 },
 ar:{
 
@@ -66,7 +66,7 @@ goodMorning:"صباح الخير",goodAfternoon:"مساء الخير",goodEvenin
 keepRhythm:"استمر على هذا الإيقاع. هذا هو هدفك الأقوى حاليًا.",belowLine:"تحت خط المسار الجيد. أنجز مهمة مرتبطة به اليوم لتبدأ العودة.",protectSystem:"حافظ على النظام بإتمام أهم أعمال اليوم.",
 noTasks:"لا توجد مهام بعد. أضف عملًا واضحًا مرتبطًا بأحد أهدافك.",noGoals:"لا توجد أهداف بعد.",noNotifications:"لا توجد إشعارات بعد.",noPlan:"لم تحدده بعد",goalProgress:"تقدم الهدف",noDeadline:"دون موعد نهائي",
 strong:"زخم قوي",onTrack:"على المسار المطلوب",attention:"يحتاج تدخلك",atRisk:"خارج المسار",delete:"حذف",viewGoal:"عرض الهدف",created:"تم إنشاء الهدف",taskAdded:"تمت إضافة المهمة",saved:"تم الحفظ",wrongLogin:"البريد الإلكتروني أو كلمة المرور غير صحيحة.",
-accountExists:"يوجد حساب بهذا البريد بالفعل.",accountCreated:"تم إنشاء الحساب.",createGoalFirst:"أنشئ هدفًا أولًا.",completed:"تم الإنجاز",movedUp:"ارتفع",below:"تحت المسار",historyEmpty:"سيبدأ الخط بالنمو كلما نفذت."
+accountExists:"يوجد حساب بهذا البريد بالفعل.",accountCreated:"تم إنشاء الحساب.",createGoalFirst:"أنشئ هدفًا أولًا.",completed:"تم الإنجاز",movedUp:"ارتفع",below:"تحت المسار",historyEmpty:"سيبدأ الخط بالنمو كلما نفذت.",tasks:"المهام",focus:"التركيز",optionalPlanning:"تخطيط اختياري",priority:"الأولوية",high:"عالية",medium:"متوسطة",low:"منخفضة",date:"تاريخ الاستحقاق"
 }};
 // Landing copy shares the existing language switch.
 Object.assign(dict.en, {
@@ -646,7 +646,25 @@ $("#goalForm").addEventListener("submit",e=>{
   saveData(x=>x.goals.push(g));goalDialog.close();e.target.reset();generateSignals();renderAll();toast(t("created"));
 });
 $("#taskForm").addEventListener("submit",e=>{
-  e.preventDefault();const tk={id:uid(),title:$("#taskTitle").value.trim(),goalId:$("#taskGoal").value,impact:Number($("#taskImpact").value),progressImpact:Number($("#taskProgress").value||0),date:iso(),done:false,completedDate:""};saveData(d=>d.tasks.push(tk));taskDialog.close();e.target.reset();renderAll();toast(t("taskAdded"));
+  e.preventDefault();
+  const priority = $("#taskPriority")?.value || "medium";
+  const priorityImpact = priority === "high" ? 20 : priority === "low" ? 5 : 10;
+  const tk = {
+    id: uid(),
+    title: $("#taskTitle").value.trim(),
+    goalId: $("#taskGoal").value,
+    priority,
+    impact: $("#taskImpact") ? Number($("#taskImpact").value) : priorityImpact,
+    progressImpact: $("#taskProgress") ? Number($("#taskProgress").value || 0) : 10,
+    date: $("#taskDate")?.value || iso(),
+    done: false,
+    completedDate: ""
+  };
+  saveData(d=>d.tasks.push(tk));
+  taskDialog.close();
+  e.target.reset();
+  renderAll();
+  toast(t("taskAdded"));
 });
 function toggleTask(id){
   saveData(d=>{

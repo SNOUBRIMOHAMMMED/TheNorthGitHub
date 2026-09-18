@@ -473,7 +473,7 @@
 
   function goalBoard(d) {
     const gs = d.goals.filter((g) => !g.archived);
-    return `<section class="lx-card lx-goal-board"><div class="lx-card-head"><div><div class="lx-eyebrow">${L("YOUR DIRECTION", "وجهتك أولًا")}</div><h2>${L("Where you are. Where you are going.", "أين أنت الآن، وإلى أين تتجه؟")}</h2></div>${btn(L("Momentum", "خريطة الزخم"), "navigate", 'data-to="dashboard"')}</div><div class="lx-goal-strip">${
+    return `<section class="lx-card lx-goal-board"><div class="lx-card-head"><div><div class="lx-eyebrow">${L("YOUR DIRECTION", "وجهتك أولًا")}</div><h2>${L("Where you are. Where you are going.", "أين أنت الآن، وإلى أين تتجه؟")}</h2></div>${btn(L("Momentum", "خريطة الزخم"), "navigate", 'data-to="home"')}</div><div class="lx-goal-strip">${
       gs
         .map((g) => {
           const points = (g.history || [])
