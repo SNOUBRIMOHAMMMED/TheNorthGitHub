@@ -3,7 +3,8 @@ begin;
 create table public.user_sessions (
  user_id uuid primary key references auth.users(id) on delete cascade,
  payload jsonb not null check (jsonb_typeof(payload) = 'object'),
-A updated_at timestamptz not null default now()
+ revision bigint not null default 0 check (revision >= 0),
+ updated_at timestamptz not null default now()
 );
 alter table public.user_sessions enable row level security;
 revoke all on public.user_sessions from anon, authenticated;
