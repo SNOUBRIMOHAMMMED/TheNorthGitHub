@@ -1,30 +1,22 @@
-# Supabase setup and validation
+# Supabase setup
 
-## Existing project
-You reported that supabase-setup.sql succeeded. This release uses that same user_sessions table; no new migration is required. Do not rerun CREATE TABLE or delete existing data.
+This release preserves the existing cloud adapters. No remote database changes were performed.
 
-## New project only
-Run supabase-setup.sql once in the SQL Editor. Enable Email authentication, configure the deployed application's Site URL and allowed redirects, and retain email confirmation. Configure the public URL and publishable key in auth.js. Never expose service-role credentials.
+## Existing working project
 
-## Unified authentication
-Create account and Sign in call Supabase directly through auth.js. There is no second local/cloud login. Confirm email before signing in if required. A previous browser-only user registers with the same email once; an existing Supabase user signs in. A new device signs in to that same account.
+Keep the current database. Do not run a table reset or rerun the bootstrap script. The adapter expects `public.user_sessions` with `user_id` (UUID primary key), `payload` (JSONB), `revision` (bigint) and `updated_at` (timestamptz), and policies limiting each authenticated user to their own row. If the deployed schema differs, inspect it and prepare a data-preserving migration separately.
 
-## Storage
-user_sessions contains one versioned JSON workspace document per authenticated user. Existing IDs and relationships are preserved. The document includes tasks, completed sessions, projects, goals, notes, events, habits, inbox, finances, health, learning, notifications, profile, settings and planning. Credentials and the active timer are excluded.
+## New empty project
 
-Local edits schedule synchronization after 700 ms. A 15-second poll retrieves remote changes. Network failures leave local edits pending. Check the saved status before closing. An active timer stays on its originating device until completion; cross-device timer transfer and distributed timer locking are not implemented.
+1. In the Supabase SQL Editor, run the complete `supabase-setup.sql` once.
+2. Enable email authentication. Set your deployed site URL and allowed redirect URLs. Retain email confirmation.
+3. Put the project URL and publishable client key in `auth.js`. Never use a service-role key in the application.
+4. Verify with two test accounts that each account can read/write only its own workspace, and test email confirmation and sign-in.
 
-Revision checks detect concurrent edits. Conflicting copies require an explicit choice in Settings > Sync and recovery, rather than an automatic merge. A local recovery snapshot is retained before replacement; remote replacement is blocked during an active timer.
+The bootstrap SQL includes the `revision` column used by the existing adapter and trigger. A stray character before `updated_at` was corrected in this local export. The script has not been executed against the live database.
 
-## Files
-- auth.js: shared Supabase client and authentication adapter.
-- app.js: unified login/signup, verified identity before entering workspace.
-- cloud-sync.js: snapshots, revision checks and recovery.
-- workspace.js: automatic sync and status/recovery UI.
-- index.html, sw.js, scripts: load and distribute the new modules.
-- supabase-setup.sql: original schema and own-user RLS.
+## Behavior
 
-## Validation limits
-Build and 39 tests passed using mocked authentication/database operations. The local unauthenticated screens loaded with no captured console errors. Real remote authentication, email confirmation and RLS have not been exercised by this implementation session.
+One versioned JSON document stores each authenticated user's workspace, including tasks and completed focus sessions. Local edits schedule synchronization; periodic polling retrieves remote changes. Concurrent changes produce a recovery choice rather than a silent overwrite. An active timer remains local to its browser. Network failures retain local edits; check the synchronization status before leaving.
 
-After deployment, test with two accounts: create a task and finish a session in account A, sign in as A in a second browser and verify restoration. Verify account B cannot see A's workspace. Test offline edits and reconnection, and conflicting edits across browsers. Never disable RLS to solve a setup error.
+Live authentication, email delivery, RLS and synchronization must be checked against the actual Supabase project; the automated test suite uses mocked responses.

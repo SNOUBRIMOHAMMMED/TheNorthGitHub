@@ -1,6 +1,12 @@
 /* Offline shell only. Never intercept external traffic or clear other apps' caches. */
-const CACHE = "lifeos-v4-20260914-ultra2026";
+const CACHE = "lifeos-v4-20260920-north-final";
 const ASSETS = [
+  "north-brand.css",
+  "north-brand.css?v=5",
+  "landing-motion.js",
+  "landing-motion.js?v=3",
+  "assets/north-summit.png",
+  "assets/north-bridge.png",
   "./",
   "index.html",
   "styles.css",

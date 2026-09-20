@@ -6,6 +6,8 @@ const root = path.resolve(__dirname, ".."),
 fs.mkdirSync(out, { recursive: true });
 for (const f of [
   "index.html",
+  "north-brand.css",
+  "landing-motion.js",
   "styles.css",
   "executive.css",
   "landing.css",
@@ -25,3 +27,5 @@ for (const f of [
 console.log(
   "Static production assets copied to dist/. No transpilation or dependencies required.",
 );
+
+fs.cpSync(path.join(root,"assets"),path.join(out,"assets"),{recursive:true});
