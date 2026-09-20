@@ -1370,3 +1370,42 @@ dialog.lx-dialog[open]{
   }
 }
 
+/* --- Daily Shutdown Mode --- */
+body.lx-shutdown-active .life-workspace {
+  display: none !important;
+}
+body.lx-shutdown-active {
+  background: var(--n-base);
+  overflow: hidden;
+}
+.lx-shutdown-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999;
+  text-align: center;
+  color: var(--n-i3);
+  animation: lxFadeIn 2s ease-in-out;
+}
+.lx-shutdown-overlay h1 {
+  font-size: 80px;
+  margin: 0 0 24px;
+}
+.lx-shutdown-overlay h2 {
+  font-size: 28px;
+  color: var(--n-i1);
+  margin: 0 0 12px;
+  letter-spacing: -0.5px;
+}
+.lx-shutdown-overlay p {
+  font-size: 16px;
+  max-width: 400px;
+  line-height: 1.6;
+}
+@keyframes lxFadeIn {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}

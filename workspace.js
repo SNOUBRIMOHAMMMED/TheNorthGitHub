@@ -1,4 +1,4 @@
-/* Product UI: progressively extends the original LifeOS application. */
+﻿/* Product UI: progressively extends the original LifeOS application. */
 (() => {
   "use strict";
   const C = window.LifeCore,
@@ -741,7 +741,7 @@
       .sort((a, b) => ["high", "medium", "low"].indexOf(a.priority) - ["high", "medium", "low"].indexOf(b.priority));
 
     return heading(L("Executive Radar", "القيادة التنفيذية"),
-      L("Trajectory. Deep attention. Relentless execution.", "مسار الزخم. التركيز العميق. والوصول إلى أهدافك.")) +
+      L("Trajectory. Deep attention. Relentless execution.", "مسار الزخم. التركيز العميق. والوصول إلى أهدافك."), btn("🌙 " + L("Daily Shutdown", "الإغلاق اليومي"), "shutdown")) +
       /* 1. خريطة الزخم */
       `<section class="lx-card lx-momentum-section">
         <div class="lx-card-head">
@@ -2034,6 +2034,56 @@
     if (a === "zen-mode") {
       if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(()=>{});
       else document.exitFullscreen();
+    }
+    if (a === "shutdown") {
+      const today = C.day();
+      const tt = totals(db.read());
+      const doneTasks = db.read().tasks.filter(t => t.done && t.completedDate?.startsWith(today));
+      const body = `<div class="lx-shutdown-modal" style="text-align:center">
+        <h1 style="font-size:48px; margin-bottom:10px">🌙</h1>
+        <h2>${L("Work is done.", "لقد انتهى العمل.")}</h2>
+        <p class="lx-muted" style="margin-bottom:24px">${L("Disconnecting helps you avoid burnout and guarantees a fresh start tomorrow.", "فصل عقلك عن العمل الآن يحميك من الاحتراق النفسي ويضمن لك بداية قوية غداً.")}</p>
+        
+        <div class="lx-grid-two" style="text-align:start; margin-bottom:24px">
+          <div class="lx-card" style="padding:16px">
+            <div class="lx-eyebrow">${L("TODAY'S WINS", "إنجازات اليوم")}</div>
+            <h3 style="font-size:24px; color:var(--lx-accent)">${doneTasks.length} ${L("Tasks", "مهام")}</h3>
+          </div>
+          <div class="lx-card" style="padding:16px">
+            <div class="lx-eyebrow">${L("DEEP FOCUS", "التركيز العميق")}</div>
+            <h3 style="font-size:24px; color:var(--lx-accent)">${hrs(tt.today)}</h3>
+          </div>
+        </div>
+        
+        <div style="text-align:start; margin-bottom:24px">
+          <label class="full">
+            <span>${L("Brain Dump (Inbox)", "تفريغ الدماغ (الوارد)")}</span>
+            <textarea id="sdDump" rows="3" placeholder="${L("Any lingering thoughts? Write them here so you can sleep peacefully...", "هل هناك أفكار عالقة في ذهنك؟ اكتبها هنا لتنام بسلام ولتجدها غداً في الوارد...")}"></textarea>
+          </label>
+        </div>
+        
+        <button class="lx-btn lx-primary lx-wide" data-action="shutdown-confirm" style="font-size:16px; padding:16px">
+          ${L("Disconnect Now", "أغلق اليوم وافصل عقلك")}
+        </button>
+      </div>`;
+      modal(L("Daily Shutdown", "الإغلاق اليومي"), body);
+      return;
+    }
+    
+    if (a === "shutdown-confirm") {
+      const dump = document.getElementById("sdDump")?.value.trim();
+      if (dump) {
+        await mutate(d => {
+          d.inbox.push({ id: C.id(), text: dump, ts: Date.now() });
+        });
+      }
+      document.getElementById("lxDialog").close();
+      document.body.classList.add("lx-shutdown-active");
+      const overlay = document.createElement("div");
+      overlay.className = "lx-shutdown-overlay";
+      overlay.innerHTML = `<h1>🌙</h1><h2>${L("The day is done.", "انتهى عمل اليوم.")}</h2><p>${L("Rest well. The system is suspended until you return tomorrow.", "نتمنى لك راحة هنيئة. تم تعليق النظام حتى عودتك غداً.")}</p>`;
+      document.body.appendChild(overlay);
+      return;
     }
     if (a === "new") editor(kind, "", { projectId: b.dataset.project || "", goalId: b.dataset.goal || "" });
     if (a === "edit") editor(kind, id);
