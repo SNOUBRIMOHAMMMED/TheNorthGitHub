@@ -1,4 +1,4 @@
-﻿(() => {
+(() => {
 const APP_KEY="lifeos_v11_accounts", SESSION_KEY="lifeos_v11_session";
 // NOTE: We intentionally do NOT wipe SESSION_KEY here anymore.
 // The previous localStorage.removeItem(SESSION_KEY) caused an offline lockout:
@@ -38,7 +38,7 @@ yourGoals:"Your goal portfolio",goalsHint:"Every important outcome, its current 
 planCascade:"From strategy to execution",plannerHint:"Keep the big picture intact while reducing it into actions you can execute.",goalSignals:"Signal center",notifHint:"Progress, risk, recovery and the wins that actually matter.",clearAll:"Clear all",
 profileSettings:"Profile & control",accountHint:"Identity, language and control over your private workspace.",saveProfile:"Save profile",preferences:"Preferences",language:"Language",languageHint:"Switch the entire interface.",
 onTrackLevel:"On-track level",onTrackHint:"The horizontal line your momentum should rise above.",backup:"Backup",backupHint:"Export before changing device or clearing browser data.",export:"Export",import:"Import",
-signOut:"Sign out",signOutHint:"Your local data stays on this browser.",defineGoal:"Define your next destination",goalName:"Goal name",deadline:"Deadline",category:"Category",whyGoal:"Why does this matter?",
+signOut:"Sign out",signOutHint:"Your local data stays on this browser.",defineGoal:"Define your next destination",goalName:"Goal name",deadline:"Deadline",category:"Category",whyGoal:"Why does this matter?",identityGoal:"Who are you becoming? (Identity)",
 startsZero:"This goal will start at zero momentum and zero progress.",breakItDown:"BREAK IT DOWN",sixMonths:"6 months",threeMonths:"3 months",thisMonth:"This month",thisWeek:"This week",cancel:"Cancel",createGoal:"Create goal",
 todayAction:"TODAY'S ACTION",moveGoal:"Move a goal today",task:"Task",linkedGoal:"Linked goal",momentumImpact:"Momentum impact",goalProgressImpact:"Goal progress",
 goodMorning:"Good morning",goodAfternoon:"Good afternoon",goodEvening:"Good evening",peace:"Hello",strongest:"Strongest right now",needsAttention:"Needs attention",allSafe:"All goals are above the line",
@@ -70,7 +70,7 @@ yourGoals:"محفظة أهدافك",goalsHint:"كل نتيجة مهمة، اتج
 planCascade:"من الرؤية إلى التنفيذ",plannerHint:"احتفظ بالصورة الكبرى، ثم حوّلها إلى مراحل وأعمال قابلة للتنفيذ.",goalSignals:"مركز الإشارات",notifHint:"التقدم، المخاطر، التعافي، والإنجازات التي تستحق انتباهك.",clearAll:"مسح الإشعارات",
 profileSettings:"الملف الشخصي والتحكم",accountHint:"هويتك، لغتك، وتحكمك في مساحة عملك الخاصة.",saveProfile:"حفظ الملف",preferences:"التفضيلات",language:"لغة الواجهة",languageHint:"اختر اللغة التي تريد إدارة THE NORTH بها.",
 onTrackLevel:"حدّ المسار المطلوب",onTrackHint:"الحدّ المرجعي الذي تريد أن يبقى زخم أهدافك فوقه.",backup:"النسخة الاحتياطية",backupHint:"احتفظ بنسخة من بياناتك قبل تغيير الجهاز أو حذف بيانات المتصفح.",export:"تصدير",import:"استيراد",
-signOut:"تسجيل الخروج",signOutHint:"سيتم تسجيل خروجك، بينما تبقى بيانات هذه النسخة محفوظة على الجهاز.",defineGoal:"حدّد النتيجة التي تريد الوصول إليها",goalName:"اسم الهدف",deadline:"الموعد النهائي",category:"المجال",whyGoal:"لماذا يستحق هذا الهدف وقتك؟",
+signOut:"تسجيل الخروج",signOutHint:"سيتم تسجيل خروجك، بينما تبقى بيانات هذه النسخة محفوظة على الجهاز.",defineGoal:"حدد وجهتك واستراتيجيتك لهذا الهدف",goalName:"اسم الهدف",deadline:"الموعد النهائي",category:"القطاع",whyGoal:"لماذا تنجز هذا الهدف؟ (السبب)",identityGoal:"من هو الشخص الذي يحقق هذا الهدف؟ (الهوية)",
 startsZero:"سيبدأ هذا الهدف بزخم 0 وتقدّم 0.",breakItDown:"حوّل الهدف إلى مراحل تنفيذ",sixMonths:"6 أشهر",threeMonths:"3 أشهر",thisMonth:"هذا الشهر",thisWeek:"هذا الأسبوع",cancel:"إلغاء",createGoal:"إنشاء الهدف",
 todayAction:"تنفيذ اليوم",moveGoal:"أضف عملاً يحرك أحد أهدافك",task:"العمل المطلوب",linkedGoal:"الهدف الذي سيحرّكه هذا العمل",momentumImpact:"قوة تأثير العمل في الزخم",goalProgressImpact:"أثرها في نسبة تقدم الهدف",
 goodMorning:"صباح الخير",goodAfternoon:"مساء الخير",goodEvening:"مساء الخير",peace:"السلام عليكم",strongest:"الأفضل الآن",needsAttention:"يحتاج انتباهك",allSafe:"كل الأهداف فوق الخط",
@@ -653,7 +653,7 @@ $$("[data-add-task]").forEach(b=>b.onclick=()=>{const ag=data().goals.filter(g=>
 $$(".close-dialog").forEach(b=>b.onclick=()=>b.closest("dialog").close());
 
 $("#goalForm").addEventListener("submit",e=>{
-  e.preventDefault();const d=data();const g={id:uid(),name:$("#goalName").value.trim(),deadline:$("#goalDeadline").value,category:$("#goalCategory").value,why:$("#goalWhy").value.trim(),color:palette[d.goals.length%palette.length],momentum:0,progress:0,history:[{date:iso(),value:0}],plan:{m6:$("#goal6m").value.trim(),m3:$("#goal3m").value.trim(),month:$("#goalMonth").value.trim(),week:$("#goalWeek").value.trim()}};
+  e.preventDefault();const d=data();const g={id:uid(),name:$("#goalName").value.trim(),identity:$("#goalIdentity")?.value.trim()||"",deadline:$("#goalDeadline").value,category:$("#goalCategory").value,why:$("#goalWhy").value.trim(),color:palette[d.goals.length%palette.length],momentum:0,progress:0,history:[{date:iso(),value:0}],plan:{m6:$("#goal6m").value.trim(),m3:$("#goal3m").value.trim(),month:$("#goalMonth").value.trim(),week:$("#goalWeek").value.trim()}};
   saveData(x=>x.goals.push(g));goalDialog.close();e.target.reset();generateSignals();renderAll();toast(t("created"));
 });
 $("#taskForm").addEventListener("submit",e=>{
