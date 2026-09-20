@@ -537,7 +537,12 @@
       );
     }
     const month = C.day().slice(0, 7),
-      rows = d.finances.filter((x) => !x.archived && x.date?.startsWith(month)),
+      normMonth = (s) => {
+        if (!s || typeof s !== "string") return "";
+        const p = s.split("-");
+        return p.length >= 2 ? `${p[0]}-${p[1].padStart(2, "0")}` : s.slice(0, 7);
+      },
+      rows = d.finances.filter((x) => !x.archived && normMonth(x.date) === month),
       income = rows.filter((x) => x.type === "income").reduce((n, x) => n + Math.round(Number(x.amount || 0) * 100), 0),
       spent = rows.filter((x) => x.type !== "income").reduce((n, x) => n + Math.round(Number(x.amount || 0) * 100), 0),
       planned = (d.settings.moneyTodos || []).filter((t) => !t.done).reduce((n, t) => n + Math.round(Number(t.amount || 0) * 100), 0),
@@ -2162,7 +2167,8 @@
     }
     if (a === "confirm-archive") {
       await mutate((d) => {
-        d[kind].find((x) => x.id === id).archived = true;
+        const item = d[kind]?.find((x) => x.id === id);
+        if (item) item.archived = true;
       });
       $("#lxDialog").close();
     }
@@ -2199,17 +2205,23 @@
       );
     }
     if (a === "confirm-restore") {
-      const restored = JSON.parse(
-        localStorage.getItem(
+      try {
+        const raw = localStorage.getItem(
           "lifeos_recovery_" + localStorage.getItem(C.SESSION_KEY),
-        ),
-      );
-      await mutate((d) => {
-        for (const k of Object.keys(d)) delete d[k];
-        Object.assign(d, C.migrate(restored));
-      });
-      $("#lxDialog").close();
-      window.LifeLegacy.applyLang();
+        );
+        if (!raw) throw Error("noBackup");
+        const restored = JSON.parse(raw);
+        const validated = C.migrate(restored);
+        await mutate((d) => {
+          for (const k of Object.keys(d)) delete d[k];
+          Object.assign(d, validated);
+        });
+        $("#lxDialog").close();
+        window.LifeLegacy.applyLang();
+        notice(L("Data restored successfully.", "تمت استعادة البيانات بنجاح."));
+      } catch (e) {
+        error(e);
+      }
     }
   }
 
@@ -2482,9 +2494,11 @@
           if (kind === "tasks")
             C.completeTask(d, item.id, data.status === "done");
           if (form.dataset.source) {
-            const source = d.inbox.find((x) => x.id === form.dataset.source);
-            source.archived = true;
-            source.convertedTo = { kind, id: item.id };
+            const source = d.inbox?.find((x) => x.id === form.dataset.source);
+            if (source) {
+              source.archived = true;
+              source.convertedTo = { kind, id: item.id };
+            }
           }
           return item;
         });
