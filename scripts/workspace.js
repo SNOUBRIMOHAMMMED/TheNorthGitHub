@@ -797,6 +797,30 @@
           </div>
           ${btn(L("All tasks", "كل المهام"), "navigate", 'data-to="tasks"')}
         </div>
+        ${(() => {
+          const todayAll = d.tasks.filter(t => !t.archived && (!t.date || t.date <= today));
+          const todayDone = todayAll.filter(t => t.done).length;
+          const todayTotal = todayAll.length;
+          if (todayTotal === 0) return '';
+          const pct = Math.round((todayDone / todayTotal) * 100);
+          const allDone = todayDone === todayTotal;
+          return `<div class="lx-day-progress" style="margin:0 0 16px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+              <span style="font-size:0.78rem;font-weight:600;letter-spacing:.05em;opacity:.6;">
+                ${L("TODAY", "إنجاز اليوم")}
+              </span>
+              <span style="font-size:0.82rem;font-weight:700;${allDone ? 'color:var(--lx-green,#37C98A)' : ''}">
+                ${todayDone} / ${todayTotal} ${allDone ? (L("✓ Complete!", "✓ أنجزت كل مهامك!")) : L("done", "منجز")}
+              </span>
+            </div>
+            <div style="height:6px;background:var(--lx-border,rgba(255,255,255,.08));border-radius:99px;overflow:hidden;">
+              <div style="height:100%;width:${pct}%;background:${allDone ? 'var(--lx-green,#37C98A)' : 'var(--lx-accent,#5B8CFF)'};border-radius:99px;transition:width .4s ease;"></div>
+            </div>
+            ${allDone ? `<p style="font-size:0.8rem;color:var(--lx-green,#37C98A);margin-top:8px;text-align:center;">
+              🎯 ${L("Outstanding execution today. Keep the momentum going.", "تنفيذ استثنائي اليوم. حافظ على الزخم.")}
+            </p>` : ''}
+          </div>`;
+        })()}
         <div class="lx-task-list">
           ${due.slice(0, 4).map((t) => taskRow(t, d)).join("") || empty(L("Add your next action in Tasks.", "أضف خطوتك القادمة في قسم المهام."), "tasks")}
         </div>
