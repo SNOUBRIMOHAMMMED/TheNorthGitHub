@@ -1409,3 +1409,17 @@ body.lx-shutdown-active {
   0% { opacity: 0; }
   100% { opacity: 1; }
 }
+
+/* --- Habit Grace Days & Recovery --- */
+.lx-streak-badge.is-grace {
+  background: rgba(245, 158, 11, 0.15) !important;
+  color: #f59e0b !important;
+  border: 1px solid rgba(245, 158, 11, 0.35) !important;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.lx-card.is-grace-card {
+  border-color: rgba(245, 158, 11, 0.3) !important;
+  background: linear-gradient(180deg, rgba(245, 158, 11, 0.03) 0%, transparent 100%);
+}

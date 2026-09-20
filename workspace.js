@@ -1,4 +1,4 @@
-﻿/* Product UI: progressively extends the original LifeOS application. */
+/* Product UI: progressively extends the original LifeOS application. */
 (() => {
   "use strict";
   const C = window.LifeCore,
@@ -1030,7 +1030,7 @@
           </div>
         </section>` +
         entityTime(d, "goalId", g.id) +
-        `<div class="lx-grid-two"><section class="lx-card"><h2>${L("Outcome progress", "تقدم النتيجة")} · ${g.progress}%</h2>${progress(g.progress)}<p>${L("Time is an investment, not an automatic measure of completion.", "الوقت استثمار، وليس مقياسًا تلقائيًا لاكتمال الهدف.")}</p><div class="lx-mini-stats">${stat(L("Estimated", "المقدر"), (g.targetHours || 0) + L(" hours", " ساعة"))}${stat(L("Remaining", "المتبقي"), hrs(Math.max(0, (g.targetHours || 0) * 3600000 - time)))}${stat(L("Momentum", "الزخم"), (g.momentum || 0) + "%")}${stat(L("Days left", "الأيام المتبقية"), g.deadline ? Math.max(0, Math.ceil((+new Date(g.deadline + "T23:59:59") - Date.now()) / 86400000)) : "—")}</div><h3>${L("Milestones", "المراحل")}</h3>${["m6", "m3", "month", "week"].map((key, i) => `<div class="lx-list-line"><span>${L(["6 months", "Quarter", "Month", "Week"][i], ["ستة أشهر", "ربع سنة", "شهر", "أسبوع"][i])}</span><strong>${esc(g.plan?.[key] || "—")}</strong></div>`).join("")}<p class="lx-pre">${esc(g.notes || "")}</p></section><section class="lx-card"><h2>${name("tasks")} (${ts.filter((t) => t.done).length}/${ts.length})</h2>${ts.map((t) => taskRow(t, d)).join("") || empty(L("Connect actions to this outcome.", "اربط التنفيذ بهذه النتيجة."), "tasks")}<h3>${name("habits")} (${hs.length})</h3>${hs.map((h) => `<div class="lx-list-line"><span><strong>${esc(h.title)}</strong><small>🔥 ${C.habitStreak(h.checks || [], C.day()).current} ${L("day streak", "أيام متتالية")}</small></span>${btn(h.checks?.includes(C.day()) ? "✓ " + L("Done", "تمت") : L("Check", "إكمال"), "habit-toggle", `data-id="${h.id}"`, h.checks?.includes(C.day()))}</div>`).join("") || `<p class="lx-pre">${L("No habits linked to this goal yet.", "لا توجد عادات مرتبطة بهذا الهدف بعد.")}</p>`}</section></div>`
+        `<div class="lx-grid-two"><section class="lx-card"><h2>${L("Outcome progress", "تقدم النتيجة")} · ${g.progress}%</h2>${progress(g.progress)}<p>${L("Time is an investment, not an automatic measure of completion.", "الوقت استثمار، وليس مقياسًا تلقائيًا لاكتمال الهدف.")}</p><div class="lx-mini-stats">${stat(L("Estimated", "المقدر"), (g.targetHours || 0) + L(" hours", " ساعة"))}${stat(L("Remaining", "المتبقي"), hrs(Math.max(0, (g.targetHours || 0) * 3600000 - time)))}${stat(L("Momentum", "الزخم"), (g.momentum || 0) + "%")}${stat(L("Days left", "الأيام المتبقية"), g.deadline ? Math.max(0, Math.ceil((+new Date(g.deadline + "T23:59:59") - Date.now()) / 86400000)) : "—")}</div><h3>${L("Milestones", "المراحل")}</h3>${["m6", "m3", "month", "week"].map((key, i) => `<div class="lx-list-line"><span>${L(["6 months", "Quarter", "Month", "Week"][i], ["ستة أشهر", "ربع سنة", "شهر", "أسبوع"][i])}</span><strong>${esc(g.plan?.[key] || "—")}</strong></div>`).join("")}<p class="lx-pre">${esc(g.notes || "")}</p></section><section class="lx-card"><h2>${name("tasks")} (${ts.filter((t) => t.done).length}/${ts.length})</h2>${ts.map((t) => taskRow(t, d)).join("") || empty(L("Connect actions to this outcome.", "اربط التنفيذ بهذه النتيجة."), "tasks")}<h3>${name("habits")} (${hs.length})</h3>${hs.map((h) => { const strk = C.habitStreak(h.checks || [], C.day()); return `<div class="lx-list-line"><span><strong>${esc(h.title)}</strong><small>${strk.inGrace ? "🛡️" : "🔥"} ${strk.current} ${strk.inGrace ? L("in recovery", "في التعافي") : L("day streak", "أيام متتالية")}</small></span>${btn(h.checks?.includes(C.day()) ? "✓ " + L("Done", "تمت") : (strk.inGrace ? "🛡️ " + L("Rescue", "إنقاذ") : L("Check", "إكمال")), "habit-toggle", `data-id="${h.id}"`, h.checks?.includes(C.day()))}</div>`; }).join("") || `<p class="lx-pre">${L("No habits linked to this goal yet.", "لا توجد عادات مرتبطة بهذا الهدف بعد.")}</p>`}</section></div>`
       );
     }
     return (
@@ -1364,6 +1364,7 @@
           true,
         ),
       ) +
+      `<div class="lx-card" style="margin-bottom:16px;background:rgba(245,158,11,0.06);border:1px solid rgba(245,158,11,0.22);display:flex;align-items:center;gap:12px;padding:12px 16px"><span style="font-size:24px">🛡️</span><div><strong style="color:var(--lx-text);font-size:14px">${L("Behavioral Science: Never Miss Twice", "علم النفس السلوكي: لا تفوّت مرتين أبداً")}</strong><p class="lx-muted" style="margin:2px 0 0;font-size:13px">${L("Missed yesterday? The Recovery Shield protects your streak for 24 hours. Complete today to keep moving forward without resetting to zero.", "فاتتك عادة الأمس؟ درع التعافي يحمي سلسلتك لـ 24 ساعة. أنجزها اليوم لتستمر سلسلتك دون أن تتصفر وتفقد حماسك.")}</p></div></div>` +
       `<div class="lx-grid-three">${
         d.habits
           .filter((h) => !h.archived)
@@ -1393,7 +1394,17 @@
             };
             const freqText = freqMap[h.frequency] || L("Daily", "يوميًا");
 
-            return `<article class="lx-card"><div class="lx-card-head"><div><span class="lx-streak-badge" title="${L("Current streak / Best streak", "التتابع الحالي / أفضل تتابع")}">🔥 ${strk.current} <small>(${L("Best", "الأفضل")}: ${strk.best})</small></span><h2>${esc(h.title)}</h2></div>${btn(L("Edit", "تعديل"), "edit", `data-kind="habits" data-id="${h.id}"`)}</div><p>${esc(h.description || "")}</p>${goal ? `<div class="lx-habit-goal-pill"><button class="lx-text-button" data-route="goals" data-id="${goal.id}">🎯 ${esc(goal.name)}</button><small>+${h.impact || 5}% ${L("momentum", "زخم")}</small></div>` : ""}<p class="lx-habit-meta"><span>${L("Last 7 days", "آخر 7 أيام")}: <strong>${past7Count} / 7</strong></span><span>${esc(h.time || "")} · ${freqText}</span></p><div class="lx-habit-days">${weekDays}</div>${btn(isTodayChecked ? L("Completed today ✓", "تمت اليوم ✓") : L("Mark today complete", "إكمال عادة اليوم"), "habit-toggle", `data-id="${h.id}"`, isTodayChecked)}</article>`;
+            const streakBadge = strk.inGrace
+              ? `<span class="lx-streak-badge is-grace" title="${L("Grace Day active: Never miss twice! Complete today to save your streak.", "درع التعافي مفعل: لا تفوّت مرتين أبداً! أنجزها اليوم لإنقاذ سلسلتك.")}">🛡️ ${strk.current} <small>(${L("Grace Recovery", "فرصة تعافي")})</small></span>`
+              : `<span class="lx-streak-badge" title="${L("Current streak / Best streak", "التتابع الحالي / أفضل تتابع")}">🔥 ${strk.current} <small>(${L("Best", "الأفضل")}: ${strk.best})</small></span>`;
+
+            const actionBtn = isTodayChecked
+              ? btn(L("Completed today ✓", "تمت اليوم ✓"), "habit-toggle", `data-id="${h.id}"`, true)
+              : (strk.inGrace
+                ? btn(L("🛡️ Save streak today!", "🛡️ أنقذ سلسلتك اليوم!"), "habit-toggle", `data-id="${h.id}"`, false, 'style="border-color:#f59e0b;color:#f59e0b;font-weight:700;"')
+                : btn(L("Mark today complete", "إكمال عادة اليوم"), "habit-toggle", `data-id="${h.id}"`, false));
+
+            return `<article class="lx-card ${strk.inGrace ? "is-grace-card" : ""}"><div class="lx-card-head"><div>${streakBadge}<h2>${esc(h.title)}</h2></div>${btn(L("Edit", "تعديل"), "edit", `data-kind="habits" data-id="${h.id}"`)}</div><p>${esc(h.description || "")}</p>${goal ? `<div class="lx-habit-goal-pill"><button class="lx-text-button" data-route="goals" data-id="${goal.id}">🎯 ${esc(goal.name)}</button><small>+${h.impact || 5}% ${L("momentum", "زخم")}</small></div>` : ""}<p class="lx-habit-meta"><span>${L("Last 7 days", "آخر 7 أيام")}: <strong>${past7Count} / 7</strong></span><span>${esc(h.time || "")} · ${freqText}</span></p><div class="lx-habit-days">${weekDays}</div>${actionBtn}</article>`;
           })
           .join("") ||
         empty(

@@ -725,12 +725,52 @@
   function habitStreak(checks = [], todayStr = day()) {
     const set = new Set((checks || []).filter(Boolean));
     let current = 0,
+      inGrace = false,
+      graceUsed = false,
       cursor = new Date(todayStr + "T12:00:00");
-    if (!set.has(todayStr)) cursor.setDate(cursor.getDate() - 1);
-    while (set.has(day(+cursor))) {
+
+    if (!set.has(todayStr)) {
+      cursor.setDate(cursor.getDate() - 1);
+      if (!set.has(day(+cursor))) {
+        cursor.setDate(cursor.getDate() - 1);
+        if (set.has(day(+cursor))) {
+          inGrace = true;
+          while (set.has(day(+cursor))) {
+            current++;
+            cursor.setDate(cursor.getDate() - 1);
+          }
+        } else {
+          current = 0;
+        }
+      } else {
+        while (set.has(day(+cursor))) {
+          current++;
+          cursor.setDate(cursor.getDate() - 1);
+        }
+      }
+    } else {
       current++;
       cursor.setDate(cursor.getDate() - 1);
+      while (true) {
+        const dKey = day(+cursor);
+        if (set.has(dKey)) {
+          current++;
+          cursor.setDate(cursor.getDate() - 1);
+        } else if (!graceUsed) {
+          const prevDate = new Date(+cursor);
+          prevDate.setDate(prevDate.getDate() - 1);
+          if (set.has(day(+prevDate))) {
+            graceUsed = true;
+            cursor.setDate(cursor.getDate() - 1);
+          } else {
+            break;
+          }
+        } else {
+          break;
+        }
+      }
     }
+
     const sorted = [...set].filter((d) => /^\d{4}-\d{2}-\d{2}$/.test(d)).sort();
     let best = 0,
       temp = 0,
@@ -740,13 +780,14 @@
       if (prev) {
         const diff = Math.round((curDate - prev) / 86400000);
         if (diff === 1) temp++;
-        else if (diff > 1) temp = 1;
+        else if (diff === 2) temp++;
+        else if (diff > 2) temp = 1;
       } else temp = 1;
       if (temp > best) best = temp;
       prev = curDate;
     }
     if (current > best) best = current;
-    return { current, best };
+    return { current, best, inGrace };
   }
 
   function toggleHabit(d, id, targetDate = day()) {
