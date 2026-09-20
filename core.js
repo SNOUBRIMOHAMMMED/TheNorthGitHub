@@ -317,6 +317,71 @@
     }
     return d;
   }
+  // ── Auto-prune: keeps localStorage lean forever ────────────────────────────
+  // Runs silently on every save. Removes old data the user will never need again
+  // while keeping everything that matters.
+  function prune(d) {
+    const now = Date.now();
+    const msPerDay = 86400000;
+    // Cutoff dates (ms timestamps for comparison)
+    const taskCutoff    = now - 90  * msPerDay; // completed tasks  → keep 90 days
+    const sessionCutoff = now - 60  * msPerDay; // focus sessions   → keep 60 days
+    const notifCutoff   = now - 30  * msPerDay; // notifications    → keep 30 days
+    const habitCutoff   = day(now - 365 * msPerDay); // habit checks → keep 365 days
+    const HISTORY_LIMIT = 180; // goal history points
+
+    // 1. Completed tasks older than 90 days
+    if (Array.isArray(d.tasks)) {
+      d.tasks = d.tasks.filter(t => {
+        if (!t.done && t.status !== "done") return true; // keep all pending tasks
+        const completed = t.completedDate
+          ? new Date(t.completedDate + "T12:00:00").getTime()
+          : (t.updatedAt || 0);
+        return completed >= taskCutoff;
+      });
+    }
+
+    // 2. Focus sessions older than 60 days
+    if (Array.isArray(d.sessions)) {
+      d.sessions = d.sessions.filter(s => {
+        const ts = s.endedAt || s.startedAt || 0;
+        return ts >= sessionCutoff;
+      });
+    }
+
+    // 3. Notifications older than 30 days
+    if (Array.isArray(d.notifications)) {
+      d.notifications = d.notifications.filter(n => (n.ts || 0) >= notifCutoff);
+      // Also clean up dismissed keys for notifications that no longer exist
+      if (d.dismissed) {
+        const remaining = new Set(d.notifications.map(n => n.id));
+        for (const k of Object.keys(d.dismissed)) {
+          if (!remaining.has(k)) delete d.dismissed[k];
+        }
+      }
+    }
+
+    // 4. Trim goal history to last HISTORY_LIMIT points (keep most recent)
+    if (Array.isArray(d.goals)) {
+      d.goals.forEach(g => {
+        if (Array.isArray(g.history) && g.history.length > HISTORY_LIMIT) {
+          g.history = g.history.slice(-HISTORY_LIMIT);
+        }
+      });
+    }
+
+    // 5. Trim old habit check dates (keep last 365 days)
+    if (Array.isArray(d.habits)) {
+      d.habits.forEach(h => {
+        if (Array.isArray(h.checks) && h.checks.length > 0) {
+          h.checks = h.checks.filter(dateStr => dateStr >= habitCutoff);
+        }
+      });
+    }
+
+    return d;
+  }
+
   function store(storage) {
     let lastRaw, lastEmail, cached;
     function read() {
@@ -335,6 +400,7 @@
       if (!all[email]) throw Error("signedOut");
       const d = migrate(all[email].data);
       const result = fn(d);
+      prune(d); // ← silently clean old data on every save
       all[email].data = d;
       storage.setItem(ACCOUNT_KEY, JSON.stringify(all));
       return { data: d, result };
