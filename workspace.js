@@ -301,15 +301,24 @@
         goals: '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/><path d="M16.5 7.5 21 3"/>',
         tasks: '<rect x="3" y="4" width="18" height="16" rx="3"/><path d="m8 12 2.5 2.5L16 9"/><path d="M8 8h8M8 16h4"/>',
         focus: '<circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M10 2h4M12 2v2"/>',
+        account: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/>',
         more: '<path d="M5 6h14M5 12h14M5 18h14"/>'
       };
       if (flat[k]) return `<svg viewBox="0 0 24 24" aria-hidden="true">${flat[k]}</svg>`;
       return `<svg viewBox="0 0 24 24" aria-hidden="true">${icon(k)}</svg>`;
     };
-    const mobileRoutes = ["home", "goals", "tasks", "focus"];
-    $(".bottom-nav").innerHTML = mobileRoutes.map(k =>
-      `<button class="bottom-item ${route === k ? "active" : ""}" data-route="${k}" aria-label="${name(k)}" ${route === k ? 'aria-current="page"' : ""}>${dockIcon(k)}<small>${name(k)}</small></button>`).join("") +
-      `<button class="bottom-item ${!mobileRoutes.includes(route) ? "active" : ""}" data-action="menu" aria-haspopup="dialog" aria-label="${L("More sections", "المزيد من الأقسام")}">${dockIcon("more")}<small>${L("More", "المزيد")}</small></button>`;
+    const mobileRoutes = ["home", "goals", "tasks", "focus", "account"];
+    const bottomNavEl = $(".bottom-nav");
+    if (bottomNavEl) {
+      bottomNavEl.innerHTML = mobileRoutes.map(k => {
+        const isAct = route === k || (k === "account" && route === "account");
+        const labelText = k === "focus" ? L("Pomodoro", "التركيز") : (k === "account" ? L("Settings", "الإعدادات") : name(k));
+        return `<button class="bottom-item ${isAct ? "active" : ""}" data-route="${k}" aria-label="${labelText}" ${isAct ? 'aria-current="page"' : ""}>
+          <span class="dock-icon-wrap">${dockIcon(k)}<i class="active-dot" aria-hidden="true"></i></span>
+          <small>${labelText}</small>
+        </button>`;
+      }).join("");
+    }
     // Desktop topbar: breadcrumb + actions (hidden on mobile via CSS)
     $("#lxTopbar").innerHTML =
       `<div class="lx-topbar-brand"><span class="brand-mark lifeos-mark" aria-hidden="true"></span><div class="lx-breadcrumb">THE NORTH <span>/</span> ${name(route)}</div></div><div class="lx-top-actions"><button class="lx-btn lx-menu-button" data-action="menu">${icon("tasks")}${L("Explore","الأقسام")}</button>${btn(icon("inbox")+L("Search","بحث"),"command",'aria-label="'+L("Search, Control K","بحث، Control K")+'"')}${btn(ar()?"EN":"عربي","language")}${btn(icon("account"),"navigate",'data-to="account" aria-label="'+name("account")+'"')}</div>`;
@@ -729,102 +738,214 @@
     </div>`;
   }
 
+  function homeHeader(d) {
+    const hr = new Date().getHours();
+    const greetingWord = hr < 12 ? L("Good morning", "صباح الخير") : (hr < 18 ? L("Good afternoon", "مساء الخير") : L("Good evening", "مساء النور"));
+    const userName = (d.profile && d.profile.name) ? d.profile.name : (isAdmin() ? "محمد" : "");
+    const greetingText = userName ? `${greetingWord}، ${esc(userName)}` : greetingWord;
+    const dateStr = new Intl.DateTimeFormat(ar() ? "ar-EG" : "en-US", { weekday: "long", day: "numeric", month: "long", year: "numeric" }).format(new Date());
+    return `<div class="v3-home-header">
+      <div class="v3-header-top-row">
+        <span class="v3-header-date">${dateStr}</span>
+        <div class="v3-header-actions">
+          ${btn("🌙 " + L("Daily Shutdown", "الإغلاق اليومي"), "shutdown", 'class="lx-btn v3-shutdown-btn"')}
+          ${btn("+ " + L("New Goal", "هدف جديد"), "new", 'data-kind="goals" class="lx-btn lx-primary"')}
+        </div>
+      </div>
+      <div class="v3-greeting-text">${greetingText}</div>
+      <h1 class="v3-headline">${L("Your goals in front of you. Your next step, clear.", "أهدافك أمامك. وخطوتك واضحة.")}</h1>
+      <p class="v3-subheadline">${L("Track your actual momentum against your plan, and execute with absolute clarity.", "تابع تقدمك الفعلي مقابل المخطط، وركز على ما يصنع الفرق هذا الأسبوع.")}</p>
+    </div>`;
+  }
+
+  function homeGoalCards(d) {
+    const gs = d.goals.filter(g => !g.archived).slice(0, 3);
+    const colors = [
+      { color: "#8B5CF6", bg: "rgba(139,92,246,0.14)", icon: '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/>' },
+      { color: "#10B981", bg: "rgba(16,185,129,0.14)", icon: '<path d="m21 16-9 5-9-5V8l9-5 9 5v8z"/><path d="m3.27 6.96 8.73 4.89 8.73-4.89M12 22.08V12"/>' },
+      { color: "#F59E0B", bg: "rgba(245,158,11,0.14)", icon: '<path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 6h10M6 10h10"/>' }
+    ];
+    return `<section class="v3-goals-section">
+      <div class="v3-section-title-row">
+        <div>
+          <span class="v3-section-kicker">🎯 ${L("YOUR GOALS", "أهدافك")}</span>
+          <h2 class="v3-section-title">${L("Active Horizons", "أهدافك")}</h2>
+        </div>
+        ${btn(L("All goals", "كل الأهداف") + " ›", "navigate", 'data-to="goals" class="v3-view-all-link"')}
+      </div>
+      <div class="v3-goals-grid">
+        ${gs.length ? gs.map((g, i) => {
+          const c = colors[i % colors.length];
+          const actual = g.progress || 0;
+          let planned = 50;
+          if (g.deadline) {
+            const created = g.createdAt || (Date.now() - 30 * 86400000);
+            const totalDays = Math.max(7, Math.ceil((+new Date(g.deadline + "T23:59:59") - created) / 86400000));
+            const passedDays = Math.max(1, Math.ceil((Date.now() - created) / 86400000));
+            planned = Math.min(100, Math.round((passedDays / totalDays) * 100));
+          } else {
+            planned = Math.min(100, Math.round(actual * 1.15) || 50);
+          }
+          return `<article class="v3-goal-card" data-route="goals" data-id="${esc(g.id)}">
+            <div class="v3-goal-card-head">
+              <span class="v3-goal-icon" style="background:${c.bg};color:${c.color};border-color:${c.color}30">
+                <svg viewBox="0 0 24 24" aria-hidden="true">${c.icon}</svg>
+              </span>
+              <div class="v3-goal-titles">
+                <strong>${esc(g.name)}</strong>
+                ${g.identity ? `<small class="v3-goal-id-tag">👑 ${esc(g.identity)}</small>` : ''}
+              </div>
+              <span class="v3-chevron">›</span>
+            </div>
+            <div class="v3-goal-metrics-row">
+              <div class="v3-metric-col">
+                <strong>${actual}%</strong>
+                <small>${L("Actual", "الفعلي")}</small>
+              </div>
+              <div class="v3-metric-col">
+                <strong>${planned}%</strong>
+                <small>${L("Planned", "المخطط")}</small>
+              </div>
+            </div>
+            <div class="v3-goal-track">
+              <div class="v3-goal-fill" style="width:${actual}%;background:${c.color}"></div>
+              <div class="v3-goal-marker" style="left:${planned}%"></div>
+            </div>
+            <div class="v3-goal-marker-sub">${planned}%</div>
+          </article>`;
+        }).join("") : `<div class="v3-empty-card"><p>${L("No goals created yet.", "لم تضف أهدافاً بعد.")}</p>${btn("+ " + L("Create your first goal", "أضف أول هدف لك"), "new", 'data-kind="goals"', true)}</div>`}
+      </div>
+    </section>`;
+  }
+
+  function homeNextAction(d, due) {
+    const topTask = due[0];
+    if (!topTask) {
+      return `<article class="lx-card v3-next-card is-empty">
+        <div class="v3-card-kicker">🎯 ${L("NEXT ACTION", "خطوتك التالية")}</div>
+        <h3>${L("No open tasks for today", "لا توجد مهام مفتوحة اليوم")}</h3>
+        <p class="lx-muted">${L("A single high-leverage action is all you need to maintain momentum.", "خطوة واضحة واحدة تكفي للحفاظ على زخم يومك.")}</p>
+        ${btn("+ " + L("Add next action", "أضف خطوتك التالية"), "new", 'data-kind="tasks" class="lx-btn lx-primary"')}
+      </article>`;
+    }
+    const linkedGoal = d.goals.find(g => g.id === topTask.goalId);
+    const minutes = topTask.estimatedHours ? Math.round(topTask.estimatedHours * 60) : 25;
+    return `<article class="lx-card v3-next-card">
+      <div class="v3-next-card-kicker-row">
+        <span class="v3-card-kicker">⚡ ${L("NEXT ACTION", "خطوتك التالية")}</span>
+        ${linkedGoal ? `<span class="v3-linked-goal-pill"><span class="v3-dot"></span><small>${L("Linked Goal: ", "الهدف المرتبط: ")}</small><strong>${esc(linkedGoal.name)}</strong></span>` : ''}
+      </div>
+      <h3 class="v3-next-task-title">${esc(topTask.title)}</h3>
+      <p class="v3-next-task-desc">${esc(topTask.body || topTask.notes || L("Review content, pricing, and final execution before delivery.", "مراجعة المحتوى والتسعير والنسخة النهائية قبل الإرسال."))}</p>
+      <button type="button" class="v3-apple-start-btn" data-action="task-focus" data-id="${topTask.id}">
+        <span class="v3-btn-icon">▶</span>
+        <span>${L("Start focus · " + minutes + " min", "ابدأ التركيز · " + minutes + " دقيقة")}</span>
+      </button>
+    </article>`;
+  }
+
+  function homeDeepWork(d, tt) {
+    const targetMs = (d.settings.dailyHours || 4) * 3600000;
+    const pct = Math.min(100, Math.round((tt.deep / targetMs) * 100));
+    const targetHrs = d.settings.dailyHours || 4;
+    return `<article class="lx-card v3-deepwork-card">
+      <div class="v3-card-kicker">⏱️ ${L("TODAY'S DEEP WORK", "العمل العميق اليوم")}</div>
+      <div class="v3-deepwork-title-row">
+        <div class="v3-deepwork-text">
+          <h3>${ar() ? `${hrs(tt.deep)} من ${targetHrs} ساعات` : `${hrs(tt.deep)} of ${targetHrs} hours`}</h3>
+          <p class="lx-muted">${pct >= 100 ? L("Daily target completed! Fantastic focus.", "اكتمل الهدف اليومي! إنجاز رائع.") : (pct >= 50 ? L("Great pace. Keep this momentum.", "ممتاز، استمر على هذا الإيقاع.") : L("Start your first deep execution block.", "ابدأ جلستك الأولى اليوم لتحقيق الهدف."))}</p>
+        </div>
+        <div class="v3-donut-container">
+          <svg viewBox="0 0 88 88" class="v3-donut-svg">
+            <circle cx="44" cy="44" r="36" class="v3-donut-track"/>
+            <circle cx="44" cy="44" r="36" class="v3-donut-fill" style="stroke-dashoffset:${226.2 - (226.2 * pct) / 100}"/>
+          </svg>
+          <div class="v3-donut-number">${pct}%</div>
+        </div>
+      </div>
+      <div class="v3-deepwork-progress-row">
+        <div class="v3-deepwork-track">
+          <div class="v3-deepwork-bar" style="width:${pct}%"></div>
+        </div>
+        <div class="v3-deepwork-labels">
+          <span>0</span>
+          <span>${targetHrs} ${L("hours", "ساعات")}</span>
+        </div>
+      </div>
+      <div class="v3-deepwork-actions">
+        ${btn(d.activeSession ? L("Resume session", "استأنف الجلسة") : L("Start focus session", "ابدأ جلسة تركيز"), "navigate", 'data-to="focus" class="lx-btn lx-primary"')}
+        ${btn(L("Log time", "تسجيل يدوي"), "manual", 'class="lx-btn"')}
+      </div>
+    </article>`;
+  }
+
+  function homeWeeklyChart(d, tt) {
+    const start = C.week(Date.now(), d.settings.weekStart);
+    const todayStr = C.day();
+    const days = Array.from({ length: 7 }, (_, i) => {
+      const dt = new Date(start);
+      dt.setDate(dt.getDate() + i);
+      const dayStr = C.day(+dt);
+      const end = new Date(dt);
+      end.setDate(end.getDate() + 1);
+      const val = C.duration(tt.all, +dt, +end);
+      const isToday = dayStr === todayStr;
+      const dayName = new Intl.DateTimeFormat(ar() ? "ar-EG" : "en-US", { weekday: "short" }).format(dt);
+      const dateNum = dt.getDate();
+      const monthName = new Intl.DateTimeFormat(ar() ? "ar-EG" : "en-US", { month: "short" }).format(dt);
+      return { dayStr, dayName, dateNum, monthName, val, isToday };
+    });
+    const max = Math.max(3600000 * 4, ...days.map(x => x.val));
+    return `<section class="lx-card v3-weekly-section">
+      <div class="v3-weekly-head">
+        <div>
+          <div class="v3-card-kicker">📊 ${L("WEEKLY FOCUS TIME", "وقت التركيز هذا الأسبوع")}</div>
+          <h3 class="v3-weekly-title">${L("Seven-day deep execution rhythm", "ساعات التركيز هذا الأسبوع")}</h3>
+          <p class="lx-muted">${L("Hours reflect actual recorded session time, not task estimates.", "الساعات تعكس وقت التركيز الفعلي، وليست نسبة اكتمال الأهداف.")}</p>
+        </div>
+        <div class="v3-weekly-badge">
+          <strong>${hrs(days.reduce((acc, x) => acc + x.val, 0))}</strong>
+          <small>${L("this week", "هذا الأسبوع")}</small>
+        </div>
+      </div>
+      <div class="v3-weekly-bars">
+        ${days.map(x => {
+          const heightPct = Math.max(6, Math.round((x.val / max) * 100));
+          const hrsLabel = x.val > 0 ? (x.val / 3600000).toFixed(1) : "";
+          return `<div class="v3-bar-column ${x.isToday ? 'is-today' : ''}">
+            <div class="v3-bar-top-val">${hrsLabel}</div>
+            <div class="v3-bar-track-wrap">
+              <div class="v3-bar-fill-elem" style="height:${heightPct}%"></div>
+            </div>
+            <div class="v3-bar-labels">
+              <strong>${x.dayName}</strong>
+              <small>${x.dateNum} ${x.monthName}</small>
+            </div>
+          </div>`;
+        }).join("")}
+      </div>
+    </section>`;
+  }
+
   function home(d) {
     const tt = totals(d), today = C.day(), now = Date.now();
-    const deepWeek = C.duration(
-      tt.all,
-      C.week(now, d.settings.weekStart),
-      Infinity,
-      (s) => s.categoryId === "Deep Work"
-    );
     const due = d.tasks.filter((t) => !t.archived && !t.done && (!t.date || t.date <= today))
       .sort((a, b) => ["high", "medium", "low"].indexOf(a.priority) - ["high", "medium", "low"].indexOf(b.priority));
 
-    return heading(L("Executive Radar", "القيادة التنفيذية"),
-      L("Trajectory. Deep attention. Relentless execution.", "مسار الزخم. التركيز العميق. والوصول إلى أهدافك."), btn("🌙 " + L("Daily Shutdown", "الإغلاق اليومي"), "shutdown")) +
-      /* 1. خريطة الزخم */
-      `<section class="lx-card lx-momentum-section">
-        <div class="lx-card-head">
-          <div>
-            <div class="lx-eyebrow">${L("SYSTEM TRAJECTORY", "مسار الزخم")}</div>
-            <h2>${L("Momentum Map", "خريطة الزخم")}</h2>
-            <p class="lx-muted">${L("Live trajectory of your goals against the stability baseline.", "المسار الحي لزخم أهدافك وموقعها مقارنة بخط الاستقرار.")}</p>
-          </div>
-          ${btn(L("Manage goals", "إدارة الأهداف"), "navigate", 'data-to="goals"')}
-        </div>
-        ${momentumMap(d)}
-      </section>` +
-      /* 2. وقت التركيز حسب اليوم + 3. العمل العميق الأسبوعي */
-      `<div class="lx-grid-two">
-        <section class="lx-card">
-          <div class="lx-card-head">
-            <div>
-              <div class="lx-eyebrow">${L("TODAY'S ATTENTION", "انتباه اليوم")}</div>
-              <h2>${L("Focus time by day", "وقت التركيز حسب اليوم")}</h2>
-            </div>
-            <div class="lx-badge">${hrs(tt.deep)} / ${d.settings.dailyHours} ${L("h", "س")}</div>
-          </div>
-          <div class="lx-big-number">${hrs(tt.deep)}</div>
-          <p class="lx-muted">${L("Daily target: ", "الهدف اليومي: ")} ${d.settings.dailyHours} ${L("hours of deep execution.", "ساعات من العمل العميق المتواصل.")}</p>
-          ${progress(percent(tt.deep, d.settings.dailyHours * 3600000))}
-          <div class="lx-actions" style="margin-top:16px;">
-            ${btn(L(d.activeSession ? "Resume focus" : "Start focus", d.activeSession ? "استأنف التركيز" : "ابدأ جلسة تركيز"), "navigate", 'data-to="focus"', true)}
-            ${btn(L("Log time", "تسجيل يدوي"), "manual")}
-          </div>
-        </section>
-        <section class="lx-card">
-          <div class="lx-card-head">
-            <div>
-              <div class="lx-eyebrow">${L("SEVEN-DAY EXECUTION", "إنجاز الأسبوع")}</div>
-              <h2>${L("Weekly deep work", "العمل العميق الأسبوعي")}</h2>
-            </div>
-            <div class="lx-badge">${hrs(deepWeek)} / ${d.settings.weeklyHours} ${L("h", "س")}</div>
-          </div>
-          <div class="lx-big-number">${hrs(deepWeek)}</div>
-          <p class="lx-muted">${L("of", "من")} ${d.settings.weeklyHours} ${L("hours", "ساعة")} · ${hrs(Math.max(0, d.settings.weeklyHours * 3600000 - deepWeek))} ${L("remaining", "متبقية هذا الأسبوع")}</p>
-          ${progress(percent(deepWeek, d.settings.weeklyHours * 3600000))}
-          ${dayChart(tt.all, d)}
-        </section>
+    return homeHeader(d) +
+      homeGoalCards(d) +
+      `<div class="v3-mid-grid">
+        ${homeNextAction(d, due)}
+        ${homeDeepWork(d, tt)}
       </div>` +
-      /* 4. خطة الأهداف */
-      goalBoard(d) +
-      /* 5. أولويات التنفيذ (Next Actions) */
-      `<section class="lx-card">
-        <div class="lx-card-head">
-          <div>
-            <div class="lx-eyebrow">${L("HIGH LEVERAGE", "الخطوات القادمة")}</div>
-            <h2>${L("Execution priorities", "أولويات التنفيذ")}</h2>
-          </div>
-          ${btn(L("All tasks", "كل المهام"), "navigate", 'data-to="tasks"')}
-        </div>
-        ${(() => {
-          const todayAll = d.tasks.filter(t => !t.archived && (!t.date || t.date <= today));
-          const todayDone = todayAll.filter(t => t.done).length;
-          const todayTotal = todayAll.length;
-          if (todayTotal === 0) return '';
-          const pct = Math.round((todayDone / todayTotal) * 100);
-          const allDone = todayDone === todayTotal;
-          return `<div class="lx-day-progress" style="margin:0 0 16px;">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-              <span style="font-size:0.78rem;font-weight:600;letter-spacing:.05em;opacity:.6;">
-                ${L("TODAY", "إنجاز اليوم")}
-              </span>
-              <span style="font-size:0.82rem;font-weight:700;${allDone ? 'color:var(--lx-green,#37C98A)' : ''}">
-                ${todayDone} / ${todayTotal} ${allDone ? (L("✓ Complete!", "✓ أنجزت كل مهامك!")) : L("done", "منجز")}
-              </span>
-            </div>
-            <div style="height:6px;background:var(--lx-border,rgba(255,255,255,.08));border-radius:99px;overflow:hidden;">
-              <div style="height:100%;width:${pct}%;background:${allDone ? 'var(--lx-green,#37C98A)' : 'var(--lx-accent,#5B8CFF)'};border-radius:99px;transition:width .4s ease;"></div>
-            </div>
-            ${allDone ? `<p style="font-size:0.8rem;color:var(--lx-green,#37C98A);margin-top:8px;text-align:center;">
-              🎯 ${L("Outstanding execution today. Keep the momentum going.", "تنفيذ استثنائي اليوم. حافظ على الزخم.")}
-            </p>` : ''}
-          </div>`;
-        })()}
-        <div class="lx-task-list">
-          ${due.slice(0, 4).map((t) => taskRow(t, d)).join("") || empty(L("Add your next action in Tasks.", "أضف خطوتك القادمة في قسم المهام."), "tasks")}
-        </div>
-      </section>`;
+      homeWeeklyChart(d, tt) +
+      `<details class="lx-card v3-momentum-details" open>
+        <summary class="v3-details-summary">
+          <div class="v3-card-kicker">📈 ${L("SYSTEM TRAJECTORY", "مسار الزخم")}</div>
+          <h2>${L("Goals Momentum Map", "خريطة زخم الأهداف")}</h2>
+        </summary>
+        ${momentumMap(d)}
+      </details>`;
   }
   function linkFields(d, obj = {}) {
     return `<div class="lx-fields-three">${select(name("projects"), "projectId", options(d.projects), obj.projectId)}${select(name("goals"), "goalId", options(d.goals), obj.goalId)}${select(name("tasks"), "taskId", options(d.tasks, "title"), obj.taskId)}</div>`;
@@ -866,7 +987,80 @@
     const task = d.tasks.find((t) => t.id === a.taskId),
       project = d.projects.find((p) => p.id === a.projectId),
       goal = d.goals.find((g) => g.id === a.goalId);
-    return `<div class="lx-focus-screen ${a.phase === "break" ? "is-break" : ""}"><div class="lx-focus-top">${btn("" + L("Workspace", "مساحة العمل"), "navigate", 'data-to="home"')}<span class="lx-badge">${a.type === "pomodoro" ? "Pomodoro" : L("Focus", "تركيز")} · ${L("Round", "الجولة")} ${a.cyclesCompleted + 1}</span>${btn("🧘 " + L("Zen Mode", "وضع الزن"), "zen-mode", 'title="Fullscreen focus / ملء الشاشة للتركيز العميق"')}</div><div class="lx-session-context"><div class="lx-eyebrow">${a.phase === "break" ? L("RECOVER YOUR ATTENTION", "استعد انتباهك") : esc(project?.name || catName(a.categoryId))}</div><h1>${a.phase === "break" ? L("A little room to breathe.", "مساحة صغيرة للتنفس.") : esc(task?.title || a.title || L("Focused work", "عمل بتركيز"))}</h1><p>${esc(goal?.name || "")}</p></div><div id="lxTimer" class="lx-timer" dir="ltr" role="timer" aria-label="${L("Session timer", "مؤقت الجلسة")}">00:00:00</div><div id="lxTimerMeta" class="lx-timer-meta"></div><div class="lx-timer-progress">${progress(0, L("Session progress", "تقدم الجلسة"))}</div><div class="lx-focus-controls">${a.status === "completed" ? btn(L("Finish", "إنهاء"), "session-finish", "", true) + btn(L("Take a break", "خذ استراحة"), "session-break") + btn(L("Continue working", "تابع العمل"), "session-continue") + btn("+15 " + L("min", "د"), "session-extend", 'data-minutes="15"') + btn("+30 " + L("min", "د"), "session-extend", 'data-minutes="30"') : btn(a.segmentStartedAt === null ? L("Resume", "استئناف") : L("Pause", "إيقاف مؤقت"), a.segmentStartedAt === null ? "session-resume" : "session-pause", "", true) + btn(L("Stop & review", "إيقاف ومراجعة"), "session-finish")}${btn(L("Cancel session", "إلغاء الجلسة"), "session-cancel")}</div>${a.phase === "break" ? `<p class="lx-break-tip">${L("Stand up. Drink water. Rest your eyes.", "قف. اشرب الماء. أرح عينيك.")}</p>` : ""}<div class="lx-focus-extras"><details><summary>${L("Session notes", "ملاحظات الجلسة")} <span id="lxSaved"></span></summary>${area(L("Keep a thought without leaving focus", "سجل فكرة دون مغادرة التركيز"), "activeNotes", a.notes, 'data-autosave="session"')}</details>${btn("+ " + L("Capture a distraction", "سجل مشتتاً"), "distraction")}<small>${a.distractions.length} ${L("captured in Inbox", "سُجلت في الوارد")}</small></div></div>`;
+    const cycleNum = (a.cyclesCompleted || 0) + 1;
+    const totalCycles = d.settings.cycles || 4;
+    return `<div class="lx-focus-screen v3-focus-screen ${a.phase === "break" ? "is-break" : ""}">
+      <div class="lx-focus-top">
+        ${btn("← " + L("Workspace", "الرئيسية"), "navigate", 'data-to="home" class="v3-back-btn"')}
+        <div class="v3-focus-pill-top">
+          <span class="v3-dot"></span>
+          <span>${a.phase === "break" ? L("Recovery Break", "استراحة") : esc(goal?.name || catName(a.categoryId))}</span>
+        </div>
+        ${btn("🧘 " + L("Zen", "زن"), "zen-mode", 'class="v3-zen-btn" title="Fullscreen / ملء الشاشة"')}
+      </div>
+      
+      <div class="v3-focus-header">
+        <h1 class="v3-focus-task-title">${a.phase === "break" ? L("A moment to recharge.", "مساحة صغيرة للتنفس.") : esc(task?.title || a.title || L("Deep execution", "عمل بتركيز"))}</h1>
+        ${goal ? `<p class="v3-focus-goal-sub">${L("Target: ", "الهدف: ")}${esc(goal.name)}</p>` : ''}
+      </div>
+
+      <div class="v3-timer-dial-container">
+        <svg viewBox="0 0 280 280" class="v3-timer-svg" aria-hidden="true">
+          <defs>
+            <linearGradient id="v3TimerGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#8B5CF6"/>
+              <stop offset="50%" stop-color="#EC4899"/>
+              <stop offset="100%" stop-color="#F43F5E"/>
+            </linearGradient>
+          </defs>
+          <circle cx="140" cy="140" r="120" class="v3-dial-track"/>
+          <circle id="v3DialFill" cx="140" cy="140" r="120" class="v3-dial-fill"/>
+        </svg>
+        <div class="v3-timer-dial-content">
+          <div id="lxTimer" class="v3-timer-display" dir="ltr" role="timer" aria-label="${L("Session timer", "مؤقت الجلسة")}">00:00:00</div>
+          <div id="lxTimerMeta" class="v3-timer-dial-meta">${a.phase === "break" ? L("Break time", "فترة راحة") : L("Deep focus session", "جلسة تركيز")}</div>
+        </div>
+      </div>
+
+      <div class="v3-focus-controls-row">
+        ${a.status === "completed" 
+          ? (btn(L("Finish", "إنهاء"), "session-finish", 'class="v3-ctrl-btn primary"') + 
+             btn(L("Take a break", "خذ استراحة"), "session-break", 'class="v3-ctrl-btn"') + 
+             btn("+15 " + L("m", "د"), "session-extend", 'data-minutes="15" class="v3-ctrl-btn small"')) 
+          : (btn(a.segmentStartedAt === null ? "▶ " + L("Resume", "استئناف") : "⏸ " + L("Pause", "إيقاف مؤقت"), 
+                a.segmentStartedAt === null ? "session-resume" : "session-pause", 
+                'class="v3-ctrl-btn main-play-pause"') + 
+             btn("■ " + L("Stop & save", "إيقاف وحفظ"), "session-finish", 'class="v3-ctrl-btn stop-btn"'))}
+      </div>
+
+      <div class="v3-session-dots-wrap">
+        <div class="v3-dots-row">
+          ${Array.from({ length: totalCycles }, (_, i) => {
+            const isDone = i < (a.cyclesCompleted || 0);
+            const isCurr = i === (a.cyclesCompleted || 0);
+            return `<span class="v3-session-dot ${isDone ? 'done' : (isCurr ? 'current' : '')}"></span>`;
+          }).join("")}
+        </div>
+        <small class="v3-dots-label">${L(`Round ${cycleNum} of ${totalCycles}`, `الجلسة ${cycleNum} من ${totalCycles}`)}</small>
+      </div>
+
+      <div class="v3-next-phase-card">
+        <small>${L("UP NEXT", "بعد هذه الجلسة")}</small>
+        <strong>${a.phase === "break" ? L("Deep work session", "جلسة تركيز 25 دقيقة") : (cycleNum % totalCycles === 0 ? L(`Long break · ${d.settings.longBreak} min`, `استراحة طويلة · ${d.settings.longBreak} دقيقة`) : L(`Short break · ${d.settings.shortBreak} min`, `استراحة قصيرة · ${d.settings.shortBreak} دقائق`))}</strong>
+      </div>
+
+      <div class="lx-focus-extras">
+        <details>
+          <summary>${L("Session notes & distraction capture", "ملاحظات الجلسة وتفريغ المشتتات")} <span id="lxSaved"></span></summary>
+          ${area(L("Write a thought without leaving focus", "سجل فكرة دون مغادرة التركيز"), "activeNotes", a.notes, 'data-autosave="session"')}
+          <div style="margin-top:10px;display:flex;gap:10px;align-items:center;">
+            ${btn("+ " + L("Capture distraction", "سجل مشتتاً"), "distraction", 'class="lx-btn"')}
+            <small class="lx-muted">${a.distractions.length} ${L("captured in Inbox", "سُجلت في الوارد")}</small>
+          </div>
+        </details>
+        ${btn(L("Cancel session", "إلغاء الجلسة"), "session-cancel", 'class="lx-btn ghost danger" style="margin-top:12px;"')}
+      </div>
+    </div>`;
   }
   function taskRow(t, d) {
     const all = C.reportSessions(d),
@@ -2848,6 +3042,13 @@
             percent(phase, a.phaseDuration) +
             "%"
           : "");
+      const dial = $("#v3DialFill");
+      if (dial && a.phaseDuration) {
+        const circ = 2 * Math.PI * 120; // ~753.98
+        dial.style.strokeDasharray = circ;
+        const pct = Math.max(0, Math.min(100, (phase / a.phaseDuration) * 100));
+        dial.style.strokeDashoffset = circ - (circ * pct) / 100;
+      }
       const p = $(".lx-timer-progress [role=progressbar]");
       if (p) {
         const v = percent(phase, a.phaseDuration);
