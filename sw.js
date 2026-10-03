@@ -1,5 +1,5 @@
 /* Offline shell only. Never intercept external traffic or clear other apps' caches. */
-const CACHE = "lifeos-v4-20261003-reference-design";
+const CACHE = "lifeos-v4-20261003-sync-schema";
 const ASSETS = [
   "north-brand.css",
   "north-brand.css?v=20261003",
@@ -28,7 +28,7 @@ const ASSETS = [
   "app.js",
   "app.js?v=auto2",
   "workspace.js",
-  "workspace.js?v=20261003",
+  "workspace.js?v=20261003-sync",
   "manifest.webmanifest",
   "brand-mark.svg",
   "icon-180.png",

@@ -1781,7 +1781,7 @@
     syncing:L("Syncing…", "جارٍ الحفظ والمزامنة…"), connecting:L("Connecting…", "جارٍ الاتصال…"),
     saved:L("Workspace saved", "تم حفظ مساحة العمل"),
     conflict:L("Changes exist on both devices. Choose which copy to keep; local recovery backup is retained.", "توجد تغييرات محلية وسحابية. اختر النسخة المعتمدة؛ نحتفظ بنسخة استعادة محلية."),
-    schema:L("Run supabase-setup.sql in Supabase first.", "شغّل ملف supabase-setup.sql في Supabase أولًا."),
+    schema:L("The cloud table or its columns do not match this version. Your local copy is preserved. Inspect the existing schema before a data-preserving migration; do not reset the table.", "الجدول السحابي أو أعمدته غير متوافقة مع هذه النسخة. بيانات الجهاز محفوظة؛ افحص بنية الجدول قبل تعديلها دون حذف البيانات. لا تعِد تهيئة الجدول."),
     offline:L("Cloud unavailable. Changes remain local; reconnect or retry.", "تعذر الحفظ السحابي. التغييرات محفوظة محليًا؛ أعد الاتصال أو المحاولة."),
     permission:L("Database access was denied. Your local copy is preserved. The administrator must check RLS and grants.", "رفضت قاعدة البيانات الوصول. النسخة المحلية محفوظة؛ يلزم فحص صلاحيات الجدول وسياسات RLS."),
     expired:L("Your cloud session expired. Sign in to the same account to resume sync.", "انتهت صلاحية الجلسة السحابية. سجّل الدخول إلى الحساب نفسه لاستئناف المزامنة."),
