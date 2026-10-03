@@ -2521,3 +2521,9 @@ body.v3-zen-mode-active .v3-zen-cancel-btn:hover {
   word-break: break-word;
   white-space: normal;
 }
+
+/* Recoverable task deletion: visible, keyboard-accessible, thumb-friendly. */
+.lx-task-delete { display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;width:44px;height:44px;padding:0;border:1px solid var(--lx-line);border-radius:12px;background:transparent;color:var(--lx-muted);cursor:pointer; }
+.lx-task-delete:hover { color:var(--lx-danger);background:var(--lx-soft); }
+.lx-task-delete:focus-visible { outline:2px solid var(--lx-accent);outline-offset:3px; }
+@media(max-width:600px) { .lx-task-row { flex-wrap:wrap;gap:8px; } .lx-task-title { flex-basis:calc(100% - 40px); } .lx-task-row .lx-priority { margin-inline-start:29px; } .lx-task-row .lx-task-delete { margin-inline-start:auto; } .lx-toolbar .lx-segmented { flex-wrap:wrap; } }

@@ -1378,6 +1378,7 @@
   function taskRow(t, d) {
     const all = C.reportSessions(d),
       actual = C.duration(all, 0, Infinity, (s) => s.taskId === t.id);
+    if (t.archived) return `<div class="lx-task-row"><div class="lx-task-title"><strong>${esc(t.title)}</strong><small>${L("Deleted · work history preserved", "محذوفة · سجل العمل محفوظ")}</small></div>${btn(L("Restore", "استعادة"), "task-restore", `data-id="${esc(t.id)}"`)}</div>`;
     return `<div class="lx-task-row ${t.done ? "is-done" : ""}">
       <button class="lx-check" data-action="task-toggle" data-id="${t.id}" role="checkbox" aria-checked="${!!t.done}" aria-label="${esc(t.title)}">${t.done ? "✓" : ""}</button>
       <button class="lx-task-title" data-action="edit" data-kind="tasks" data-id="${t.id}">
@@ -1389,14 +1390,15 @@
         <span class="v3-btn-icon">▶</span>
         <span>${L("Focus", "تركيز")}</span>
       </button>
+      <button type="button" class="lx-task-delete" data-action="task-delete" data-id="${esc(t.id)}" aria-label="${esc(L("Delete task: ", "حذف المهمة: ") + t.title)}" title="${L("Delete task", "حذف المهمة")}"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7"/></svg></button>
     </div>`;
   }
   function tasks(d) {
     const list = d.tasks
       .filter(
         (t) =>
-          !t.archived &&
-          (taskFilter === "all" || (taskFilter === "done" ? t.done : !t.done)),
+          (taskFilter === "deleted" ? t.archived : !t.archived) &&
+          (taskFilter === "deleted" || taskFilter === "all" || (taskFilter === "done" ? t.done : !t.done)),
       )
       .filter((t) => !search || t.title.toLowerCase().includes(search));
     return (
@@ -1414,7 +1416,7 @@
         ),
         L("Actionable execution items linked to your goals. Launch the focus timer on any task to track real effort.", "المهام التنفيذية المرتبطة بأهدافك. اضغط على زر الساعة في المهمة لبدء جلسة بومودورو أو عد تنازلي وتوثيق إنجازك."),
       ) +
-      `<div class="lx-toolbar"><div class="lx-segmented">${["all", "open", "done"].map((k) => btn(L(k === "all" ? "All" : k === "open" ? "Open" : "Completed", k === "all" ? "الكل" : k === "open" ? "مفتوحة" : "مكتملة"), "filter", `data-filter="${k}" aria-pressed="${taskFilter === k}"`)).join("")}</div></div><div class="lx-card">${list.length ? list.map((t) => taskRow(t, d)).join("") : empty(L("Give your next action a name.", "سمِّ خطوتك التالية."), "tasks")}</div>`
+      `<div class="lx-toolbar"><div class="lx-segmented">${["all", "open", "done", "deleted"].map((k) => btn(L(k === "all" ? "All" : k === "open" ? "Open" : k === "deleted" ? "Deleted" : "Completed", k === "all" ? "الكل" : k === "open" ? "مفتوحة" : k === "deleted" ? "المحذوفة" : "مكتملة"), "filter", `data-filter="${k}" aria-pressed="${taskFilter === k}"`)).join("")}</div></div><div class="lx-card">${list.length ? list.map((t) => taskRow(t, d)).join("") : taskFilter === "deleted" ? `<p class="lx-muted">${L("No deleted tasks.", "لا توجد مهام محذوفة.")}</p>` : empty(L("Give your next action a name.", "سمِّ خطوتك التالية."), "tasks")}</div>`
     );
   }
   function entityTime(d, key, id) {
@@ -2016,7 +2018,7 @@
     dialog.querySelector("input:not([type=hidden]),textarea,select")?.focus();
   }
   const endForm = (editing, kind, id) =>
-    `<div class="lx-dialog-footer">${editing ? btn(L("Archive", "أرشفة"), "archive", `data-kind="${kind}" data-id="${id}"`) : ""}${btn(L("Cancel", "إلغاء"), "close")}<button class="lx-btn lx-primary" type="submit">${L("Save", "حفظ")}</button></div>`;
+    `<div class="lx-dialog-footer">${editing ? btn(kind === "tasks" ? L("Delete task", "حذف المهمة") : L("Archive", "أرشفة"), kind === "tasks" ? "task-delete" : "archive", `data-kind="${kind}" data-id="${id}"`) : ""}${btn(L("Cancel", "إلغاء"), "close")}<button class="lx-btn lx-primary" type="submit">${L("Save", "حفظ")}</button></div>`;
   function editor(kind, id = "", seed = {}) {
     const d = db.read();
     if (!Array.isArray(d[kind])) return;
@@ -3024,6 +3026,25 @@
         body: item.body,
         sourceInbox: id,
       });
+    }
+    if (a === "task-delete" || a === "task-restore") {
+      const deleting = a === "task-delete";
+      if (deleting && db.read().activeSession?.taskId === id) {
+        notice(L("Finish the active session before deleting its task.", "أنه جلسة التركيز النشطة قبل حذف مهمتها."), true);
+        return;
+      }
+      const saved = await mutate(d => {
+        const task = d.tasks.find(t => t.id === id);
+        if (!task) throw Error("invalidData");
+        task.archived = deleting;
+        task.updatedAt = Date.now();
+      });
+      if (saved) {
+        if ($("#lxDialog")?.open) $("#lxDialog").close();
+        notice(deleting ? L("Task deleted. Restore it from Deleted.", "حُذفت المهمة. يمكنك استعادتها من «المحذوفة».") : L("Task restored.", "تمت استعادة المهمة."));
+        window.LifeLegacy?.renderAll?.();
+      }
+      return;
     }
     if (a === "archive") {
       modal(
