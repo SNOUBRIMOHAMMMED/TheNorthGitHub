@@ -539,152 +539,466 @@
   function budgetRows(d) {
     return Array.isArray(d.settings.budget) ? d.settings.budget : [];
   }
+  let financeTab = "overview";
+  let financeMonth = "";
+  let financeTxFilter = "all";
+
   const financeCategories = [
-    { id: "food", icon: "🍽️", en: "Food & Dining", ar: "طعام ومطاعم", color: "#F59E0B" },
-    { id: "housing", icon: "🏠", en: "Housing", ar: "سكن وإيجار", color: "#3B82F6" },
-    { id: "transport", icon: "🚗", en: "Transport", ar: "مواصلات ونقل", color: "#8B5CF6" },
-    { id: "bills", icon: "💡", en: "Bills & Utilities", ar: "فواتير وخدمات", color: "#14B8A6" },
-    { id: "shopping", icon: "🛍️", en: "Shopping", ar: "تسوق", color: "#EC4899" },
-    { id: "health", icon: "🏥", en: "Health", ar: "صحة", color: "#EF4444" },
-    { id: "entertainment", icon: "🎮", en: "Entertainment", ar: "ترفيه", color: "#A855F7" },
-    { id: "education", icon: "📚", en: "Education", ar: "تعليم", color: "#6366F1" },
-    { id: "savings", icon: "💰", en: "Savings & Invest", ar: "ادخار واستثمار", color: "#10B981" },
-    { id: "debt", icon: "💳", en: "Debt & Loans", ar: "ديون وقروض", color: "#F43F5E" },
-    { id: "gifts", icon: "🎁", en: "Gifts & Charity", ar: "هدايا وتبرعات", color: "#FBBF24" },
-    { id: "other", icon: "📋", en: "Other", ar: "أخرى", color: "#64748B" }
+    { id: "salary", icon: "💼", en: "Salary / My Job", ar: "راتب / وظيفة (My Job)", color: "#10B981", type: "income" },
+    { id: "business", icon: "📈", en: "Business / Dividends", ar: "أرباح ومشاريع (Business)", color: "#06B6D4", type: "income" },
+    { id: "freelance", icon: "💻", en: "Freelance", ar: "أعمال حرة ومستقلة", color: "#3B82F6", type: "income" },
+    { id: "tools_income", icon: "🛍️", en: "Tools & Products", ar: "مبيعات أدوات وتطبيقات", color: "#6366F1", type: "income" },
+    { id: "other_income", icon: "💵", en: "Other Income", ar: "دخل إضافي آخر", color: "#8B5CF6", type: "income" },
+
+    { id: "housing", icon: "🏠", en: "Housing / Rent (Lkarya)", ar: "كراء وسكن (Lkarya)", color: "#8B5CF6", type: "expense" },
+    { id: "food", icon: "🍽️", en: "Food & Dining (lmakla)", ar: "أكل ومطاعم (lmakla 3la barra)", color: "#F59E0B", type: "expense" },
+    { id: "pocket", icon: "👛", en: "Pocket Money (lmasrof)", ar: "مصروف شخصي (lmasrof)", color: "#EC4899", type: "expense" },
+    { id: "telecom", icon: "📱", en: "Phone & Mobile", ar: "هاتف ومكالمات (Mobile phone)", color: "#6366F1", type: "expense" },
+    { id: "internet", icon: "🌐", en: "Internet", ar: "إنترنت (Internet)", color: "#14B8A6", type: "expense" },
+    { id: "subscriptions", icon: "🔄", en: "Subscriptions", ar: "اشتراكات وبرامج", color: "#06B6D4", type: "expense" },
+    { id: "education", icon: "📚", en: "Courses & Books", ar: "دورات وكتب (Cources / Books)", color: "#38BDF8", type: "expense" },
+    { id: "tools", icon: "🛠️", en: "Tools & Apps", ar: "أدوات وتطبيقات (Tools)", color: "#A855F7", type: "expense" },
+    { id: "bank", icon: "🏦", en: "Bank Fees", ar: "رسوم بنكية (fees bank)", color: "#94A3B8", type: "expense" },
+    { id: "debt", icon: "🤝", en: "Debts & Credi", ar: "ديون والتزامات (Credi)", color: "#F43F5E", type: "expense" },
+    { id: "savings", icon: "💰", en: "Savings & Invest", ar: "ادخار واستثمار", color: "#059669", type: "expense" },
+    { id: "transport", icon: "🚗", en: "Transport & Taxi", ar: "مواصلات وتنقل", color: "#F97316", type: "expense" },
+    { id: "health", icon: "🏥", en: "Health", ar: "صحة وعلاج", color: "#EF4444", type: "expense" },
+    { id: "other", icon: "📋", en: "Other", ar: "أخرى ومتنوعات", color: "#64748B", type: "expense" }
   ];
 
   function getCategoryInfo(catName) {
-    return financeCategories.find(c => c.en === catName || c.ar === catName) || financeCategories[11];
+    if (!catName) return { id: "other", icon: "🏷️", en: "Other", ar: "أخرى", color: "#64748B" };
+    const lower = String(catName).toLowerCase().trim();
+    for (const c of financeCategories) {
+      if (
+        c.id === lower ||
+        c.en.toLowerCase() === lower ||
+        c.ar.toLowerCase() === lower ||
+        c.en.toLowerCase().includes(lower) ||
+        lower.includes(c.id) ||
+        (lower.includes("karya") && c.id === "housing") ||
+        (lower.includes("rent") && c.id === "housing") ||
+        (lower.includes("makla") && c.id === "food") ||
+        (lower.includes("masrof") && c.id === "pocket") ||
+        (lower.includes("credi") && c.id === "debt") ||
+        (lower.includes("jop") && c.id === "salary") ||
+        (lower.includes("job") && c.id === "salary") ||
+        (lower.includes("cource") && c.id === "education") ||
+        (lower.includes("book") && c.id === "education") ||
+        (lower.includes("fee") && c.id === "bank") ||
+        (lower.includes("phone") && c.id === "telecom") ||
+        (lower.includes("internet") && c.id === "internet")
+      ) return c;
+    }
+    return { id: "custom", icon: "🏷️", en: catName, ar: catName, color: "#818CF8" };
+  }
+
+  function getStartingBalance(d, m) {
+    if (d?.settings?.monthlyStartingBalance && typeof d.settings.monthlyStartingBalance[m] === "number") {
+      return d.settings.monthlyStartingBalance[m];
+    }
+    if (typeof d?.settings?.startingBalance === "number") return d.settings.startingBalance;
+    return 8000;
+  }
+
+  function getDebts(d) {
+    if (Array.isArray(d?.settings?.debts) && d.settings.debts.length > 0) return d.settings.debts;
+    return [
+      { id: "debt_credi_mohammed", name: "Credi mohammed", totalAmount: 2500, paidAmount: 500, note: "سلفة والتزامات شخصية" }
+    ];
+  }
+
+  function getFinancePlan(d, m) {
+    if (d?.settings?.financePlans && d.settings.financePlans[m]) {
+      return d.settings.financePlans[m];
+    }
+    return {
+      income: [
+        { source: "Salary", amount: 5000, label: "الراتب (Salary)" },
+        { source: "Business / Dividends", amount: 2000, label: "أرباح واستثمارات (Business)" }
+      ],
+      expenses: [
+        { category: "Housing / Rent (Lkarya)", amount: 3000, label: "الكراء / السكن (Lkarya)" },
+        { category: "Food & Dining (lmakla)", amount: 1000, label: "الأكل والمطاعم (lmakla)" },
+        { category: "Phone & Mobile", amount: 30, label: "الهاتف (Mobile phone)" },
+        { category: "Internet", amount: 30, label: "الإنترنت (Internet)" },
+        { category: "Subscriptions", amount: 50, label: "الاشتراكات والبرامج" }
+      ]
+    };
+  }
+
+  function formatFinanceMonth(m) {
+    if (!m || typeof m !== "string") return "";
+    const p = m.split("-");
+    if (p.length < 2) return m;
+    const y = p[0], mon = parseInt(p[1], 10);
+    const arMonths = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
+    const enMonths = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    return ar() ? (arMonths[mon - 1] + " " + y) : (enMonths[mon - 1] + " " + y);
   }
 
   function finance(d) {
-    // Finance stays available until paid subscriptions launch.
-    const month = C.day().slice(0, 7),
+    const curMonth = financeMonth || C.day().slice(0, 7),
       normMonth = (s) => {
         if (!s || typeof s !== "string") return "";
         const p = s.split("-");
-        return p.length >= 2 ? `${p[0]}-${p[1].padStart(2, "0")}` : s.slice(0, 7);
+        return p.length >= 2 ? (p[0] + "-" + p[1].padStart(2, "0")) : s.slice(0, 7);
       },
-      rows = d.finances.filter((x) => !x.archived && normMonth(x.date) === month),
+      rows = d.finances.filter((x) => !x.archived && normMonth(x.date) === curMonth),
       income = rows.filter((x) => x.type === "income").reduce((n, x) => n + Math.round(Number(x.amount || 0) * 100), 0),
       spent = rows.filter((x) => x.type !== "income").reduce((n, x) => n + Math.round(Number(x.amount || 0) * 100), 0),
-      planned = (d.settings.moneyTodos || []).filter((t) => !t.done).reduce((n, t) => n + Math.round(Number(t.amount || 0) * 100), 0),
-      money = (n) => new Intl.NumberFormat(ar() ? "ar-MA" : "en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n / 100) + " " + esc(d.settings.currency),
-      budget = C.allocateBudget(income, budgetRows(d)),
-      allocated = budget.reduce((n, b) => n + b.cents, 0);
+      money = (n) => new Intl.NumberFormat(ar() ? "ar-MA" : "en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format((n || 0) / 100) + " " + esc(d.settings.currency || "MAD"),
+      startBalance = getStartingBalance(d, curMonth),
+      plan = getFinancePlan(d, curMonth),
+      debts = getDebts(d),
+      plannedIncome = plan.income.reduce((n, x) => n + Math.round(Number(x.amount || 0) * 100), 0),
+      plannedSpent = plan.expenses.reduce((n, x) => n + Math.round(Number(x.amount || 0) * 100), 0),
+      netCashflow = income - spent,
+      totalBalance = Math.round(startBalance * 100) + netCashflow,
+      plannedTotalBalance = Math.round(startBalance * 100) + (plannedIncome - plannedSpent),
+      totalDebts = debts.reduce((n, x) => n + Math.round(Number(x.totalAmount || 0) * 100), 0),
+      paidDebts = debts.reduce((n, x) => n + Math.round(Number(x.paidAmount || 0) * 100), 0),
+      remainingDebts = Math.max(0, totalDebts - paidDebts),
+      savingsRate = income > 0 ? Math.max(0, Math.round(((income - spent) / income) * 100)) : 0;
 
-    const safeToSpend = income - spent - planned;
     const totalDays = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate();
     const currentDay = new Date().getDate();
     const monthProgress = currentDay / totalDays;
-    const spentRatio = income > 0 ? spent / income : 0;
-    
-    // Advice logic
+    const spentRatio = plannedSpent > 0 ? spent / plannedSpent : (income > 0 ? spent / income : 0);
+
     let advice = "";
     if (spentRatio > monthProgress + 0.15) {
-      advice = `<div class="lx-advice-card warning">⚠️ <strong>${L("Burn Rate Alert", "تنبيه سرعة الإنفاق")}</strong>: ${L("You are spending faster than the month is progressing. Consider slowing down discretionary purchases.", "سرعة إنفاقك أعلى من تقدم أيام الشهر. حاول تقليل المصاريف غير الضرورية.")}</div>`;
-    } else if (income > 0 && budget.filter(b => b.name.includes("Saving") || b.name.includes("ادخار")).length === 0) {
-      advice = `<div class="lx-advice-card info">💡 <strong>${L("Wealth Building", "بناء الثروة")}</strong>: ${L("You haven't set a Savings budget. The 50/30/20 rule suggests saving 20% of your income.", "لم تحدد بنداً للادخار. قاعدة 50/30/20 تنصح بادخار 20% من دخلك.")}</div>`;
-    } else if (income > 0 && spentRatio < monthProgress - 0.1) {
-      advice = `<div class="lx-advice-card good">✅ <strong>${L("On Track", "مسار ممتاز")}</strong>: ${L("Your spending velocity is well below your income. Great discipline this month.", "سرعة إنفاقك أقل بكثير من الدخل. انضباط مالي ممتاز هذا الشهر.")}</div>`;
+      advice = `<div class="lx-advice-card warning">⚠️ <strong>${L("Burn Rate Alert", "تنبيه سرعة الإنفاق")}</strong>: ${L("Your expenses are outpacing this month’s timeline. Watch discretionary purchases.", "سرعة إنفاقك تسبق الأيام المتبقية من الشهر. حاول ضبط المصاريف الجانبية.")}</div>`;
+    } else if (remainingDebts > 0 && paidDebts === 0) {
+      advice = `<div class="lx-advice-card info">🤝 <strong>${L("Debt Repayment", "إدارة الالتزامات")}</strong>: ${L("You have active debts. Logging installments regularly helps achieve full financial freedom.", "لديك ديون مستحقة مسجلة. ننصح بتسجيل دفعات منتظمة لتصفيتها وتحقيق الاستقرار المالي.")}</div>`;
+    } else if (income > 0 && spentRatio < monthProgress - 0.08) {
+      advice = `<div class="lx-advice-card good">✅ <strong>${L("Masterful Discipline", "انضباط مالي ممتاز")}</strong>: ${L("Spending is well under your monthly planned targets. Great savings discipline!", "المصاريف أقل من المخطط لها ومعدل الادخار إيجابي. استمر على هذا النهج المميز!")}</div>`;
     }
 
+    const categoriesOptions = financeCategories.map(c => `<option value="${esc(c.en)}">${c.icon} ${esc(ar() ? c.ar : c.en)}</option>`).join("");
+
     return (
-      heading(
-        name("finances"),
-        L("Executive Financial Command", "مركز القيادة المالية التنفيذية"),
-        btn("📥 " + L("Export CSV", "تصدير CSV"), "export-finance", 'class="lx-btn lx-secondary"') +
-        btn("+ " + L("Transaction", "معاملة"), "new", 'data-kind="finances"', true)
-      ) +
+      `<div class="lx-page-head v3-finance-page-head">
+        <div>
+          <div class="lx-eyebrow">THE NORTH / ${name(route)}</div>
+          <h1 tabindex="-1">${L("Executive Financial Command", "مركز القيادة المالية التنفيذية")}</h1>
+          <p>${L("Plan vs Actual budgets, starting balance, debt ledger, and daily cash flow.", "المخطط مقابل الفعلي، الرصيد الافتتاحي، إدارة الديون، وسجل المعاملات اليومية.")}</p>
+        </div>
+        <div class="lx-actions v3-finance-top-actions">
+          <div class="v3-finance-month-nav">
+            <button type="button" class="v3-month-arrow-btn" data-action="finance-month-prev" title="${L("Previous month", "الشهر السابق")}">‹</button>
+            <span class="v3-finance-month-label">${formatFinanceMonth(curMonth)}</span>
+            <button type="button" class="v3-month-arrow-btn" data-action="finance-month-next" title="${L("Next month", "الشهر التالي")}">›</button>
+          </div>
+          ${btn("✏️ " + L("Starting Balance", "الرصيد الافتتاحي"), "finance-start-balance", 'class="lx-btn lx-secondary"')}
+          ${btn("⚙️ " + L("Budget Plan", "خطة الميزانية"), "finance-plan-edit", 'class="lx-btn lx-secondary"')}
+          ${btn("📥 " + L("Export CSV", "تصدير CSV"), "export-finance", 'class="lx-btn lx-secondary"')}
+          ${btn("+ " + L("Transaction", "معاملة"), "new", 'data-kind="finances"', true)}
+        </div>
+      </div>` +
       advice +
-      `<section class="lx-finance-dashboard">
-        <div class="lx-safe-spend">
-          <small>${L("Balance after planned bills", "الرصيد بعد الالتزامات المخططة")}</small>
-          <strong>${money(safeToSpend)}</strong><p class="lx-muted">${L("Income minus expenses and open bills. Budget allocations are targets, not reserved funds.", "الدخل ناقص المصروف والالتزامات المفتوحة. نسب الميزانية أهداف توزيع وليست مبالغ محجوزة.")}</p>
+      `<section class="v3-finance-kpi-grid">
+        <div class="v3-kpi-card total-balance">
+          <div class="v3-kpi-head">
+            <span class="v3-kpi-icon">💼</span>
+            <span class="v3-kpi-title">${L("Total Balance", "الرصيد الإجمالي")}</span>
+          </div>
+          <strong class="v3-kpi-val" dir="auto">${money(totalBalance)}</strong>
+          <div class="v3-kpi-sub">
+            <span>${L("Starting:", "الافتتاحي:")} ${money(Math.round(startBalance * 100))}</span>
+            <span>·</span>
+            <span>${L("Expected:", "المتوقع:")} ${money(plannedTotalBalance)}</span>
+          </div>
         </div>
-        <div class="lx-stats-grid">
-          ${stat(L("Total Income", "إجمالي الدخل"), money(income))}
-          ${stat(L("Total Spent", "المصروف الفعلي"), money(spent))}
-          ${stat(L("Planned Bills", "فواتير مجدولة"), money(planned))}
+
+        <div class="v3-kpi-card income">
+          <div class="v3-kpi-head">
+            <span class="v3-kpi-icon">📈</span>
+            <span class="v3-kpi-title">${L("Total Income", "إجمالي الدخل")}</span>
+          </div>
+          <strong class="v3-kpi-val" dir="auto" style="color:#10B981">${money(income)}</strong>
+          <div class="v3-kpi-sub">
+            <span>${L("Plan:", "المخطط:")} ${money(plannedIncome)}</span>
+            <span class="v3-kpi-badge ${income >= plannedIncome ? 'good' : 'neutral'}">${plannedIncome > 0 ? Math.round((income / plannedIncome) * 100) : 100}%</span>
+          </div>
         </div>
-        <div class="lx-burn-bar">
-          <div class="lx-burn-fill" style="width: ${Math.min(100, spentRatio * 100)}%; background: ${spentRatio > monthProgress ? '#F43F5E' : '#10B981'}"></div>
-          <div class="lx-burn-marker" style="left: ${monthProgress * 100}%" title="${L("Today", "اليوم")}"></div>
+
+        <div class="v3-kpi-card expenses">
+          <div class="v3-kpi-head">
+            <span class="v3-kpi-icon">📉</span>
+            <span class="v3-kpi-title">${L("Total Expenses", "إجمالي المصاريف")}</span>
+          </div>
+          <strong class="v3-kpi-val" dir="auto" style="color:#F43F5E">${money(spent)}</strong>
+          <div class="v3-kpi-sub">
+            <span>${L("Plan:", "المخطط:")} ${money(plannedSpent)}</span>
+            <span class="v3-kpi-badge ${spent <= plannedSpent ? 'good' : 'warning'}">${spent <= plannedSpent ? (L("Saved:", "وفرت:") + " " + money(plannedSpent - spent)) : (L("Over:", "تجاوز:") + " " + money(spent - plannedSpent))}</span>
+          </div>
+        </div>
+
+        <div class="v3-kpi-card cashflow">
+          <div class="v3-kpi-head">
+            <span class="v3-kpi-icon">📊</span>
+            <span class="v3-kpi-title">${L("Net Cashflow", "صافي التدفق")}</span>
+          </div>
+          <strong class="v3-kpi-val" dir="auto" style="color:${netCashflow >= 0 ? '#10B981' : '#F43F5E'}">${netCashflow >= 0 ? "+" : "−"} ${money(Math.abs(netCashflow))}</strong>
+          <div class="v3-kpi-sub">
+            <span>${L("Savings rate:", "معدل الادخار:")} ${savingsRate}%</span>
+          </div>
+        </div>
+
+        <div class="v3-kpi-card debts">
+          <div class="v3-kpi-head">
+            <span class="v3-kpi-icon">🤝</span>
+            <span class="v3-kpi-title">${L("Debts Remaining", "الديون والالتزامات")}</span>
+          </div>
+          <strong class="v3-kpi-val" dir="auto" style="color:#A78BFA">${money(remainingDebts)}</strong>
+          <div class="v3-kpi-sub">
+            <span>${L("Paid:", "سُدد:")} ${money(paidDebts)} ${L("of", "من")} ${money(totalDebts)}</span>
+          </div>
         </div>
       </section>
-      
-      <section class="lx-card lx-margin">
-        <h2>${L("Planned bills", "الالتزامات المخططة")}</h2>
-        <p class="lx-muted">${L("Closing a bill removes its reservation. Record the actual payment as an expense separately.", "إغلاق الالتزام يلغي حجزه من الرصيد. سجّل الدفع الفعلي كمعاملة مصروف منفصلة.")}</p>
-        <form id="lxMoneyTodo" class="lx-fields-three">
-          ${field(L("Bill", "الالتزام"), "title", "", "text", 'required maxlength="120"')}
-          ${field(L("Amount", "المبلغ"), "amount", "", "number", 'required min="0.01" step="0.01"')}
-          <button type="submit" class="lx-btn">${L("Add bill", "إضافة التزام")}</button>
+
+      <section class="v3-quick-tx-card">
+        <div class="v3-quick-tx-head">
+          <span>⚡ <strong>${L("Quick Daily Transaction", "تسجيل سريع لمعاملة اليوم")}</strong></span>
+          <small class="lx-muted">${L("Fast daily expense/income logger matching your sheet", "تسجيل سريع للمصاريف أو الدخل بضغطة زر واحدة")}</small>
+        </div>
+        <form id="lxQuickTxForm" class="v3-quick-tx-form">
+          <div class="v3-quick-tx-pills">
+            <label class="v3-tx-radio-pill"><input type="radio" name="type" value="expense" checked><span>📉 ${L("Expense", "مصروف")}</span></label>
+            <label class="v3-tx-radio-pill"><input type="radio" name="type" value="income"><span>📈 ${L("Income", "دخل")}</span></label>
+          </div>
+          <input type="number" step="0.01" min="0.01" name="amount" placeholder="${L("Amount", "المبلغ")}" required class="v3-quick-input amt">
+          <select name="category" class="v3-quick-input cat">
+            ${categoriesOptions}
+          </select>
+          <input type="text" name="title" placeholder="${L("Title (e.g. Lunch, Rent, Course...)", "البيان (مثال: غداء، كراء، دورة...)")}" required class="v3-quick-input title">
+          <input type="date" name="date" value="${C.day()}" required class="v3-quick-input date">
+          <button type="submit" class="lx-btn lx-primary v3-quick-submit">+ ${L("Record", "تسجيل")}</button>
         </form>
-        ${(d.settings.moneyTodos || []).map(t => `<div class="lx-list-line"><span>${esc(t.title)} · ${money(Math.round(Number(t.amount || 0)*100))}</span>${btn(t.done ? L("Reopen", "إعادة فتح") : L("Close bill", "إغلاق الالتزام"), "money-check", 'data-id="'+esc(t.id)+'" aria-pressed="'+!!t.done+'"')}</div>`).join("")}
       </section>
-      <div class="lx-grid-two">
-        <section class="lx-card">
-          <div class="lx-card-head">
-            <div><h2>${L("Budget Allocation", "توزيع الميزانية")}</h2></div>
-            ${btn(L("Edit rules", "تعديل القواعد"), "budget-edit")}
-          </div>
-          <div class="lx-budget-list">
-          ${
-            budget.map((b) => {
-              const target = b.cents,
-                actual = rows.filter((x) => x.type !== "income" && x.category === b.name).reduce((n, x) => n + Math.round(Number(x.amount) * 100), 0),
-                catInfo = getCategoryInfo(b.name);
-              return `<div class="lx-budget-row">
-                <div class="lx-budget-name"><span class="lx-cat-icon" style="background:${catInfo.color}20">${catInfo.icon}</span> <strong>${esc(b.name)}</strong> <span class="lx-badge">${b.percent}%</span></div>
-                <div class="lx-budget-numbers">
-                  <div class="lx-budget-track"><div class="lx-budget-fill" style="width:${Math.min(100, (actual/(target||1))*100)}%;background:${catInfo.color}"></div></div>
-                  <small>${money(actual)} / ${money(target)}</small>
-                </div>
-              </div>`;
-            }).join("") || `<p>${L("Add your 50/30/20 allocation rules.", "أضف قواعد توزيع 50/30/20 الخاصة بك.")}</p>`
-          }
-          </div>
-        </section>
 
-        <section class="lx-card">
-          <h2>${L("Recent Transactions", "أحدث المعاملات")}</h2>
-          <div class="lx-tx-list">
-          ${rows.slice(0, 10).map((x) => {
-            const catInfo = getCategoryInfo(x.category || "");
-            return `<button class="lx-list-button lx-tx-item" data-action="edit" data-kind="finances" data-id="${esc(x.id)}">
-              <span class="lx-cat-icon" style="background:${catInfo.color}20">${catInfo.icon}</span>
-              <div class="lx-tx-details">
-                <strong>${esc(x.title)}</strong>
-                <small>${dateText(x.date)} · ${esc(x.category || "")}</small>
+      <div class="v3-finance-tabs-nav">
+        <button type="button" class="v3-finance-tab-btn ${financeTab === 'overview' ? 'active' : ''}" data-action="finance-tab" data-tab="overview">📊 ${L("Overview", "نظرة عامة")}</button>
+        <button type="button" class="v3-finance-tab-btn ${financeTab === 'plan' ? 'active' : ''}" data-action="finance-tab" data-tab="plan">🎯 ${L("Planned vs Actual", "المخطط مقابل الفعلي")}</button>
+        <button type="button" class="v3-finance-tab-btn ${financeTab === 'debts' ? 'active' : ''}" data-action="finance-tab" data-tab="debts">🤝 ${L("Debts Tracker", "إدارة الديون")}</button>
+        <button type="button" class="v3-finance-tab-btn ${financeTab === 'ledger' ? 'active' : ''}" data-action="finance-tab" data-tab="ledger">📝 ${L("Transactions Ledger", "سجل المعاملات")}</button>
+      </div>` +
+
+      (financeTab === "overview" ? `
+        <div class="v3-finance-tab-content">
+          <div class="lx-grid-two">
+            <section class="lx-card">
+              <div class="lx-card-head">
+                <div><h2>${L("Month Burn Velocity", "سرعة استهلاك الميزانية")}</h2></div>
+                <small class="lx-muted">${L("Day", "اليوم")} ${currentDay} / ${totalDays}</small>
               </div>
-              <strong class="lx-tx-amt" style="color:${x.type === 'income' ? '#10B981' : ''}">${x.type === "income" ? "+" : "−"} ${money(Math.round(Number(x.amount) * 100))}</strong>
-            </button>`;
-          }).join("") || empty(L("No transactions this month.", "لا توجد معاملات هذا الشهر."), "finances")}
-          </div>
-        </section>
-      </div>
+              <div class="lx-burn-bar" style="margin:16px 0 10px 0;">
+                <div class="lx-burn-fill" style="width: ${Math.min(100, spentRatio * 100)}%; background: ${spentRatio > monthProgress ? '#F43F5E' : '#10B981'}"></div>
+                <div class="lx-burn-marker" style="left: ${monthProgress * 100}%" title="${L("Today", "اليوم")}"></div>
+              </div>
+              <div style="display:flex;justify-content:space-between;font-size:12px;" class="lx-muted">
+                <span>0%</span>
+                <span>${L("Today marker", "مؤشر تقدم الشهر")} (${Math.round(monthProgress * 100)}%)</span>
+                <span>100%</span>
+              </div>
+              <p class="lx-muted" style="margin-top:14px;">${L("Keep the spent bar behind the today marker to ensure positive cash flow at month end.", "احرص على بقاء شريط الإنفاق متأخرًا عن مؤشر اليوم لضمان فائض مالي بنهاية الشهر.")}</p>
+            </section>
 
-      <details class="lx-card">
-        <summary>${L("All Transactions History", "سجل كل المعاملات")}</summary>
-        <div class="lx-tx-list">
-        ${d.finances.filter((x) => !x.archived).map((x) => {
-          const catInfo = getCategoryInfo(x.category || "");
-          return `<button class="lx-list-button lx-tx-item" data-action="edit" data-kind="finances" data-id="${esc(x.id)}">
-            <span class="lx-cat-icon" style="background:${catInfo.color}20">${catInfo.icon}</span>
-            <div class="lx-tx-details">
-              <strong>${esc(x.title)}</strong>
-              <small>${dateText(x.date)} · ${esc(x.category || "")}</small>
+            <section class="lx-card">
+              <div class="lx-card-head">
+                <div><h2>${L("Top Expenses by Category", "أبرز أبواب المصاريف")}</h2></div>
+                <button type="button" class="lx-btn lx-secondary" data-action="finance-tab" data-tab="plan">${L("All Categories", "كل الفئات")}</button>
+              </div>
+              <div class="v3-top-cat-list">
+                ${financeCategories.filter(c => c.type === "expense").map(c => {
+                  const catSpent = rows.filter(x => x.type !== "income" && getCategoryInfo(x.category).id === c.id).reduce((s, x) => s + Math.round(Number(x.amount || 0) * 100), 0);
+                  if (!catSpent) return "";
+                  const pct = spent > 0 ? Math.round((catSpent / spent) * 100) : 0;
+                  return `<div class="v3-cat-bar-row">
+                    <div class="v3-cat-bar-info">
+                      <span>${c.icon} ${esc(ar() ? c.ar : c.en)}</span>
+                      <strong>${money(catSpent)} <small>(${pct}%)</small></strong>
+                    </div>
+                    <div class="v3-cat-track"><div class="v3-cat-fill" style="width:${pct}%;background:${c.color}"></div></div>
+                  </div>`;
+                }).filter(Boolean).slice(0, 5).join("") || `<p class="lx-muted">${L("No expenses recorded yet this month.", "لا توجد مصاريف مسجلة هذا الشهر حتى الآن.")}</p>`}
+              </div>
+            </section>
+          </div>
+
+          <section class="lx-card" style="margin-top:16px;">
+            <div class="lx-card-head">
+              <div><h2>${L("Recent Daily Transactions", "أحدث المعاملات اليومية")}</h2></div>
+              <button type="button" class="lx-btn lx-secondary" data-action="finance-tab" data-tab="ledger">${L("View All Ledger", "عرض السجل كاملاً")}</button>
             </div>
-            <strong class="lx-tx-amt" style="color:${x.type === 'income' ? '#10B981' : ''}">${x.type === "income" ? "+" : "−"} ${money(Math.round(Number(x.amount) * 100))}</strong>
-          </button>`;
-        }).join("")}
-        </div>
-      </details>`
+            <div class="lx-tx-list">
+              ${rows.slice(0, 6).map((x) => {
+                const catInfo = getCategoryInfo(x.category || "");
+                return `<button class="lx-list-button lx-tx-item" data-action="edit" data-kind="finances" data-id="${esc(x.id)}">
+                  <span class="lx-cat-icon" style="background:${catInfo.color}20">${catInfo.icon}</span>
+                  <div class="lx-tx-details">
+                    <strong>${esc(x.title)}</strong>
+                    <small>${dateText(x.date)} · ${esc(ar() ? catInfo.ar : catInfo.en)}</small>
+                  </div>
+                  <strong class="lx-tx-amt" style="color:${x.type === 'income' ? '#10B981' : '#F43F5E'}">${x.type === "income" ? "+" : "−"} ${money(Math.round(Number(x.amount) * 100))}</strong>
+                </button>`;
+              }).join("") || empty(L("No transactions recorded yet.", "لا توجد معاملات مسجلة بعد."), "finances")}
+            </div>
+          </section>
+        </div>` : "") +
+
+      (financeTab === "plan" ? `
+        <div class="v3-finance-tab-content">
+          <div class="lx-grid-two">
+            <section class="lx-card v3-plan-table-card">
+              <div class="lx-card-head">
+                <div><h2>📉 ${L("Planned Expenses", "المصاريف المخططة")}</h2></div>
+                <button type="button" class="lx-btn lx-secondary" data-action="finance-plan-edit">⚙️ ${L("Edit Plan", "تعديل المخطط")}</button>
+              </div>
+              <div class="v3-plan-list">
+                ${plan.expenses.map((pe) => {
+                  const catInfo = getCategoryInfo(pe.category);
+                  const pTarget = Math.round(Number(pe.amount || 0) * 100);
+                  const act = rows.filter(x => x.type !== "income" && (getCategoryInfo(x.category).id === catInfo.id || x.category === pe.category)).reduce((s, x) => s + Math.round(Number(x.amount || 0) * 100), 0);
+                  const pct = pTarget > 0 ? Math.round((act / pTarget) * 100) : 0;
+                  const diff = pTarget - act;
+                  return `<div class="v3-plan-row">
+                    <div class="v3-plan-row-top">
+                      <div class="v3-plan-cat"><span class="lx-cat-icon" style="background:${catInfo.color}20">${catInfo.icon}</span> <strong>${esc(pe.label || (ar() ? catInfo.ar : catInfo.en))}</strong></div>
+                      <div class="v3-plan-amts">
+                        <span>${money(act)} / <strong>${money(pTarget)}</strong></span>
+                        <span class="v3-kpi-badge ${diff >= 0 ? 'good' : 'warning'}">${diff >= 0 ? (L("Rem: ", "متبقٍ: ") + money(diff)) : (L("Over: ", "تجاوز: ") + money(Math.abs(diff)))}</span>
+                      </div>
+                    </div>
+                    <div class="v3-plan-track"><div class="v3-plan-fill" style="width:${Math.min(100, pct)}%;background:${pct > 100 ? '#F43F5E' : (pct > 80 ? '#F59E0B' : '#10B981')}"></div></div>
+                  </div>`;
+                }).join("")}
+              </div>
+              <div class="v3-plan-footer">
+                <strong>${L("Total Planned Expenses", "إجمالي المصاريف المخططة")}: ${money(plannedSpent)}</strong>
+                <strong style="color:${spent <= plannedSpent ? '#10B981' : '#F43F5E'}">${L("Actual", "الفعلي")}: ${money(spent)}</strong>
+              </div>
+            </section>
+
+            <section class="lx-card v3-plan-table-card">
+              <div class="lx-card-head">
+                <div><h2>📈 ${L("Planned Income", "الدخل المخطط")}</h2></div>
+                <button type="button" class="lx-btn lx-secondary" data-action="finance-plan-edit">⚙️ ${L("Edit Plan", "تعديل المخطط")}</button>
+              </div>
+              <div class="v3-plan-list">
+                ${plan.income.map((pi) => {
+                  const catInfo = getCategoryInfo(pi.source);
+                  const pTarget = Math.round(Number(pi.amount || 0) * 100);
+                  const act = rows.filter(x => x.type === "income" && (getCategoryInfo(x.category).id === catInfo.id || x.category === pi.source || x.title.toLowerCase().includes(pi.source.toLowerCase()))).reduce((s, x) => s + Math.round(Number(x.amount || 0) * 100), 0);
+                  const diff = act - pTarget;
+                  const pct = pTarget > 0 ? Math.round((act / pTarget) * 100) : 0;
+                  return `<div class="v3-plan-row">
+                    <div class="v3-plan-row-top">
+                      <div class="v3-plan-cat"><span class="lx-cat-icon" style="background:${catInfo.color}20">${catInfo.icon}</span> <strong>${esc(pi.label || pi.source)}</strong></div>
+                      <div class="v3-plan-amts">
+                        <span>${money(act)} / <strong>${money(pTarget)}</strong></span>
+                        <span class="v3-kpi-badge ${diff >= 0 ? 'good' : 'neutral'}">${diff >= 0 ? "+" + money(diff) : "-" + money(Math.abs(diff))}</span>
+                      </div>
+                    </div>
+                    <div class="v3-plan-track"><div class="v3-plan-fill" style="width:${Math.min(100, pct)}%;background:#10B981"></div></div>
+                  </div>`;
+                }).join("")}
+              </div>
+              <div class="v3-plan-footer">
+                <strong>${L("Total Planned Income", "إجمالي الدخل المخطط")}: ${money(plannedIncome)}</strong>
+                <strong style="color:#10B981">${L("Actual", "الفعلي")}: ${money(income)}</strong>
+              </div>
+            </section>
+          </div>
+        </div>` : "") +
+
+      (financeTab === "debts" ? `
+        <div class="v3-finance-tab-content">
+          <section class="lx-card">
+            <div class="lx-card-head">
+              <div>
+                <h2>🤝 ${L("Debts & Obligations Ledger", "سجل الديون والالتزامات المالية")}</h2>
+                <p class="lx-muted">${L("Track creditors (e.g. Credi mohammed), total amounts owed, and installments paid.", "تتبع الدائنين والديون المستحقة وسجل دفعات السداد لخصمها من الرصيد تلقائياً.")}</p>
+              </div>
+              <button type="button" class="lx-btn lx-primary" data-action="finance-debt-new">+ ${L("Add Debt", "إضافة دين جديد")}</button>
+            </div>
+
+            <div class="v3-debts-grid">
+              ${debts.map(dbt => {
+                const tot = Math.round(Number(dbt.totalAmount || 0) * 100);
+                const pd = Math.round(Number(dbt.paidAmount || 0) * 100);
+                const rem = Math.max(0, tot - pd);
+                const pct = tot > 0 ? Math.min(100, Math.round((pd / tot) * 100)) : 0;
+                return `<div class="v3-debt-card">
+                  <div class="v3-debt-head">
+                    <div>
+                      <strong>${esc(dbt.name)}</strong>
+                      ${dbt.note ? `<small class="lx-muted">${esc(dbt.note)}</small>` : ""}
+                    </div>
+                    <span class="v3-kpi-badge ${rem === 0 ? 'good' : 'warning'}">${rem === 0 ? L("Fully Paid", "سُدد بالكامل") : (pct + "% " + L("Paid", "مسدد"))}</span>
+                  </div>
+                  <div class="v3-debt-numbers">
+                    <div><small>${L("Total Debt", "إجمالي الدين")}</small><strong>${money(tot)}</strong></div>
+                    <div><small>${L("Paid to Date", "المدفوع حتى الآن")}</small><strong style="color:#10B981">${money(pd)}</strong></div>
+                    <div><small>${L("Remaining", "المتبقي للسداد")}</small><strong style="color:#F43F5E">${money(rem)}</strong></div>
+                  </div>
+                  <div class="v3-debt-track"><div class="v3-debt-fill" style="width:${pct}%;"></div></div>
+                  <div class="v3-debt-actions">
+                    <button type="button" class="lx-btn lx-primary" data-action="finance-debt-pay" data-id="${esc(dbt.id)}">💳 ${L("Pay Installment", "سداد دفعة")}</button>
+                    <button type="button" class="lx-btn lx-secondary" data-action="finance-debt-edit" data-id="${esc(dbt.id)}">✏️ ${L("Edit", "تعديل")}</button>
+                    <button type="button" class="lx-btn ghost danger" data-action="finance-debt-delete" data-id="${esc(dbt.id)}" title="${L("Delete", "حذف")}">🗑️</button>
+                  </div>
+                </div>`;
+              }).join("") || `<div class="v3-empty-card"><p>${L("No active debts registered. You are debt free!", "لا توجد ديون مسجلة. أنت حر مالياً!")}</p></div>`}
+            </div>
+          </section>
+        </div>` : "") +
+
+      (financeTab === "ledger" ? `
+        <div class="v3-finance-tab-content">
+          <section class="lx-card">
+            <div class="lx-card-head">
+              <div>
+                <h2>📝 ${L("Daily Transactions Ledger", "سجل المعاملات اليومي")}</h2>
+                <p class="lx-muted">${L("All expenses and income recorded for this month.", "جميع حركات الدخل والمصاريف المسجلة خلال هذا الشهر.")}</p>
+              </div>
+              <div class="v3-tx-filter-chips">
+                <button type="button" class="v3-filter-chip ${financeTxFilter === 'all' ? 'active' : ''}" data-action="finance-filter" data-filter="all">${L("All", "الكل")} (${rows.length})</button>
+                <button type="button" class="v3-filter-chip ${financeTxFilter === 'expense' ? 'active' : ''}" data-action="finance-filter" data-filter="expense">📉 ${L("Expenses", "المصاريف")}</button>
+                <button type="button" class="v3-filter-chip ${financeTxFilter === 'income' ? 'active' : ''}" data-action="finance-filter" data-filter="income">📈 ${L("Income", "الدخل")}</button>
+                <button type="button" class="v3-filter-chip ${financeTxFilter === 'debt' ? 'active' : ''}" data-action="finance-filter" data-filter="debt">🤝 ${L("Debt Payments", "سداد ديون")}</button>
+              </div>
+            </div>
+
+            <div class="lx-tx-list">
+              ${rows
+                .filter(x => {
+                  if (financeTxFilter === "expense") return x.type !== "income" && !x.debtId;
+                  if (financeTxFilter === "income") return x.type === "income";
+                  if (financeTxFilter === "debt") return !!x.debtId || (x.category || "").includes("Debt");
+                  return true;
+                })
+                .map((x) => {
+                  const catInfo = getCategoryInfo(x.category || "");
+                  return `<div class="lx-list-button lx-tx-item" style="cursor:default">
+                    <span class="lx-cat-icon" style="background:${catInfo.color}20">${catInfo.icon}</span>
+                    <div class="lx-tx-details">
+                      <strong>${esc(x.title)}</strong>
+                      <small>${dateText(x.date)} · ${esc(ar() ? catInfo.ar : catInfo.en)} ${x.notes ? (' · ' + esc(x.notes)) : ''}</small>
+                    </div>
+                    <strong class="lx-tx-amt" style="color:${x.type === 'income' ? '#10B981' : '#F43F5E'}">${x.type === "income" ? "+" : "−"} ${money(Math.round(Number(x.amount) * 100))}</strong>
+                    <div class="lx-tx-item-actions">
+                      <button type="button" class="lx-btn lx-btn-sm" data-action="edit" data-kind="finances" data-id="${esc(x.id)}">✏️</button>
+                      <button type="button" class="lx-btn lx-btn-sm danger" data-action="archive" data-kind="finances" data-id="${esc(x.id)}" title="${L("Delete", "حذف")}">🗑️</button>
+                    </div>
+                  </div>`;
+                }).join("") || empty(L("No transactions found for this filter.", "لا توجد معاملات مسجلة لهذا التصنيف."), "finances")}
+            </div>
+          </section>
+        </div>` : "")
     );
   }
-
 
   function momentumMap(d) {
     const gs = d.goals.filter((g) => !g.archived);
@@ -1010,10 +1324,18 @@
           : (`<button type="button" class="v3-ctrl-circle-btn main-play-pause" data-action="${a.segmentStartedAt === null ? "session-resume" : "session-pause"}" aria-label="${a.segmentStartedAt === null ? "Resume" : "Pause"}">
               ${a.segmentStartedAt === null ? "▶" : "❚❚"}
              </button>
-             <button type="button" class="v3-ctrl-circle-btn stop-btn" data-action="session-finish" aria-label="Stop & Save">
+             <button type="button" class="v3-ctrl-circle-btn stop-btn" data-action="session-finish" aria-label="Stop & Save" title="${L("Save & Finish", "إنهاء وحفظ")}">
               ■
+             </button>
+             <button type="button" class="v3-ctrl-circle-btn cancel-btn" data-action="session-cancel" aria-label="Cancel session" title="${L("Cancel & Discard", "إلغاء الجلسة دون حفظ")}">
+              ✕
              </button>`)}
       </div>
+
+      ${a.segmentStartedAt === null ? `<div class="v3-session-paused-banner">
+        <span>⏸️ ${L("Session paused", "الجلسة متوقفة مؤقتًا")}</span>
+        <button type="button" class="v3-paused-cancel-btn" data-action="session-cancel">🗑️ ${L("Cancel session", "إلغاء الجلسة والتراجع")}</button>
+      </div>` : ""}
 
       <div class="v3-session-dots-wrap" ${a.type === "pomodoro" ? "" : 'hidden'}>
         <div class="v3-dots-row">
@@ -3271,6 +3593,12 @@
 
   window.addEventListener("keydown", (e) => {
     if (e.key === "Escape" && document.body.classList.contains("v3-zen-mode-active")) {
+      document.body.classList.remove("v3-zen-mode-active");
+    }
+  });
+
+  document.addEventListener("fullscreenchange", () => {
+    if (!document.fullscreenElement && document.body.classList.contains("v3-zen-mode-active")) {
       document.body.classList.remove("v3-zen-mode-active");
     }
   });
