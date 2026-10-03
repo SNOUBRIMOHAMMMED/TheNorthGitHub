@@ -178,10 +178,10 @@
     };
     notice(
       messages[e.message] ||
-        L(
+        (e.name === "QuotaExceededError" || e.name === "SecurityError" ? L(
           "Could not save. Storage may be full or unavailable. Export a backup and try again.",
           "تعذر الحفظ. قد تكون مساحة التخزين ممتلئة أو غير متاحة. صدّر نسخة احتياطية وأعد المحاولة.",
-        ),
+        ) : L("Could not complete this action. Reload the page and try again.", "تعذر إكمال هذا الإجراء. حدّث الصفحة وأعد المحاولة.")),
       true,
     );
   }
@@ -775,6 +775,11 @@
     const end = +new Date((g.deadline || "") + "T23:59:59");
     return Number.isFinite(start) && Number.isFinite(end) && end > start
       ? Math.round(Math.max(0, Math.min(100, (Date.now() - start) / (end - start) * 100))) : null;
+  }
+  function goalTone(d, g) {
+    if (/^#[\da-f]{6}$/i.test(g.color || "")) return g.color;
+    const tones = ["#c9b4e9", "#df847a", "#68b7ad"];
+    return tones[Math.max(0, d.goals.indexOf(g)) % tones.length];
   }
   function homeGoalCards(d) {
     const gs = d.goals.filter(g => !g.archived).slice(0, 3);
@@ -1730,6 +1735,7 @@
             ${field(L("Estimated hours", "الوقت المقدر بالساعات"), "estimatedHours", o.estimatedHours || 0, "number", 'min="0" max="10000" step="0.25"')}
           </div>
           ${area(L("Notes", "ملاحظات"), "notes", o.notes || "")}
+          ${area(L("Subtasks · one per line, [x] for completed", "مهام فرعية · مهمة في كل سطر، [x] للمكتملة"), "subtaskText", (o.subtasks || []).map(s => (s.done ? "[x] " : "") + s.title).join("\n"))}
         </details>` +
         (existing
           ? `<div class="lx-info">${L("Actual time", "الوقت الفعلي")}: ${hrs(C.duration(C.reportSessions(d), 0, Infinity, (s) => s.taskId === id))} · ${L("Difference from estimate", "الفرق عن التقدير")}: ${(C.duration(C.reportSessions(d), 0, Infinity, (s) => s.taskId === id) / 3600000 - (o.estimatedHours || 0)).toFixed(2)} ${L("hours", "ساعة")}</div>`
@@ -2380,9 +2386,9 @@
       return;
     }
     if (a === "qf-launch") {
-      const taskId = el.dataset.taskId;
-      const goalId = el.dataset.goalId;
-      const projectId = el.dataset.projectId;
+      const taskId = b.dataset.taskId;
+      const goalId = b.dataset.goalId;
+      const projectId = b.dataset.projectId;
       const dialog = $("#lxDialog");
       const isPomo = dialog?.querySelector('[data-qf-mode="pomodoro"]')?.classList.contains("active") !== false;
       const durPill = dialog?.querySelector(".v3-dur-pill.active");
@@ -2761,13 +2767,13 @@
             item.impact = Number(data.impact) >= 0 ? Number(data.impact) : 5;
           }
           if (kind === "tasks") {
-            item.subtasks = data.subtaskText
+            item.subtasks = typeof data.subtaskText === "string" ? data.subtaskText
               .split("\n")
               .filter((x) => x.trim())
               .map((x) => ({
                 title: x.replace(/^\[x\]\s*/i, ""),
                 done: /^\[x\]/i.test(x),
-              }));
+              })) : (item.subtasks || []);
             if (!old) item.done = false;
           }
           if (!old) d[kind].unshift(item);

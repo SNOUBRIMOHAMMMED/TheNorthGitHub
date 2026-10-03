@@ -1,5 +1,5 @@
 /* Offline shell only. Never intercept external traffic or clear other apps' caches. */
-const CACHE = "lifeos-v4-20261003-auto-save";
+const CACHE = "lifeos-v4-20261003-save-fix";
 const ASSETS = [
   "north-brand.css",
   "north-brand.css?v=20261003",
@@ -28,7 +28,7 @@ const ASSETS = [
   "app.js",
   "app.js?v=auto2",
   "workspace.js",
-  "workspace.js?v=20261003-autosave",
+  "workspace.js?v=20261003-save-fix",
   "manifest.webmanifest",
   "brand-mark.svg",
   "icon-180.png",
