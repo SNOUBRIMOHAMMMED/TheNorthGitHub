@@ -84,7 +84,8 @@
         if (choice) return inFlight.then(() => sync(choice));
         return inFlight;
       }
-      if (!valid() || (conflict && !choice)) return Promise.resolve(false);
+      if (!valid()) return Promise.resolve(false);
+      if (conflict && !choice) { status('conflict'); return Promise.resolve(false); }
       const owner = user.id;
       inFlight = (async () => {
         let nextChoice = choice;

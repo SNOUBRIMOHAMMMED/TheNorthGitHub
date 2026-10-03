@@ -1800,10 +1800,16 @@
       db.update(d=>{for(const k of Object.keys(payload)) if(k!=="activeSession") d[k]=validated[k];});
       window.LifeLegacy?.renderAll?.(); render();
     },
-    status:state=>{cloudState=state; for(const el of document.querySelectorAll("[data-cloud-status]")) el.textContent=cloudMessages()[state];}
+    status:state=>{cloudState=state; updateCloudPanel();}
   }) : null;
+  function updateCloudPanel() {
+    for (const el of document.querySelectorAll("[data-cloud-status]")) el.textContent = cloudMessages()[cloudState];
+    for (const el of document.querySelectorAll("[data-cloud-conflict]")) el.open = cloudState === "conflict";
+    if (cloudState === "conflict") for (const el of document.querySelectorAll("[data-cloud-panel]")) el.open = true;
+  }
   function cloudPanel() {
-    return `<details class="lx-card"><summary>${L("Sync and recovery", "المزامنة والاستعادة")}</summary><p id="lxCloudStatus" data-cloud-status role="status">${cloudMessages()[cloudState]}</p><p>${L("Your workspace saves automatically. If both devices change the same workspace, choose the copy to retain. Export a backup before replacing a copy.", "تُحفظ مساحة عملك تلقائيًا. إذا عُدّلت على جهازين، اختر النسخة المعتمدة. صدّر نسخة احتياطية قبل استبدال نسخة.")}</p>${btn(L("Retry sync", "إعادة المزامنة"),"cloud-sync")}<details><summary>${L("Resolve conflict", "حل تعارض")}</summary>${btn(L("Use cloud copy", "اعتماد النسخة السحابية"),"cloud-remote")}${btn(L("Use this device’s copy", "اعتماد نسخة هذا الجهاز"),"cloud-local")}</details></details>`;
+    const open = cloudState === "conflict" ? " open" : "";
+    return `<details class="lx-card" data-cloud-panel${open}><summary>${L("Sync and recovery", "المزامنة والاستعادة")}</summary><p id="lxCloudStatus" data-cloud-status role="status">${cloudMessages()[cloudState]}</p><p>${L("Your workspace saves automatically. Export a backup before replacing a copy.", "تُحفظ مساحة عملك تلقائيًا. صدّر نسخة احتياطية قبل استبدال نسخة.")}</p>${btn(L("Export backup", "تصدير نسخة احتياطية"),"cloud-backup")}${btn(L("Retry sync", "إعادة المزامنة"),"cloud-sync")}<details data-cloud-conflict${open}><summary>${L("Choose the copy to keep", "اختر النسخة التي تريد الاحتفاظ بها")}</summary><p>${L("Retrying cannot resolve a conflict. On the device showing your goals, choose this device’s copy to upload them. Use the cloud copy only to replace this device’s data. Recovery copies are kept automatically.", "إعادة المزامنة لا تحل التعارض وحدها. من الجهاز الذي تظهر فيه أهدافك، اختر نسخة هذا الجهاز لرفعها. اعتماد النسخة السحابية يستبدل بيانات هذا الجهاز. تُحفظ نسخ استعادة تلقائيًا.")}</p>${btn(L("Upload this device’s copy", "رفع نسخة هذا الجهاز"),"cloud-local",'class="lx-btn lx-primary"')}${btn(L("Replace with cloud copy", "استبدالها بالنسخة السحابية"),"cloud-remote")}</details></details>`;
   }
   if(cloud){
     const update=db.update;
@@ -2013,12 +2019,21 @@
     e.preventDefault();
     e.stopImmediatePropagation();
     if (a.startsWith("cloud-")) {
+      if (a === "cloud-backup") { $("#exportBtn")?.click(); return; }
       if (!cloud) { notice(cloudMessages().offline, true); return; }
+      const label = b.textContent;
       b.disabled = true;
+      b.textContent = L("Checking…", "جارٍ التحقق…");
       try {
         if (a === "cloud-sync") await cloud.resume();
         else if (a === "cloud-local" || a === "cloud-remote") await cloud.resolve(a.slice(6));
-      } finally { b.disabled = false; }
+        if (cloudState === "conflict") {
+          updateCloudPanel();
+          notice(L("Choose the copy to keep below. Retry does not replace either copy.", "اختر النسخة التي تريد الاحتفاظ بها من الخيارات الظاهرة. إعادة المزامنة لا تستبدل أي نسخة."));
+          $("[data-cloud-conflict] summary")?.focus();
+        } else notice(cloudMessages()[cloudState], cloudState !== "saved");
+      } catch { notice(L("Could not complete sync. Your local data is preserved.", "تعذر إكمال المزامنة. بيانات جهازك محفوظة."), true); }
+      finally { b.disabled = false; b.textContent = label; }
       return;
     }
     const id = b.dataset.id,

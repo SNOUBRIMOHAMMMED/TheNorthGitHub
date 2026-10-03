@@ -18,6 +18,18 @@ const payload={tasks:[{id:'t'}],sessions:[],projects:[],goals:[]};
 test('cloud first save initializes row and subsequent task changes update revision',async()=>{const h=harness();await h.cloud.resume();h.edit();await h.cloud.sync();assert.equal(h.row.revision,1);assert.equal(h.row.payload.tasks[0].id,'new');});
 test('cloud restores remote on empty device',async()=>{const h=harness({row:{payload,revision:4}});await h.cloud.resume();assert.equal(h.data.tasks[0].id,'t');assert.equal(h.writes,0);});
 test('cloud refuses unconfirmed first-device overwrite',async()=>{const h=harness({row:{payload,revision:2},local:{...payload,tasks:[{id:'local'}]}});await h.cloud.resume();assert.equal(h.state,'conflict');assert.equal(h.writes,0);});
+test('retry during conflict reports the conflict and explicit local choice preserves goals',async()=>{
+ const local={tasks:[],sessions:[],projects:[{id:'project-phone'}],goals:[{id:'goal-phone'}]};
+ const h=harness({row:{payload:{tasks:[],sessions:[],projects:[],goals:[]},revision:0},local});
+ await h.cloud.resume(); assert.equal(h.state,'conflict');
+ assert.equal(await h.cloud.resume(),false); assert.equal(h.state,'conflict');
+ assert.equal(h.writes,0); assert.deepEqual(h.data.goals,local.goals);
+ assert.equal(await h.cloud.resolve('local'),true); assert.equal(h.state,'saved');
+ assert.equal(h.row.revision,1); assert.deepEqual(h.row.payload.goals,local.goals);
+ assert.deepEqual(h.row.payload.projects,local.projects);
+ assert.equal(JSON.parse(h.mem.get('north_before_cloud_user-a_first')).goals[0].id,'goal-phone');
+ assert.deepEqual(JSON.parse(h.mem.get('north_before_cloud_user-a_remote')).goals,[]);
+});
 test('cloud identity mismatch never reads or writes local workspace into another account',async()=>{const h=harness({mismatch:true});await h.cloud.resume();assert.equal(h.state,'identity');assert.equal(h.writes,0);});
 test('offline edits survive and retry',async()=>{const h=harness();await h.cloud.resume();h.setFail(true);h.edit();await h.cloud.sync();assert.equal(h.state,'offline');assert.equal(h.data.tasks.length,1);h.setFail(false);await h.cloud.sync();assert.equal(h.row.payload.tasks.length,1);});
 test('remote and local concurrent edits cause conflict',async()=>{const h=harness();await h.cloud.resume();h.edit();h.remote();await h.cloud.sync();assert.equal(h.state,'conflict');assert.equal(h.writes,1);});
