@@ -92,6 +92,14 @@
     };
     return `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${p[k] || p.analytics}"/></svg>`;
   };
+  const fmtMinSec = (ms) => {
+    const totalSec = Math.max(0, Math.floor(ms / 1000));
+    const h = Math.floor(totalSec / 3600);
+    const m = Math.floor((totalSec % 3600) / 60);
+    const s = totalSec % 60;
+    if (h > 0) return `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+    return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+  };
   const fmt = (ms) => {
     const sec = Math.max(0, Math.floor(ms / 1000));
     return [Math.floor(sec / 3600), Math.floor(sec / 60) % 60, sec % 60]
@@ -306,8 +314,18 @@
       return icon(k);
     };
     const mobileRoutes = ["home", "goals", "tasks", "focus", "account"];
-    $(".bottom-nav").innerHTML = mobileRoutes.map(k =>
-      `<button class="bottom-item ${route === k ? "active" : ""}" data-route="${k}" aria-label="${name(k)}" ${route === k ? 'aria-current="page"' : ""}>${dockIcon(k)}<small>${name(k)}</small></button>`).join("");
+    const bottomNavEl = $(".bottom-nav");
+    if (bottomNavEl) {
+      bottomNavEl.innerHTML = mobileRoutes.map(k => {
+        const isAct = route === k || (k === "account" && route === "account");
+        const labelText = k === "focus" ? L("Pomodoro", "التركيز") : (k === "account" ? L("Settings", "الإعدادات") : name(k));
+        const activeTag = (k === "focus" && d.activeSession) ? `<span class="v3-dock-active-tag">ACTIVE</span>` : '';
+        return `<button class="bottom-item ${isAct ? "active" : ""}" data-route="${k}" aria-label="${labelText}" ${isAct ? 'aria-current="page"' : ""}>
+          <span class="dock-icon-wrap">${activeTag}${dockIcon(k)}<i class="active-dot" aria-hidden="true"></i></span>
+          <small>${labelText}</small>
+        </button>`;
+      }).join("");
+    }
     // Desktop topbar: breadcrumb + actions (hidden on mobile via CSS)
     $("#lxTopbar").innerHTML =
       `<div class="lx-topbar-brand"><span class="brand-mark lifeos-mark" aria-hidden="true"></span><div class="lx-breadcrumb">THE NORTH <span>/</span> ${name(route)}</div></div><div class="lx-top-actions"><button class="lx-btn lx-menu-button" data-action="menu">${icon("tasks")}${L("Explore","الأقسام")}</button>${btn(icon("inbox")+L("Search","بحث"),"command",'aria-label="'+L("Search, Control K","بحث، Control K")+'"')}${btn(ar()?"EN":"عربي","language")}${btn(icon("account"),"navigate",'data-to="account" aria-label="'+name("account")+'"')}</div>`;
@@ -477,6 +495,32 @@
       default:
         return journal(d);
     }
+  }
+
+  function calcGoalProgress(g, d) {
+    if (!g) return 0;
+    const ts = d.tasks.filter((t) => t.goalId === g.id && !t.archived);
+    const all = C.reportSessions(d);
+    const timeMs = C.duration(all, 0, Infinity, (s) => s.goalId === g.id);
+    const timeHours = timeMs / 3600000;
+    let targetHours = g.targetHours || 0;
+    if (!targetHours) {
+      if (g.deadline) {
+        const created = g.createdAt || (Date.now() - 30 * 86400000);
+        const totalDays = Math.max(7, Math.ceil((+new Date(g.deadline + "T23:59:59") - created) / 86400000));
+        targetHours = Math.max(5, Math.round(totalDays * 0.5));
+      } else {
+        targetHours = Math.max(10, (ts.length || 1) * 2);
+      }
+    }
+    const timeScore = Math.min(100, (timeHours / targetHours) * 100);
+    if (ts.length > 0) {
+      const doneCount = ts.filter((t) => t.done).length;
+      const taskScore = (doneCount / ts.length) * 100;
+      if (ts.every((t) => t.done)) return 100;
+      return Math.min(100, Math.max(0, Math.round(taskScore * 0.65 + timeScore * 0.35)));
+    }
+    return Math.min(100, Math.max(0, Math.round(timeScore)));
   }
 
   function goalBoard(d) {
@@ -732,9 +776,64 @@
     return Number.isFinite(start) && Number.isFinite(end) && end > start
       ? Math.round(Math.max(0, Math.min(100, (Date.now() - start) / (end - start) * 100))) : null;
   }
-  function goalTone(d, g) {
-    const colors = ["#62b2a4", "#eb8074", "#b8a4e8"];
-    return colors[Math.max(0, d.goals.findIndex(x => x.id === g.id)) % colors.length];
+  function homeGoalCards(d) {
+    const gs = d.goals.filter(g => !g.archived).slice(0, 3);
+    const colors = [
+      { color: "#8B5CF6", bg: "rgba(139,92,246,0.14)", icon: '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/>' },
+      { color: "#EF4444", bg: "rgba(239,68,68,0.14)", icon: '<path d="m21 16-9 5-9-5V8l9-5 9 5v8z"/><path d="m3.27 6.96 8.73 4.89 8.73-4.89M12 22.08V12"/>' },
+      { color: "#10B981", bg: "rgba(16,185,129,0.14)", icon: '<path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 6h10M6 10h10"/>' }
+    ];
+    return `<section class="v3-goals-section">
+      <div class="v3-section-title-row">
+        <div>
+          <span class="v3-section-kicker">🎯 ${L("YOUR GOALS", "أهدافك")}</span>
+          <h2 class="v3-section-title">${L("Active Horizons", "أهدافك")}</h2>
+        </div>
+        ${btn(L("All goals", "كل الأهداف") + " ›", "navigate", 'data-to="goals" class="v3-view-all-link"')}
+      </div>
+      <div class="v3-goals-grid">
+        ${gs.length ? gs.map((g, i) => {
+          const c = colors[i % colors.length];
+          const actual = calcGoalProgress(g, d);
+          let planned = 50;
+          if (g.deadline) {
+            const created = g.createdAt || (Date.now() - 30 * 86400000);
+            const totalDays = Math.max(7, Math.ceil((+new Date(g.deadline + "T23:59:59") - created) / 86400000));
+            const passedDays = Math.max(1, Math.ceil((Date.now() - created) / 86400000));
+            planned = Math.min(100, Math.round((passedDays / totalDays) * 100));
+          } else {
+            planned = Math.min(100, Math.round(actual * 1.15) || 50);
+          }
+          return `<article class="v3-goal-card" data-route="goals" data-id="${esc(g.id)}" style="border-inline-start: 4px solid ${c.color}">
+            <div class="v3-goal-card-head">
+              <span class="v3-goal-icon" style="background:${c.bg};color:${c.color};border-color:${c.color}30">
+                <svg viewBox="0 0 24 24" aria-hidden="true">${c.icon}</svg>
+              </span>
+              <div class="v3-goal-titles">
+                <strong>${esc(g.name)}</strong>
+                ${g.identity ? `<small class="v3-goal-id-tag">👑 ${esc(g.identity)}</small>` : ''}
+              </div>
+              <span class="v3-chevron">›</span>
+            </div>
+            <div class="v3-goal-metrics-row">
+              <div class="v3-metric-col">
+                <strong>${actual}%</strong>
+                <small>${L("Actual", "الفعلي")}</small>
+              </div>
+              <div class="v3-metric-col">
+                <strong>${planned}%</strong>
+                <small>${L("Planned", "المخطط")}</small>
+              </div>
+            </div>
+            <div class="v3-goal-track">
+              <div class="v3-goal-fill" style="width:${actual}%;background:${c.color}"></div>
+              <div class="v3-goal-marker" style="left:${planned}%"></div>
+            </div>
+            <div class="v3-goal-marker-sub">${planned}%</div>
+          </article>`;
+        }).join("") : `<div class="v3-empty-card"><p>${L("No goals created yet.", "لم تضف أهدافاً بعد.")}</p>${btn("+ " + L("Create your first goal", "أضف أول هدف لك"), "new", 'data-kind="goals"', true)}</div>`}
+      </div>
+    </section>`;
   }
   function workGauge(value, max) {
     const pct = Math.max(0, Math.min(100, percent(value, max)));
@@ -760,45 +859,116 @@
   function linkFields(d, obj = {}) {
     return `<div class="lx-fields-three">${select(name("projects"), "projectId", options(d.projects), obj.projectId)}${select(name("goals"), "goalId", options(d.goals), obj.goalId)}${select(name("tasks"), "taskId", options(d.tasks, "title"), obj.taskId)}</div>`;
   }
+  function taskFocusModal(task, d) {
+    const goal = d.goals.find((g) => g.id === task.goalId);
+    modal(
+      L("Start Focus Session", "بدء جلسة تركيز"),
+      `<div class="v3-quick-focus-modal">
+        <div class="v3-qf-task-head">
+          ${goal ? `<span class="v3-linked-goal-pill"><span class="v3-dot"></span><small>${L("Linked Goal: ", "الهدف المرتبط: ")}</small><strong>${esc(goal.name)}</strong></span>` : ''}
+          <h3 class="v3-qf-title">${esc(task.title)}</h3>
+          ${task.body ? `<p class="lx-muted" style="font-size:13px;margin:4px 0 16px;">${esc(task.body)}</p>` : ''}
+        </div>
+        <div class="v3-qf-mode-select">
+          <button type="button" class="v3-mode-card active" data-qf-mode="pomodoro">
+            <span class="v3-mode-icon">🍅</span>
+            <div class="v3-mode-info">
+              <strong>${L("Pomodoro (25 min)", "بومودورو (25 دقيقة)")}</strong>
+              <small>${L("25m focus · 5m recovery break", "25 دقيقة تركيز · 5 دقائق راحة")}</small>
+            </div>
+            <span class="v3-mode-check">✓</span>
+          </button>
+          <button type="button" class="v3-mode-card" data-qf-mode="countdown">
+            <span class="v3-mode-icon">⏱️</span>
+            <div class="v3-mode-info">
+              <strong>${L("Custom Countdown", "عد تنازلي مخصص")}</strong>
+              <small>${L("Choose target duration", "اختر المدة التي تناسبك")}</small>
+            </div>
+            <span class="v3-mode-check"></span>
+          </button>
+        </div>
+        <div id="v3CountdownRow" class="v3-qf-durations hidden">
+          <span class="v3-dur-label">${L("Duration: ", "المدة: ")}</span>
+          <div class="v3-dur-pills-wrap">
+            <button type="button" class="v3-dur-pill" data-dur="15">15 ${L("min", "د")}</button>
+            <button type="button" class="v3-dur-pill active" data-dur="25">25 ${L("min", "د")}</button>
+            <button type="button" class="v3-dur-pill" data-dur="45">45 ${L("min", "د")}</button>
+            <button type="button" class="v3-dur-pill" data-dur="60">60 ${L("min", "د")}</button>
+          </div>
+        </div>
+        <div class="v3-qf-actions">
+          <button type="button" class="v3-apple-start-btn full-width" data-action="qf-launch" data-task-id="${task.id}" data-goal-id="${task.goalId || ''}" data-project-id="${task.projectId || ''}">
+            <span class="v3-btn-icon">▶</span>
+            <span>${L("Launch Focus Now", "انطلق في التركيز الآن")}</span>
+          </button>
+        </div>
+      </div>`
+    );
+  }
+
+  function focusIdleScreen(d) {
+    const pendingTasks = d.tasks.filter((t) => !t.archived && !t.done)
+      .sort((a, b) => ["high", "medium", "low"].indexOf(a.priority) - ["high", "medium", "low"].indexOf(b.priority));
+    
+    return heading(
+      L("Deep Work Sessions", "جلسات التركيز والعمل العميق"),
+      L("Focus is tied to your tasks and goals.", "التركيز مرتبط بمهامك وأهدافك. اختر مهمة للبدء فوراً:"),
+      btn("+ " + L("New Task", "مهمة جديدة"), "new", 'data-kind="tasks" class="lx-btn lx-primary"') + btn(L("Settings", "إعدادات بومودورو"), "pomodoro-settings")
+    ) +
+    `<div class="v3-focus-idle-container">
+      <div class="v3-focus-quick-bar">
+        <form id="v3QuickTaskFocusForm" class="v3-quick-task-form">
+          <input name="quickTitle" type="text" placeholder="${L("Type a task to focus on right now...", "اكتب مهمة سريعة للتركيز عليها فوراً...")}" required>
+          <button type="submit" class="v3-apple-start-btn compact">
+            <span class="v3-btn-icon">▶</span>
+            <span>${L("Start 25m", "تركيز 25 دقيقة")}</span>
+          </button>
+        </form>
+      </div>
+
+      <div class="v3-section-title-row" style="margin-top:24px;">
+        <span class="v3-section-kicker">⚡ ${L("TODAY'S PRIORITIES", "مهامك الجاهزة للتركيز")}</span>
+      </div>
+
+      <div class="v3-focus-task-list">
+        ${pendingTasks.length ? pendingTasks.slice(0, 8).map((t) => {
+          const goal = d.goals.find((g) => g.id === t.goalId);
+          const mins = t.estimatedHours ? Math.round(t.estimatedHours * 60) : 25;
+          return `<div class="v3-focus-task-item">
+            <div class="v3-focus-task-info">
+              <strong>${esc(t.title)}</strong>
+              <div class="v3-focus-task-meta">
+                ${goal ? `<span class="v3-task-goal-tag">🎯 ${esc(goal.name)}</span>` : ''}
+                <span class="v3-task-time-tag">⏱️ ${mins} ${L("min", "دقيقة")}</span>
+              </div>
+            </div>
+            <button type="button" class="v3-apple-start-btn compact" data-action="task-focus" data-id="${t.id}">
+              <span class="v3-btn-icon">▶</span>
+              <span>${L("Focus", "ابدأ التركيز")}</span>
+            </button>
+          </div>`;
+        }).join("") : `<div class="v3-empty-card"><p>${L("No open tasks for today.", "لا توجد مهام مفتوحة حالياً.")}</p>${btn("+ " + L("Add task to focus on", "أضف مهمة للبدء"), "new", 'data-kind="tasks"', true)}</div>`}
+      </div>
+
+      <details class="lx-card v3-history-details" style="margin-top:24px;">
+        <summary>${L("Recent Focus Sessions History", "سجل جلسات التركيز الأخيرة")}</summary>
+        <div style="margin-top:14px;">
+          ${d.sessions.slice(0, 5).map((s) => sessionRow(s, d)).join("") || `<p class="lx-muted">${L("No sessions yet.", "لا توجد جلسات مسجلة بعد.")}</p>`}
+        </div>
+      </details>
+    </div>`;
+  }
+
   function focus(d) {
     const a = d.activeSession;
-    if (!a)
-      return (
-        heading(
-          L("Protect your attention.", "احمِ انتباهك."),
-          L(
-            "Choose the work. Set your intention. Begin.",
-            "اختر عملك. حدد نيتك. وابدأ.",
-          ),
-          btn(L("Add time manually", "إضافة وقت يدوي"), "manual") + btn(L("Pomodoro settings", "إعدادات بومودورو"), "pomodoro-settings"),
-        ) +
-        `<div class="lx-focus-layout"><form id="lxFocusForm" class="lx-card">${select(
-          L("Session type", "نوع الجلسة"),
-          "type",
-          [
-            ["stopwatch", L("Stopwatch", "ساعة إيقاف")],
-            ["countdown", L("Countdown", "عد تنازلي")],
-            ["pomodoro", L("Pomodoro", "بومودورو")],
-          ],
-          "stopwatch",
-        )} ${field(L("What will you work on?", "على ماذا ستعمل؟"), "title", "", "text", 'placeholder="' + L("A meaningful piece of work", "عمل يستحق التركيز") + '"')}<details class="lx-card"><summary>${L("Link work and set duration", "ربط العمل وتحديد المدة")}</summary>${linkFields(d)}<div class="lx-fields-two">${select(
-          L("Time category", "تصنيف الوقت"),
-          "categoryId",
-          d.categories.map((c) => [c, catName(c)]),
-          "Deep Work",
-        )}${field(L("Target minutes · 0 = open ended", "المدة بالدقائق · 0 = بلا حد"), "targetMinutes", 60, "number", 'min="0" max="1440"')}</div></details><div class="lx-info">${L("Pomodoro uses your saved focus and break settings. Time survives refresh and is calculated from real timestamps.", "يستخدم بومودورو مدد التركيز والراحة المحفوظة. الوقت يستمر بعد تحديث الصفحة ويُحسب من الطوابع الزمنية الفعلية.")}</div><button class="lx-btn lx-primary lx-wide" type="submit">${icon("focus")}${L("Start focus", "ابدأ التركيز")}</button></form><details class="lx-card"><summary>${L("Session rhythm and history", "إيقاع الجلسات وسجلها")}</summary><div class="lx-eyebrow">${L("YOUR RHYTHM", "إيقاعك")}</div><h2>${d.settings.focusMinutes} / ${d.settings.shortBreak}</h2><p>${L("Minutes of focus / short break", "دقائق تركيز / راحة قصيرة")}</p><p>${L("Long break every", "راحة طويلة كل")} ${d.settings.cycles} ${L("sessions", "جلسات")} · ${d.settings.longBreak} ${L("minutes", "دقيقة")}</p><hr><h3>${L("Recent sessions", "الجلسات الأخيرة")}</h3>${
-          d.sessions
-            .slice(0, 4)
-            .map((s) => sessionRow(s, d))
-            .join("") ||
-          `<p>${L("Your first focused minute starts here.", "دقيقتك الأولى من التركيز تبدأ هنا.")}</p>`
-        }</details></div>`
-      );
+    if (!a) return focusIdleScreen(d);
+
     const task = d.tasks.find((t) => t.id === a.taskId),
       project = d.projects.find((p) => p.id === a.projectId),
       goal = d.goals.find((g) => g.id === a.goalId);
     const cycleNum = (a.cyclesCompleted || 0) + 1;
     const totalCycles = d.settings.cycles || 4;
+
     return `<div class="lx-focus-screen v3-focus-screen ${a.phase === "break" ? "is-break" : ""}">
       <div class="lx-focus-top">
         ${btn("← " + L("Workspace", "الرئيسية"), "navigate", 'data-to="home" class="v3-back-btn"')}
@@ -827,7 +997,7 @@
           <circle id="v3DialFill" cx="140" cy="140" r="130" class="v3-dial-fill"/>
         </svg>
         <div class="v3-timer-dial-content">
-          <div id="lxTimer" class="v3-timer-display" dir="ltr" role="timer" aria-label="${L("Session timer", "مؤقت الجلسة")}">00:00:00</div>
+          <div id="lxTimer" class="v3-timer-display" dir="ltr" role="timer" aria-label="${L("Session timer", "مؤقت الجلسة")}">25:00</div>
           <div id="lxTimerMeta" class="v3-timer-dial-meta">${a.phase === "break" ? L("Break time", "فترة راحة") : L("Deep focus session", "جلسة تركيز")}</div>
         </div>
       </div>
@@ -836,11 +1006,13 @@
         ${a.status === "completed" 
           ? (btn(L("Finish", "إنهاء"), "session-finish", 'class="v3-ctrl-btn primary"') + 
              btn(L("Take a break", "خذ استراحة"), "session-break", 'class="v3-ctrl-btn"') + 
-             btn(L("Continue working", "متابعة العمل"), "session-continue") + btn("+30 " + L("m", "د"), "session-extend", 'data-minutes="30"') + btn("+15 " + L("m", "د"), "session-extend", 'data-minutes="15" class="v3-ctrl-btn small"')) 
-          : (btn(`<span aria-hidden="true">${a.segmentStartedAt===null?"▶":"⏸"}</span><span class="north-sr-only">${a.segmentStartedAt===null?L("Resume","استئناف"):L("Pause","إيقاف مؤقت")}</span>`, 
-                a.segmentStartedAt === null ? "session-resume" : "session-pause", 
-                'class="v3-ctrl-btn main-play-pause"') + 
-             btn(`<span aria-hidden="true">■</span><span class="north-sr-only">${L("Stop & save", "إيقاف وحفظ")}</span>`, "session-finish", 'class="v3-ctrl-btn stop-btn"'))}
+             btn("+15 " + L("m", "د"), "session-extend", 'data-minutes="15" class="v3-ctrl-btn small"')) 
+          : (`<button type="button" class="v3-ctrl-circle-btn main-play-pause" data-action="${a.segmentStartedAt === null ? "session-resume" : "session-pause"}" aria-label="${a.segmentStartedAt === null ? "Resume" : "Pause"}">
+              ${a.segmentStartedAt === null ? "▶" : "❚❚"}
+             </button>
+             <button type="button" class="v3-ctrl-circle-btn stop-btn" data-action="session-finish" aria-label="Stop & Save">
+              ■
+             </button>`)}
       </div>
 
       <div class="v3-session-dots-wrap" ${a.type === "pomodoro" ? "" : 'hidden'}>
@@ -981,67 +1153,126 @@
       }</div>`
     );
   }
+  function v3GoalDetail(g, d) {
+    const ts = d.tasks.filter((t) => t.goalId === g.id && !t.archived);
+    const hs = (d.habits || []).filter((h) => h.goalId === g.id && !h.archived);
+    const actual = calcGoalProgress(g, d);
+    let planned = 50;
+    if (g.deadline) {
+      const created = g.createdAt || (Date.now() - 30 * 86400000);
+      const totalDays = Math.max(7, Math.ceil((+new Date(g.deadline + "T23:59:59") - created) / 86400000));
+      const passedDays = Math.max(1, Math.ceil((Date.now() - created) / 86400000));
+      planned = Math.min(100, Math.round((passedDays / totalDays) * 100));
+    } else {
+      planned = Math.min(100, Math.round(actual * 1.15) || 50);
+    }
+    const allSessions = C.reportSessions(d);
+    const timeMs = C.duration(allSessions, 0, Infinity, (s) => s.goalId === g.id);
+
+    return `<div class="v3-goal-detail-page">
+      <div class="v3-gd-top-nav">
+        <button type="button" class="v3-back-btn" data-action="navigate" data-to="goals">← ${L("Goals", "الأهداف")}</button>
+        <div class="v3-header-actions">
+          ${btn(L("Edit", "تعديل"), "edit", `data-kind="goals" data-id="${g.id}" class="v3-shutdown-btn"`)}
+          ${btn("+ " + L("Task", "مهمة"), "new", `data-kind="tasks" data-goal="${g.id}" class="lx-btn lx-primary"`)}
+        </div>
+      </div>
+
+      <div class="v3-gd-header text-center">
+        <h1 class="v3-gd-title">${esc(g.name)}</h1>
+        ${g.identity ? `<div class="v3-gd-identity-pill"><span>👑</span><strong>${esc(g.identity)}</strong></div>` : ''}
+      </div>
+
+      <div class="v3-gd-progress-hero">
+        <div class="v3-gd-circle-wrap">
+          <svg viewBox="0 0 160 160" class="v3-gd-svg">
+            <circle cx="80" cy="80" r="68" class="v3-donut-track" stroke-width="9"/>
+            <circle cx="80" cy="80" r="68" class="v3-donut-fill" stroke-width="9" style="stroke:#8B5CF6;stroke-dasharray:427.26;stroke-dashoffset:${427.26 - (427.26 * actual) / 100}"/>
+          </svg>
+          <div class="v3-gd-circle-text">
+            <strong>${actual}%</strong>
+            <small>${L("Actual", "الفعلي")}</small>
+          </div>
+        </div>
+      </div>
+
+      <section class="lx-card v3-gd-compare-card">
+        <div class="v3-gd-compare-head">
+          <h3>${L("Planned vs Actual Progress", "المخطط مقابل الفعلي")}</h3>
+        </div>
+        <div class="v3-gd-compare-bars">
+          <div class="v3-gd-bar-row">
+            <div class="v3-gd-bar-label"><span>${L("Actual", "الفعلي")}</span><strong>${actual}%</strong></div>
+            <div class="v3-gd-track"><div class="v3-gd-fill actual" style="width:${actual}%;"></div></div>
+          </div>
+          <div class="v3-gd-bar-row">
+            <div class="v3-gd-bar-label"><span>${L("Planned", "المخطط")}</span><strong>${planned}%</strong></div>
+            <div class="v3-gd-track outline"><div class="v3-gd-fill planned" style="width:${planned}%;"></div></div>
+          </div>
+        </div>
+        <small class="v3-gd-note">${L("Calculated automatically from logged focus time and completed actions.", "تُحسب تلقائياً من ساعات التركيز الفعلية والمهام المنجزة.")}</small>
+      </section>
+
+      <section class="v3-gd-section">
+        <div class="v3-section-title-row">
+          <div>
+            <span class="v3-section-kicker">🔥 ${L("LINKED HABITS", "عاداتك المرتبطة")}</span>
+            <h3 class="v3-section-title">${L("Routines & Rituals", "العادات والروتين")}</h3>
+          </div>
+          ${btn("+ " + L("Add habit", "إضافة عادة"), "new", `data-kind="habits" data-goal="${g.id}" class="v3-view-all-link"`)}
+        </div>
+        <div class="v3-gd-habits-list">
+          ${hs.length ? hs.map((h) => {
+            const strk = C.habitStreak(h.checks || [], C.day());
+            const isDone = h.checks?.includes(C.day());
+            return `<div class="v3-gd-habit-card">
+              <div class="v3-gd-habit-streak">
+                <span>${strk.inGrace ? "🛡️" : "🔥"}</span>
+                <strong>${strk.current} ${L("days", "يوم")}</strong>
+              </div>
+              <div class="v3-gd-habit-title">
+                <strong>${esc(h.title)}</strong>
+              </div>
+              <button type="button" class="v3-habit-check-btn ${isDone ? 'done' : ''}" data-action="habit-toggle" data-id="${h.id}">
+                ${isDone ? "✓" : ""}
+              </button>
+            </div>`;
+          }).join("") : `<div class="v3-empty-card compact"><p>${L("No habits linked yet.", "لا توجد عادات مرتبطة بعد.")}</p></div>`}
+        </div>
+      </section>
+
+      <section class="v3-gd-section">
+        <div class="v3-section-title-row">
+          <div>
+            <span class="v3-section-kicker">✓ ${L("THIS WEEK'S TASKS", "مهام هذا الأسبوع")}</span>
+            <h3 class="v3-section-title">${L("Execution Actions", "مهام التنفيذ")}</h3>
+          </div>
+          ${btn("+ " + L("Add task", "إضافة مهمة"), "new", `data-kind="tasks" data-goal="${g.id}" class="v3-view-all-link"`)}
+        </div>
+        <div class="v3-gd-tasks-list">
+          ${ts.length ? ts.map((t) => {
+            const mins = t.estimatedHours ? Math.round(t.estimatedHours * 60) : 25;
+            return `<div class="v3-gd-task-card ${t.done ? 'is-done' : ''}">
+              <span class="v3-task-time-pill">${mins} ${L("min", "دقيقة")}</span>
+              <div class="v3-gd-task-text">
+                <strong>${esc(t.title)}</strong>
+              </div>
+              <div class="v3-gd-task-actions">
+                ${!t.done ? `<button type="button" class="v3-apple-start-btn mini" data-action="task-focus" data-id="${t.id}" title="${L("Start Focus", "ابدأ التركيز")}">▶</button>` : ''}
+                <button type="button" class="lx-check" data-action="task-toggle" data-id="${t.id}" role="checkbox" aria-checked="${!!t.done}">
+                  ${t.done ? "✓" : ""}
+                </button>
+              </div>
+            </div>`;
+          }).join("") : `<div class="v3-empty-card compact"><p>${L("No tasks linked yet.", "لا توجد مهام مرتبطة بعد.")}</p></div>`}
+        </div>
+      </section>
+    </div>`;
+  }
+
   function goals(d) {
     const g = d.goals.find((g) => g.id === detail);
-    if (g) {
-      const ts = d.tasks.filter((t) => t.goalId === g.id && !t.archived),
-        hs = (d.habits || []).filter((h) => h.goalId === g.id && !h.archived),
-        time = C.duration(
-          C.reportSessions(d),
-          0,
-          Infinity,
-          (s) => s.goalId === g.id,
-        );
-      const expandedDetails = (
-        heading(
-          esc(g.name),
-          (g.identity ? `👑 ${esc(g.identity)} · ` : "") + esc(g.why || ""),
-          btn(L("All goals", "كل الأهداف"), "navigate", 'data-to="goals"') +
-            btn(
-              L("Edit goal", "تعديل الهدف"),
-              "edit",
-              `data-kind="goals" data-id="${g.id}"`,
-            ) +
-            btn(
-              "+ " + L("Add habit", "إضافة عادة"),
-              "new",
-              `data-kind="habits" data-goal="${g.id}"`,
-            ) +
-            btn(
-              "+ " + L("Add task", "إضافة مهمة"),
-              "new",
-              `data-kind="tasks" data-goal="${g.id}"`,
-            ),
-        ) +
-        `<section class="lx-card lx-cascade-card">
-          <div class="lx-cascade-badge">👑 ${L("IDENTITY CASCADE", "سلسلة الهوية والتنفيذ")}</div>
-          <div class="lx-cascade-pipeline">
-            <div class="lx-cascade-step is-identity">
-              <div class="lx-cascade-step-tag">${L("01 · IDENTITY", "01 · الهوية")}</div>
-              <strong>${esc(g.identity || L("I am someone who consistently reaches this", "أنا شخص يحقق هذا الهدف بإتقان"))}</strong>
-            </div>
-            <div class="lx-cascade-step is-goal">
-              <div class="lx-cascade-step-tag">${L("02 · GOAL", "02 · الهدف")}</div>
-              <strong>${esc(g.name)}</strong>
-            </div>
-            <div class="lx-cascade-step is-habits">
-              <div class="lx-cascade-step-tag">${L("03 · HABITS", "03 · العادات اليومية")}</div>
-              <strong>${hs.length} ${L("rituals", "عادات جارية")}</strong>
-            </div>
-            <div class="lx-cascade-step is-tasks">
-              <div class="lx-cascade-step-tag">${L("04 · TASKS", "04 · المهام الميدانية")}</div>
-              <strong>${ts.filter((t) => t.done).length}/${ts.length} ${L("done", "مكتملة")}</strong>
-            </div>
-          </div>
-        </section>` +
-        entityTime(d, "goalId", g.id) +
-        `<div class="lx-grid-two"><section class="lx-card"><h2>${L("Outcome progress", "تقدم النتيجة")} · ${g.progress}%</h2>${progress(g.progress)}<p>${L("Time is an investment, not an automatic measure of completion.", "الوقت استثمار، وليس مقياسًا تلقائيًا لاكتمال الهدف.")}</p><div class="lx-mini-stats">${stat(L("Estimated", "المقدر"), (g.targetHours || 0) + L(" hours", " ساعة"))}${stat(L("Remaining", "المتبقي"), hrs(Math.max(0, (g.targetHours || 0) * 3600000 - time)))}${stat(L("Momentum", "الزخم"), (g.momentum || 0) + "%")}${stat(L("Days left", "الأيام المتبقية"), g.deadline ? Math.max(0, Math.ceil((+new Date(g.deadline + "T23:59:59") - Date.now()) / 86400000)) : "—")}</div><h3>${L("Milestones", "المراحل")}</h3>${["m6", "m3", "month", "week"].map((key, i) => `<div class="lx-list-line"><span>${L(["6 months", "Quarter", "Month", "Week"][i], ["ستة أشهر", "ربع سنة", "شهر", "أسبوع"][i])}</span><strong>${esc(g.plan?.[key] || "—")}</strong></div>`).join("")}<p class="lx-pre">${esc(g.notes || "")}</p></section><section class="lx-card"><h2>${name("tasks")} (${ts.filter((t) => t.done).length}/${ts.length})</h2>${ts.map((t) => taskRow(t, d)).join("") || empty(L("Connect actions to this outcome.", "اربط التنفيذ بهذه النتيجة."), "tasks")}<h3>${name("habits")} (${hs.length})</h3>${hs.map((h) => { const strk = C.habitStreak(h.checks || [], C.day(), h.frequency, d.settings.weekStart); return `<div class="lx-list-line"><span><strong>${esc(h.title)}</strong><small>${strk.inGrace ? "🛡️" : "🔥"} ${strk.current} ${strk.inGrace ? L("in recovery", "في التعافي") : (h.frequency === "weekly" ? L("week streak", "أسابيع متتالية") : L("scheduled days", "أيام مستحقة"))}</small></span>${btn(h.checks?.includes(C.day()) ? "✓ " + L("Done", "تمت") : (strk.inGrace ? "🛡️ " + L("Rescue", "إنقاذ") : L("Check", "إكمال")), "habit-toggle", `data-id="${h.id}"`, h.checks?.includes(C.day()))}</div>`; }).join("") || `<p class="lx-pre">${L("No habits linked to this goal yet.", "لا توجد عادات مرتبطة بهذا الهدف بعد.")}</p>`}</section></div>`
-      );
-      const actual = Math.max(0, Math.min(100, Number(g.progress) || 0)), planned = plannedProgress(g);
-      const weekly = ts.filter(t => !t.date || (+new Date(t.date + "T12:00:00") >= C.week(Date.now(), d.settings.weekStart) && +new Date(t.date + "T12:00:00") < C.week(Date.now(), d.settings.weekStart) + 7*86400000));
-      return `<div class="north-goal-detail" style="--goal-tone:${goalTone(d,g)}"><div class="north-goal-back">${btn(L("All goals", "كل الأهداف"), "navigate", 'data-to="goals"')}</div><h1>${esc(g.name)}</h1>${g.why ? `<p class="north-goal-purpose">${esc(g.why)}</p>` : ""}<div class="north-outcome"><div class="north-outcome-ring" style="--gauge:${actual}%" role="progressbar" aria-label="${L("Goal progress", "تقدم الهدف")}" aria-valuenow="${actual}" aria-valuemin="0" aria-valuemax="100"></div><div><strong dir="ltr">${Math.round(actual)}%</strong><small>${L("Actual", "الفعلي")}</small></div></div><section class="lx-card north-comparison"><h2>${L("Planned vs. actual", "المخطط مقابل الفعلي")}</h2><div class="north-compare-line"><span>${L("Actual", "الفعلي")} ${Math.round(actual)}%</span><div class="north-track"><i style="width:${actual}%"></i></div></div><div class="north-compare-line"><span>${L("Planned", "المخطط")} ${planned===null?"—":planned+"%"}</span><div class="north-track is-planned"><i style="width:${planned || 0}%"></i></div></div>${planned===null?`<small>${L("Set a start date and deadline to compare your plan.","حدّد تاريخ البداية والنهاية لمقارنة خطتك.")}</small>`:""}</section><section class="north-linked-habits"><h2>${L("Your linked habits", "عاداتك المرتبطة")}</h2>${hs.map(h=>{const streak=C.habitStreak(h.checks||[],C.day(),h.frequency,d.settings.weekStart);return `<article class="lx-card"><strong>${esc(h.title)}</strong><div><small>${streak.current} ${h.frequency==="weekly"?L("weeks", "أسابيع"):L("days", "أيام")} ${L("in a row", "متتالية")}</small>${btn(h.checks?.includes(C.day())?L("Done", "تمت"):L("Check", "إكمال"),"habit-toggle",`data-id="${esc(h.id)}"`)}</div></article>`;}).join("") || `<p class="lx-muted">${L("No habits linked yet.","لا توجد عادات مرتبطة بعد.")}</p>`}</section><section class="north-goal-tasks"><div class="lx-card-head"><h2>${L("This week's tasks", "مهام هذا الأسبوع")}</h2>${btn(L("Add task", "إضافة مهمة"),"new",`data-kind="tasks" data-goal="${esc(g.id)}"`)}</div><div class="lx-card">${weekly.map(t=>taskRow(t,d)).join("") || `<p class="lx-muted">${L("No tasks scheduled this week.","لا توجد مهام لهذا الأسبوع بعد.")}</p>`}</div></section><details class="north-goal-extra lx-card"><summary>${L("Goal settings, time and milestones", "إعدادات الهدف والوقت والمراحل")}</summary>${expandedDetails}</details></div>`;
-
-    }
+    if (g) return v3GoalDetail(g, d);
     return (
       heading(
         name("goals"),
@@ -1173,6 +1404,7 @@
           title: e.title,
           time: e.startTime || "09:00",
           sub: e.endTime || "",
+          badge: L("Event", "حدث"),
           kind: "events",
           id: e.id,
         })),
@@ -1181,7 +1413,8 @@
         .map((t) => ({
           title: t.title,
           time: t.startTime || "—",
-          sub: L("Task", "مهمة"),
+          sub: t.done ? L("Done", "مكتملة") : L("Task", "مهمة"),
+          badge: L("Task", "مهمة"),
           kind: "tasks",
           id: t.id,
         })),
@@ -1190,28 +1423,18 @@
         .map((g) => ({
           title: g.name,
           time: "—",
-          sub: L("Goal deadline", "موعد الهدف"),
+          sub: L("Deadline", "موعد الهدف"),
+          badge: L("Goal", "هدف"),
           kind: "goals",
           id: g.id,
-        })),
-      ...d.habits
-        .filter((h) => !h.archived)
-        .map((h) => ({
-          title: h.title,
-          time: h.time || "—",
-          sub: L("Habit", "عادة"),
-          kind: "habits",
-          id: h.id,
         })),
       ...d.sessions
         .filter((s) => C.day(s.startedAt) === date)
         .map((s) => ({
-          title:
-            s.title ||
-            d.tasks.find((t) => t.id === s.taskId)?.title ||
-            catName(s.categoryId),
+          title: s.title || d.tasks.find((t) => t.id === s.taskId)?.title || catName(s.categoryId),
           time: timeText(s.startedAt),
           sub: hrs(C.duration([s])),
+          badge: L("Focus", "تركيز"),
           kind: "session",
           id: s.id,
         })),
@@ -1221,10 +1444,10 @@
         .sort((a, b) => a.time.localeCompare(b.time))
         .map(
           (e) =>
-            `<button class="lx-schedule-row" data-action="${e.kind === "session" ? "session-detail" : "edit"}" data-kind="${e.kind}" data-id="${e.id}"><time dir="auto">${esc(e.time)}</time><span><strong>${esc(e.title)}</strong><small>${esc(e.sub)}</small></span></button>`,
+            `<button class="lx-schedule-row" data-action="${e.kind === "session" ? "session-detail" : "edit"}" data-kind="${e.kind}" data-id="${e.id}"><time dir="auto">${esc(e.time)}</time><span class="lx-schedule-content"><strong class="lx-truncate">${esc(e.title)}</strong><small><span class="lx-sched-badge">${e.badge}</span> ${esc(e.sub)}</small></span></button>`,
         )
         .join("") ||
-      `<p class="lx-muted">${L("Your schedule is clear.", "جدولك متاح.")}</p>`
+      `<p class="lx-muted" style="font-size:12px;padding:8px 0;">${L("Schedule is clear.", "لا توجد مواعيد.")}</p>`
     );
   }
   function calendar(d) {
@@ -2154,9 +2377,39 @@
         activeDialog();
         return;
       }
+      const t = db.read().tasks.find((x) => x.id === id);
+      if (t) {
+        taskFocusModal(t, db.read());
+        return;
+      }
       navigate("focus");
-      $("#lxFocusForm [name=taskId]").value = id;
-      syncLinks($("#lxFocusForm"), "taskId");
+      return;
+    }
+    if (a === "qf-launch") {
+      const taskId = el.dataset.taskId;
+      const goalId = el.dataset.goalId;
+      const projectId = el.dataset.projectId;
+      const dialog = $("#lxDialog");
+      const isPomo = dialog?.querySelector('[data-qf-mode="pomodoro"]')?.classList.contains("active") !== false;
+      const durPill = dialog?.querySelector(".v3-dur-pill.active");
+      const targetMinutes = isPomo ? 25 : (Number(durPill?.dataset.dur) || 25);
+      const type = isPomo ? "pomodoro" : "countdown";
+      const t = db.read().tasks.find((x) => x.id === taskId);
+      
+      await mutate((d) => {
+        C.createSession(d, {
+          type,
+          title: t ? t.title : "Deep Work",
+          taskId: taskId || "",
+          goalId: goalId || "",
+          projectId: projectId || "",
+          categoryId: "Deep Work",
+          targetMinutes
+        });
+      });
+      if (dialog?.open) dialog.close();
+      navigate("focus");
+      return;
     }
     if (a === "session-finish") {
       await finish();
@@ -2772,7 +3025,7 @@
           : duration;
     const timer = $("#lxTimer");
     if (timer) {
-      timer.textContent = time < 3600000 ? fmt(time).slice(3) : fmt(time);
+      timer.textContent = fmtMinSec(time);
       $("#lxTimerMeta").textContent =
         (a.phase === "break"
           ? L("Break", "استراحة")

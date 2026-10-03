@@ -550,6 +550,24 @@ async function authSubmit(e,signup) {
     }
     else{toast(currentLang()==="ar"?"أرسلنا رسالة لتأكيد بريدك. أكّد البريد ثم سجّل الدخول.":"Check your email to confirm your account, then sign in.");authTab("login");$("#loginEmail").value=email;}
   }catch(err){
+    if (err?.code === "email_not_confirmed" || /email not confirmed/i.test(err?.message || '')) {
+      const promptMsg = currentLang() === "ar"
+        ? "حسابك بانتظار التأكيد. لقد أرسلنا رمز تأكيد إلى بريدك الإلكتروني.\n\nأدخل رمز التأكيد (6 أرقام) هنا لتفعيل الحساب والدخول فوراً، أو اضغط على رابط التأكيد في رسالة البريد:"
+        : "Email not confirmed. A confirmation code was sent to your email.\n\nEnter the 6-digit code here to verify and sign in immediately:";
+      const otp = prompt(promptMsg);
+      if (otp && /^\d{6}$/.test(otp.trim())) {
+        try {
+          const res = await window.NorthAuth.verifyOtp(email, otp.trim());
+          if (res?.session) {
+            await enterCloud(res.user);
+            return;
+          }
+        } catch (otpErr) {
+          toast(currentLang() === "ar" ? "رمز التأكيد غير صحيح أو انتهت صلاحيته." : "Invalid or expired confirmation code.");
+          return;
+        }
+      }
+    }
     toast(window.NorthAuth.errorMessage(err,currentLang(),signup));
   }finally{password.value="";authBusy=false;buttons.forEach(b=>b.disabled=false);}
 }
@@ -771,8 +789,11 @@ window.addEventListener("load", async () => {
   }
 });
 
-window.NorthAuth?.client?.auth.onAuthStateChange((event) => {
+window.NorthAuth?.client?.auth.onAuthStateChange(async (event, session) => {
   if (event === "SIGNED_OUT") { localStorage.removeItem(SESSION_KEY); showLanding(); }
+  else if ((event === "SIGNED_IN" || event === "TOKEN_REFRESHED" || event === "USER_UPDATED") && session?.user) {
+    await enterCloud(session.user);
+  }
 });
 
 if ("serviceWorker" in navigator) window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));

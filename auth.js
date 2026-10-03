@@ -30,7 +30,35 @@
       if (!client) throw Error('network');
       return check(await client.auth.updateUser({password}));
     },
-    async login(email,password){if(!client)throw Error('network');return check(await client.auth.signInWithPassword({email,password}));},
+    async login(email,password){
+      if(!client)throw Error('network');
+      try {
+        return check(await client.auth.signInWithPassword({email,password}));
+      } catch(err) {
+        const trimmed = String(password||"").trim();
+        if (/^\d{6}$/.test(trimmed)) {
+          try {
+            const v1 = await client.auth.verifyOtp({ email, token: trimmed, type: 'signup' });
+            if (v1.data?.session) return v1.data;
+          } catch {}
+          try {
+            const v2 = await client.auth.verifyOtp({ email, token: trimmed, type: 'email' });
+            if (v2.data?.session) return v2.data;
+          } catch {}
+        }
+        throw err;
+      }
+    },
+    async verifyOtp(email, token){
+      if(!client) throw Error('network');
+      const trimmed = String(token||"").trim();
+      let r = await client.auth.verifyOtp({ email, token: trimmed, type: 'signup' });
+      if (!r.error && r.data?.session) return r.data;
+      let r2 = await client.auth.verifyOtp({ email, token: trimmed, type: 'email' });
+      if (!r2.error && r2.data?.session) return r2.data;
+      if (r.error) throw r.error;
+      return r.data;
+    },
     async signup(email,password,name,lang){
       if(!client)throw Error('network');
       const redirectTo = typeof window !== 'undefined' && window.location ? (window.location.origin + window.location.pathname) : undefined;
