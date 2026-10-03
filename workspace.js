@@ -34,29 +34,69 @@
   };
   const ar = () => document.documentElement.lang === "ar";
   const L = (en, arabic) => (ar() ? arabic : en);
+  
+  let activeTipEl = null;
+  function tip(text) {
+    return `<button type="button" class="v3-info-tip" data-action="show-tip" data-tip="${esc(text)}" aria-label="info">?</button>`;
+  }
+  function showTip(btn, text) {
+    let existing = document.getElementById("v3GlobalTip");
+    if (existing) {
+      existing.remove();
+      if (activeTipEl === btn) {
+        activeTipEl = null;
+        return;
+      }
+    }
+    activeTipEl = btn;
+    const pop = document.createElement("div");
+    pop.id = "v3GlobalTip";
+    pop.className = "v3-info-popover";
+    pop.innerHTML = `<div class="v3-tip-body">${esc(text)}</div>`;
+    document.body.appendChild(pop);
+
+    const rect = btn.getBoundingClientRect();
+    const popRect = pop.getBoundingClientRect();
+    let top = rect.top - popRect.height - 8;
+    if (top < 10) top = rect.bottom + 8;
+    let left = rect.left + (rect.width / 2) - (popRect.width / 2);
+    if (left < 10) left = 10;
+    if (left + popRect.width > window.innerWidth - 10) {
+      left = window.innerWidth - popRect.width - 10;
+    }
+    pop.style.top = `${Math.round(top)}px`;
+    pop.style.left = `${Math.round(left)}px`;
+    pop.classList.add("visible");
+    setTimeout(() => {
+      if (document.getElementById("v3GlobalTip") === pop) {
+        pop.remove();
+        if (activeTipEl === btn) activeTipEl = null;
+      }
+    }, 6500);
+  }
+  document.addEventListener("click", (e) => {
+    if (!e.target.closest(".v3-info-tip") && !e.target.closest("#v3GlobalTip")) {
+      const existing = document.getElementById("v3GlobalTip");
+      if (existing) {
+        existing.remove();
+        activeTipEl = null;
+      }
+    }
+  });
+
   const labels = {
     home: ["Home", "الرئيسية"],
-    today: ["Today", "اليوم"],
-    focus: ["Focus", "التركيز"],
-    tasks: ["Tasks", "المهام"],
-    projects: ["Projects", "المشاريع"],
     goals: ["Goals", "الأهداف"],
-    calendar: ["Calendar", "التقويم"],
-    habits: ["Habits & routines", "العادات والروتين"],
-    analytics: ["Analytics", "التحليلات"],
-    notes: ["Notes", "الملاحظات"],
-    inbox: ["Inbox", "الوارد"],
-    planning: ["Planning", "التخطيط"],
+    tasks: ["Tasks", "المهام"],
     finances: ["Finances", "المال"],
-    health: ["Health", "الصحة"],
-    learning: ["Learning & reading", "التعلم والقراءة"],
+    analytics: ["Analytics", "التحليلات"],
     dashboard: ["Momentum", "زخم الأهداف"],
     planner: ["Goal cascade", "خطة الأهداف"],
     notifications: ["Signals", "الإشارات"],
     account: ["Settings", "الإعدادات"],
   };
-  const primaryRoutes = ["home", "goals", "tasks", "habits", "finances", "analytics", "focus"];
-  const secondaryRoutes = Object.keys(labels).filter(k => !primaryRoutes.includes(k) && k !== "account");
+  const primaryRoutes = ["home", "goals", "tasks", "finances", "analytics"];
+  const secondaryRoutes = ["dashboard", "planner", "notifications", "account"];
   const name = (k) => (labels[k] ? L(...labels[k]) : k);
   const catName = (k) =>
     ({
@@ -399,8 +439,9 @@
     tickDisplay(d);
     lastTick = "";
   }
-  function heading(title, sub, actions = "") {
-    return `<div class="lx-page-head"><div><div class="lx-eyebrow">THE NORTH / ${name(route)}</div><h1 tabindex="-1">${title}</h1><p>${sub}</p></div><div class="lx-actions">${actions}</div></div>`;
+  function heading(title, sub, actions = "", tipText = "") {
+    const tipHtml = tipText ? ` ${tip(tipText)}` : "";
+    return `<div class="lx-page-head"><div><div class="lx-eyebrow">THE NORTH / ${name(route)}</div><h1 tabindex="-1">${title}${tipHtml}</h1><p>${sub}</p></div><div class="lx-actions">${actions}</div></div>`;
   }
   function totals(d) {
     const all = C.reportSessions(d),
@@ -463,30 +504,24 @@
       case "home":
       case "today":
         return home(d);
-      case "focus":
-        return focus(d);
       case "tasks":
         return tasks(d);
-      case "projects":
-        return projects(d);
       case "goals":
         return goals(d);
-      case "analytics":
-        return analytics(d);
-      case "calendar":
-        return calendar(d);
-      case "planning":
-        return planning(d);
-      case "notes":
-        return notes(d);
-      case "inbox":
-        return inbox(d);
-      case "habits":
-        return habits(d);
       case "finances":
         return finance(d);
+      case "analytics":
+        return analytics(d);
+      case "dashboard":
+        return dashboard(d);
+      case "planner":
+        return planner(d);
+      case "notifications":
+        return notifications(d);
+      case "account":
+        return account(d);
       default:
-        return journal(d);
+        return home(d);
     }
   }
 
@@ -625,6 +660,24 @@
         { category: "Subscriptions", amount: 50, label: "الاشتراكات والبرامج" }
       ]
     };
+  }
+
+  
+  async function setStartingBalance(m, amount) {
+    return mutate((d) => {
+      if (!d.settings) d.settings = {};
+      if (!d.settings.monthlyStartingBalance) d.settings.monthlyStartingBalance = {};
+      d.settings.monthlyStartingBalance[m] = amount;
+      d.settings.startingBalance = amount;
+    });
+  }
+
+  async function setFinancePlan(m, plan) {
+    return mutate((d) => {
+      if (!d.settings) d.settings = {};
+      if (!d.settings.financePlans) d.settings.financePlans = {};
+      d.settings.financePlans[m] = plan;
+    });
   }
 
   function formatFinanceMonth(m) {
@@ -1404,6 +1457,7 @@
           'data-kind="tasks"',
           true,
         ),
+        L("Actionable execution items linked to your goals. Launch the focus timer on any task to track real effort.", "المهام التنفيذية المرتبطة بأهدافك. اضغط على زر الساعة في المهمة لبدء جلسة بومودورو أو عد تنازلي وتوثيق إنجازك."),
       ) +
       `<div class="lx-toolbar"><div class="lx-segmented">${["all", "open", "done"].map((k) => btn(L(k === "all" ? "All" : k === "open" ? "Open" : "Completed", k === "all" ? "الكل" : k === "open" ? "مفتوحة" : "مكتملة"), "filter", `data-filter="${k}" aria-pressed="${taskFilter === k}"`)).join("")}</div></div><div class="lx-card">${list.length ? list.map((t) => taskRow(t, d)).join("") : empty(L("Give your next action a name.", "سمِّ خطوتك التالية."), "tasks")}</div>`
     );
@@ -1621,6 +1675,7 @@
             'data-kind="goals"',
             true,
           ),
+        L("Core strategic objectives. Focus sessions logged on tasks linked to this goal automatically advance its progress percentage.", "الأهداف الاستراتيجية الكبرى. أي جلسة تركيز تنجزها في المهام التابعة للهدف تزيد من نسبة تقدمه وساعاته تلقائياً."),
       ) +
       `<div class="lx-grid-three">${
         d.goals
@@ -2034,7 +2089,7 @@
           ${select(name("goals"), "goalId", options(d.goals), o.goalId)}
           ${field(L("Due date", "تاريخ الاستحقاق"), "date", o.date || C.day(), "date", "required")}
         </div>
-        <div class="lx-fields-two">
+        <div class="lx-fields-one">
           ${select(
             L("Priority", "الأولوية"),
             "priority",
@@ -2045,28 +2100,9 @@
             ],
             o.priority || "medium",
           )}
-          ${select(name("projects"), "projectId", options(d.projects), o.projectId)}
-        </div>
-        <details class="lx-details" style="margin-top:12px">
-          <summary>${L("Advanced options · optional", "خيارات إضافية · اختياري")}</summary>
-          <div class="lx-fields-two" style="margin-top:10px">
-            ${select(
-              L("Status", "الحالة"),
-              "status",
-              [
-                ["todo", L("To do", "للتنفيذ")],
-                ["doing", L("In progress", "قيد التنفيذ")],
-                ["done", L("Done", "مكتملة")],
-              ],
-              o.status || "todo",
-            )}
-            ${field(L("Estimated hours", "الوقت المقدر بالساعات"), "estimatedHours", o.estimatedHours || 0, "number", 'min="0" max="10000" step="0.25"')}
-          </div>
-          ${area(L("Notes", "ملاحظات"), "notes", o.notes || "")}
-          ${area(L("Subtasks · one per line, [x] for completed", "مهام فرعية · مهمة في كل سطر، [x] للمكتملة"), "subtaskText", (o.subtasks || []).map(s => (s.done ? "[x] " : "") + s.title).join("\n"))}
-        </details>` +
+        </div>` +
         (existing
-          ? `<div class="lx-info">${L("Actual time", "الوقت الفعلي")}: ${hrs(C.duration(C.reportSessions(d), 0, Infinity, (s) => s.taskId === id))} · ${L("Difference from estimate", "الفرق عن التقدير")}: ${(C.duration(C.reportSessions(d), 0, Infinity, (s) => s.taskId === id) / 3600000 - (o.estimatedHours || 0)).toFixed(2)} ${L("hours", "ساعة")}</div>`
+          ? `<div class="lx-info">${L("Actual time", "الوقت الفعلي")}: ${hrs(C.duration(C.reportSessions(d), 0, Infinity, (s) => s.taskId === id))}</div>`
           : "");
     }
     if (kind === "projects")
@@ -2573,6 +2609,201 @@
     }
     e.preventDefault();
     e.stopImmediatePropagation();
+    if (a === "show-tip") {
+      showTip(b, b.dataset.tip);
+      return;
+    }
+    if (a === "finance-tab") {
+      financeTab = b.dataset.tab || "overview";
+      window.LifeLegacy.renderAll();
+      return;
+    }
+    if (a === "finance-filter") {
+      financeTxFilter = b.dataset.filter || b.dataset.cat || "all";
+      window.LifeLegacy.renderAll();
+      return;
+    }
+    if (a === "finance-month-prev") {
+      const cur = financeMonth || C.day().slice(0, 7);
+      const parts = cur.split("-");
+      let y = parseInt(parts[0], 10), m = parseInt(parts[1], 10) - 1;
+      if (m < 1) { m = 12; y--; }
+      financeMonth = `${y}-${String(m).padStart(2, "0")}`;
+      window.LifeLegacy.renderAll();
+      return;
+    }
+    if (a === "finance-month-next") {
+      const cur = financeMonth || C.day().slice(0, 7);
+      const parts = cur.split("-");
+      let y = parseInt(parts[0], 10), m = parseInt(parts[1], 10) + 1;
+      if (m > 12) { m = 1; y++; }
+      financeMonth = `${y}-${String(m).padStart(2, "0")}`;
+      window.LifeLegacy.renderAll();
+      return;
+    }
+    if (a === "finance-start-balance") {
+      const d = db.read();
+      const curM = financeMonth || C.day().slice(0, 7);
+      const bal = getStartingBalance(d, curM);
+      const dlg = $("#lxDialog");
+      dlg.innerHTML = `<div class="lx-modal-box">
+        <div class="lx-modal-head">
+          <h3>💰 ${L("Monthly Starting Balance", "الرصيد الافتتاحي للشهر")}</h3>
+          <button type="button" class="lx-modal-close" data-action="close">✕</button>
+        </div>
+        <form id="lxStartBalanceForm">
+          <input type="hidden" name="month" value="${esc(curM)}" />
+          <p class="lx-muted" style="margin-bottom:14px">${L("Set your starting cash & bank balance at the beginning of this month.", "حدد إجمالي رصيدك النقدي والبنكي في بداية هذا الشهر لاحتساب الرصيد التراكمي بدقة.")}</p>
+          <div class="lx-field">
+            <label>${L("Amount", "المبلغ")} (${esc(d.settings?.currency || "MAD")})</label>
+            <input type="number" step="any" min="0" name="amount" value="${bal}" required class="lx-input" />
+          </div>
+          <div class="lx-modal-actions">
+            <button type="button" class="lx-btn lx-secondary" data-action="close">${L("Cancel", "إلغاء")}</button>
+            <button type="submit" class="lx-btn lx-primary">${L("Save Balance", "حفظ الرصيد")}</button>
+          </div>
+        </form>
+      </div>`;
+      dlg.showModal();
+      return;
+    }
+    if (a === "finance-plan-edit") {
+      const d = db.read();
+      const curM = financeMonth || C.day().slice(0, 7);
+      const plan = getFinancePlan(d, curM);
+      const dlg = $("#lxDialog");
+      let expHtml = plan.expenses.map((e, idx) => `
+        <div style="display:grid;grid-template-columns:1fr 100px;gap:8px;margin-bottom:8px;">
+          <input type="text" name="exp_cat_${idx}" value="${esc(e.category)}" class="lx-input" placeholder="${L("Category", "الفئة")}" />
+          <input type="number" step="any" min="0" name="exp_amt_${idx}" value="${e.amount}" class="lx-input" placeholder="${L("Amount", "المبلغ")}" />
+        </div>
+      `).join("");
+      let incHtml = plan.income.map((i, idx) => `
+        <div style="display:grid;grid-template-columns:1fr 100px;gap:8px;margin-bottom:8px;">
+          <input type="text" name="inc_cat_${idx}" value="${esc(i.category)}" class="lx-input" placeholder="${L("Source", "المصدر")}" />
+          <input type="number" step="any" min="0" name="inc_amt_${idx}" value="${i.amount}" class="lx-input" placeholder="${L("Amount", "المبلغ")}" />
+        </div>
+      `).join("");
+      dlg.innerHTML = `<div class="lx-modal-box" style="max-width:580px;">
+        <div class="lx-modal-head">
+          <h3>⚙️ ${L("Edit Budget Plan", "تعديل خطة الميزانية")} (${formatFinanceMonth(curM)})</h3>
+          <button type="button" class="lx-modal-close" data-action="close">✕</button>
+        </div>
+        <form id="lxFinancePlanForm">
+          <input type="hidden" name="month" value="${esc(curM)}" />
+          <h4 style="margin:10px 0 8px;">📉 ${L("Planned Expenses Targets", "أهداف المصاريف المخططة")}</h4>
+          <div style="max-height:160px;overflow-y:auto;padding-right:4px;">${expHtml}</div>
+          <h4 style="margin:14px 0 8px;">📈 ${L("Planned Income Targets", "أهداف الدخل المخطط")}</h4>
+          <div style="max-height:140px;overflow-y:auto;padding-right:4px;">${incHtml}</div>
+          <div class="lx-modal-actions" style="margin-top:16px;">
+            <button type="button" class="lx-btn lx-secondary" data-action="close">${L("Cancel", "إلغاء")}</button>
+            <button type="submit" class="lx-btn lx-primary">${L("Save Plan", "حفظ الخطة")}</button>
+          </div>
+        </form>
+      </div>`;
+      dlg.showModal();
+      return;
+    }
+    if (a === "finance-debt-new" || a === "finance-debt-edit") {
+      const d = db.read();
+      const debts = getDebts(d);
+      const debt = a === "finance-debt-edit" ? debts.find(x => x.id === b.dataset.id) : null;
+      const dlg = $("#lxDialog");
+      dlg.innerHTML = `<div class="lx-modal-box">
+        <div class="lx-modal-head">
+          <h3>🤝 ${debt ? L("Edit Debt / Obligation", "تعديل الدين / الالتزام") : L("Add New Debt / Obligation", "إضافة دين أو التزام جديد")}</h3>
+          <button type="button" class="lx-modal-close" data-action="close">✕</button>
+        </div>
+        <form id="lxDebtForm">
+          <input type="hidden" name="id" value="${debt ? esc(debt.id) : ""}" />
+          <div class="lx-field">
+            <label>${L("Creditor / Title", "الدائن / العنوان")}</label>
+            <input type="text" name="name" required class="lx-input" value="${debt ? esc(debt.name) : ""}" placeholder="e.g. Credi mohammed" />
+          </div>
+          <div class="lx-fields-two">
+            <div class="lx-field">
+              <label>${L("Total Debt Amount", "إجمالي قيمة الدين")}</label>
+              <input type="number" step="any" min="0" name="totalAmount" required class="lx-input" value="${debt ? debt.totalAmount : ""}" />
+            </div>
+            <div class="lx-field">
+              <label>${L("Amount Already Paid", "المبلغ المسدد سابقاً")}</label>
+              <input type="number" step="any" min="0" name="paidAmount" class="lx-input" value="${debt ? debt.paidAmount : 0}" />
+            </div>
+          </div>
+          <div class="lx-field">
+            <label>${L("Due Date / Notes (optional)", "تاريخ السداد / ملاحظات")}</label>
+            <input type="text" name="notes" class="lx-input" value="${debt ? esc(debt.notes || "") : ""}" placeholder="Optional" />
+          </div>
+          <div class="lx-modal-actions">
+            <button type="button" class="lx-btn lx-secondary" data-action="close">${L("Cancel", "إلغاء")}</button>
+            <button type="submit" class="lx-btn lx-primary">${L("Save Debt", "حفظ الدين")}</button>
+          </div>
+        </form>
+      </div>`;
+      dlg.showModal();
+      return;
+    }
+    if (a === "finance-debt-pay") {
+      const d = db.read();
+      const debts = getDebts(d);
+      const debt = debts.find(x => x.id === b.dataset.id);
+      if (!debt) return;
+      const remaining = Math.max(0, Number(debt.totalAmount) - Number(debt.paidAmount || 0));
+      const dlg = $("#lxDialog");
+      dlg.innerHTML = `<div class="lx-modal-box">
+        <div class="lx-modal-head">
+          <h3>💳 ${L("Log Debt Payment", "تسجيل دفعة سداد دين")}</h3>
+          <button type="button" class="lx-modal-close" data-action="close">✕</button>
+        </div>
+        <form id="lxDebtPayForm">
+          <input type="hidden" name="debtId" value="${esc(debt.id)}" />
+          <p><strong>${esc(debt.name)}</strong> - ${L("Remaining owed:", "المتبقي:")} <span style="color:#A78BFA">${remaining} ${esc(d.settings?.currency || "MAD")}</span></p>
+          <div class="lx-field" style="margin-top:12px;">
+            <label>${L("Installment Amount Paid", "مبلغ الدفعة المسددة")}</label>
+            <input type="number" step="any" min="0.01" max="${remaining}" name="paymentAmount" value="${remaining}" required class="lx-input" />
+          </div>
+          <div class="lx-field">
+            <label><input type="checkbox" name="deductBalance" checked /> ${L("Also record as expense (deduct from monthly cash balance)", "تسجيلها أيضاً كمصروف (خصمها من الرصيد النقدي للشهر)")}</label>
+          </div>
+          <div class="lx-modal-actions">
+            <button type="button" class="lx-btn lx-secondary" data-action="close">${L("Cancel", "إلغاء")}</button>
+            <button type="submit" class="lx-btn lx-primary">${L("Confirm Payment", "تأكيد السداد")}</button>
+          </div>
+        </form>
+      </div>`;
+      dlg.showModal();
+      return;
+    }
+    if (a === "finance-debt-delete") {
+      const debtId = b.dataset.id;
+      const dlg = $("#lxDialog");
+      dlg.innerHTML = `<div class="lx-modal-box">
+        <div class="lx-modal-head">
+          <h3>🗑️ ${L("Delete Debt", "حذف الدين")}</h3>
+          <button type="button" class="lx-modal-close" data-action="close">✕</button>
+        </div>
+        <p>${L("Are you sure you want to remove this debt record?", "هل أنت متأكد من رغبتك في حذف هذا الالتزام المالي؟")}</p>
+        <div class="lx-modal-actions">
+          <button type="button" class="lx-btn lx-secondary" data-action="close">${L("Cancel", "إلغاء")}</button>
+          <button type="button" class="lx-btn" style="background:#EF4444;color:#fff;" data-action="finance-debt-confirm-delete" data-id="${esc(debtId)}">${L("Delete", "حذف")}</button>
+        </div>
+      </div>`;
+      dlg.showModal();
+      return;
+    }
+    if (a === "finance-debt-confirm-delete") {
+      const debtId = b.dataset.id;
+      await mutate((d) => {
+        if (!d.settings) d.settings = {};
+        if (!Array.isArray(d.settings.debts)) d.settings.debts = [];
+        d.settings.debts = d.settings.debts.filter(x => x.id !== debtId);
+      });
+      $("#lxDialog")?.close();
+      notice(L("Debt removed.", "تم حذف الدين."));
+      window.LifeLegacy.renderAll();
+      return;
+    }
+
     if (a.startsWith("cloud-")) {
       if (a === "cloud-backup") { $("#exportBtn")?.click(); return; }
       if (!cloud) { notice(cloudMessages().offline, true); return; }
@@ -2952,6 +3183,119 @@
     if (submitButton) submitButton.disabled = true;
     let result;
     try {
+      if (form.id === "lxQuickTxForm") {
+        const type = data.type || "expense";
+        const amount = parseFloat(data.amount);
+        const category = data.category || "General";
+        const title = (data.title || "").trim() || category;
+        const curM = financeMonth || C.day().slice(0, 7);
+        const todayStr = C.day();
+        const date = todayStr.startsWith(curM) ? todayStr : (curM + "-01");
+        if (!amount || amount <= 0) {
+          notice(L("Please enter a valid amount.", "يرجى إدخال مبلغ صحيح."), true);
+          if (submitButton) submitButton.disabled = false;
+          return;
+        }
+        await mutate((d) => {
+          if (!Array.isArray(d.finances)) d.finances = [];
+          d.finances.unshift({
+            id: C.uid(),
+            title,
+            amount,
+            type,
+            category,
+            date,
+            createdAt: Date.now()
+          });
+        });
+        form.reset();
+        notice(L("Transaction saved.", "تم تسجيل المعاملة بنجاح."));
+        window.LifeLegacy.renderAll();
+        return;
+      }
+      if (form.id === "lxStartBalanceForm") {
+        const m = data.month;
+        const amount = parseFloat(data.amount) || 0;
+        await setStartingBalance(m, amount);
+        $("#lxDialog")?.close();
+        notice(L("Starting balance updated.", "تم تحديث الرصيد الافتتاحي."));
+        window.LifeLegacy.renderAll();
+        return;
+      }
+      if (form.id === "lxFinancePlanForm") {
+        const m = data.month;
+        const curPlan = getFinancePlan(db.read(), m);
+        const newExpenses = curPlan.expenses.map((e, idx) => ({
+          category: data[`exp_cat_${idx}`] || e.category,
+          amount: parseFloat(data[`exp_amt_${idx}`]) || 0
+        })).filter(x => x.category);
+        const newIncome = curPlan.income.map((i, idx) => ({
+          category: data[`inc_cat_${idx}`] || i.category,
+          amount: parseFloat(data[`inc_amt_${idx}`]) || 0
+        })).filter(x => x.category);
+        await setFinancePlan(m, { expenses: newExpenses, income: newIncome });
+        $("#lxDialog")?.close();
+        notice(L("Budget plan saved.", "تم حفظ خطة الميزانية."));
+        window.LifeLegacy.renderAll();
+        return;
+      }
+      if (form.id === "lxDebtForm") {
+        const id = data.id || C.uid();
+        const name = (data.name || "").trim();
+        const totalAmount = parseFloat(data.totalAmount) || 0;
+        const paidAmount = parseFloat(data.paidAmount) || 0;
+        const notes = (data.notes || "").trim();
+        await mutate((d) => {
+          if (!d.settings) d.settings = {};
+          if (!Array.isArray(d.settings.debts)) d.settings.debts = [];
+          const idx = d.settings.debts.findIndex(x => x.id === id);
+          const item = { id, name, totalAmount, paidAmount, notes, updatedAt: Date.now() };
+          if (idx >= 0) d.settings.debts[idx] = item;
+          else d.settings.debts.push(item);
+        });
+        $("#lxDialog")?.close();
+        notice(L("Debt saved.", "تم حفظ بيانات الدين."));
+        window.LifeLegacy.renderAll();
+        return;
+      }
+      if (form.id === "lxDebtPayForm") {
+        const debtId = data.debtId;
+        const paymentAmount = parseFloat(data.paymentAmount) || 0;
+        const deductBalance = form.querySelector("[name=deductBalance]")?.checked;
+        if (paymentAmount <= 0) {
+          notice(L("Invalid payment amount.", "مبلغ السداد غير صحيح."), true);
+          if (submitButton) submitButton.disabled = false;
+          return;
+        }
+        await mutate((d) => {
+          if (!d.settings) d.settings = {};
+          if (!Array.isArray(d.settings.debts)) d.settings.debts = [];
+          const debt = d.settings.debts.find(x => x.id === debtId);
+          if (debt) {
+            debt.paidAmount = Math.min(Number(debt.totalAmount), Number(debt.paidAmount || 0) + paymentAmount);
+          }
+          if (deductBalance) {
+            if (!Array.isArray(d.finances)) d.finances = [];
+            const curM = financeMonth || C.day().slice(0, 7);
+            const todayStr = C.day();
+            const date = todayStr.startsWith(curM) ? todayStr : (curM + "-01");
+            d.finances.unshift({
+              id: C.uid(),
+              title: L("Debt Payment: ", "سداد دين: ") + (debt?.name || ""),
+              amount: paymentAmount,
+              type: "expense",
+              category: "Debts / سداد ديون",
+              date,
+              createdAt: Date.now()
+            });
+          }
+        });
+        $("#lxDialog")?.close();
+        notice(L("Payment recorded successfully.", "تم تسجيل دفعة السداد وخصمها من الرصيد."));
+        window.LifeLegacy.renderAll();
+        return;
+      }
+
       if (form.id === "lxFeedbackForm") {
         const cat = data.fbCategory || "feature";
         const msg = String(data.fbMessage || "").trim();

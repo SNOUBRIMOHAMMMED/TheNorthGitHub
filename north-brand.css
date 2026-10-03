@@ -2450,3 +2450,74 @@ body.v3-zen-mode-active .v3-zen-cancel-btn:hover {
   margin-inline-start: 10px;
 }
 
+
+
+/* ==========================================================================
+   V3 Premium Information Tips & Floating Popovers [?]
+   ========================================================================== */
+.v3-info-tip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 17px;
+  height: 17px;
+  min-width: 17px;
+  min-height: 17px;
+  padding: 0;
+  margin: 0 5px;
+  vertical-align: middle;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.06);
+  color: #94A3B8;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  user-select: none;
+}
+
+.v3-info-tip:hover,
+.v3-info-tip:focus-visible {
+  color: #FFFFFF;
+  border-color: rgba(99, 102, 241, 0.6);
+  background: rgba(99, 102, 241, 0.25);
+  box-shadow: 0 0 8px rgba(99, 102, 241, 0.4);
+  transform: scale(1.1);
+  outline: none;
+}
+
+.v3-info-popover {
+  position: fixed;
+  z-index: 9999999;
+  max-width: 290px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: #111118;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  color: #E2E8F0;
+  font-size: 12.5px;
+  line-height: 1.55;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.75), 0 0 1px 1px rgba(255, 255, 255, 0.08);
+  pointer-events: auto;
+  opacity: 0;
+  transform: translateY(4px) scale(0.97);
+  transition: opacity 0.18s ease, transform 0.18s ease;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  text-align: start;
+  direction: inherit;
+}
+
+.v3-info-popover.visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.v3-tip-body {
+  word-break: break-word;
+  white-space: normal;
+}
