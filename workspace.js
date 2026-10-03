@@ -2003,9 +2003,9 @@
     disconnected:L("Restoring account…", "جارٍ استرجاع الحساب…"),
     syncing:L("Syncing…", "جارٍ الحفظ والمزامنة…"), connecting:L("Connecting…", "جارٍ الاتصال…"),
     saved:L("Workspace saved", "تم حفظ مساحة العمل"),
-    conflict:L("Changes exist on both devices. Choose which copy to keep; local recovery backup is retained.", "توجد تغييرات محلية وسحابية. اختر النسخة المعتمدة؛ نحتفظ بنسخة استعادة محلية."),
+    pending:L("Changes are saved on this device. Cloud saving will retry automatically.", "التغييرات محفوظة على هذا الجهاز. سيُستأنف الحفظ السحابي تلقائيًا."),
     schema:L("The cloud table or its columns do not match this version. Your local copy is preserved. Inspect the existing schema before a data-preserving migration; do not reset the table.", "الجدول السحابي أو أعمدته غير متوافقة مع هذه النسخة. بيانات الجهاز محفوظة؛ افحص بنية الجدول قبل تعديلها دون حذف البيانات. لا تعِد تهيئة الجدول."),
-    offline:L("Cloud unavailable. Changes remain local; reconnect or retry.", "تعذر الحفظ السحابي. التغييرات محفوظة محليًا؛ أعد الاتصال أو المحاولة."),
+    offline:L("Offline. Changes are saved on this device and will upload automatically when connection returns.", "الاتصال غير متاح. التغييرات محفوظة على هذا الجهاز وستُرفع تلقائيًا عند عودة الاتصال."),
     permission:L("Database access was denied. Your local copy is preserved. The administrator must check RLS and grants.", "رفضت قاعدة البيانات الوصول. النسخة المحلية محفوظة؛ يلزم فحص صلاحيات الجدول وسياسات RLS."),
     expired:L("Your cloud session expired. Sign in to the same account to resume sync.", "انتهت صلاحية الجلسة السحابية. سجّل الدخول إلى الحساب نفسه لاستئناف المزامنة."),
     invalidData:L("The cloud copy has an incompatible format. It was not replaced. Contact support before importing or resetting data.", "صيغة النسخة السحابية غير متوافقة ولم نستبدلها. يلزم فحصها قبل استيراد البيانات أو تصفيرها."),
@@ -2027,20 +2027,18 @@
   }) : null;
   function updateCloudPanel() {
     for (const el of document.querySelectorAll("[data-cloud-status]")) el.textContent = cloudMessages()[cloudState];
-    for (const el of document.querySelectorAll("[data-cloud-conflict]")) el.open = cloudState === "conflict";
-    if (cloudState === "conflict") for (const el of document.querySelectorAll("[data-cloud-panel]")) el.open = true;
   }
   function cloudPanel() {
-    const open = cloudState === "conflict" ? " open" : "";
-    return `<details class="lx-card" data-cloud-panel${open}><summary>${L("Sync and recovery", "المزامنة والاستعادة")}</summary><p id="lxCloudStatus" data-cloud-status role="status">${cloudMessages()[cloudState]}</p><p>${L("Your workspace saves automatically. Export a backup before replacing a copy.", "تُحفظ مساحة عملك تلقائيًا. صدّر نسخة احتياطية قبل استبدال نسخة.")}</p>${btn(L("Export backup", "تصدير نسخة احتياطية"),"cloud-backup")}${btn(L("Retry sync", "إعادة المزامنة"),"cloud-sync")}<details data-cloud-conflict${open}><summary>${L("Choose the copy to keep", "اختر النسخة التي تريد الاحتفاظ بها")}</summary><p>${L("Retrying cannot resolve a conflict. On the device showing your goals, choose this device’s copy to upload them. Use the cloud copy only to replace this device’s data. Recovery copies are kept automatically.", "إعادة المزامنة لا تحل التعارض وحدها. من الجهاز الذي تظهر فيه أهدافك، اختر نسخة هذا الجهاز لرفعها. اعتماد النسخة السحابية يستبدل بيانات هذا الجهاز. تُحفظ نسخ استعادة تلقائيًا.")}</p>${btn(L("Upload this device’s copy", "رفع نسخة هذا الجهاز"),"cloud-local",'class="lx-btn lx-primary"')}${btn(L("Replace with cloud copy", "استبدالها بالنسخة السحابية"),"cloud-remote")}</details></details>`;
+    return `<details class="lx-card" data-cloud-panel><summary>${L("Automatic account saving", "الحفظ التلقائي للحساب")}</summary><p id="lxCloudStatus" data-cloud-status role="status">${cloudMessages()[cloudState]}</p><p>${L("Changes save automatically to your account. Sign in to the same account on another device to restore your workspace. Independent changes from multiple devices are combined automatically; no copy selection is needed.", "تُحفظ تغييراتك تلقائيًا في حسابك. سجّل الدخول بالحساب نفسه من أي جهاز لاسترجاع مساحة عملك. تُدمج تغييرات الأجهزة تلقائيًا دون اختيار نسخة يدويًا.")}</p><details><summary>${L("Backup and connection diagnostics", "النسخ الاحتياطي وفحص الاتصال")}</summary>${btn(L("Export backup", "تصدير نسخة احتياطية"),"cloud-backup")}${btn(L("Check connection", "فحص الاتصال"),"cloud-sync")}</details></details>`;
   }
   if(cloud){
     const update=db.update;
     let pending;
-    db.update=fn=>{const result=update(fn);clearTimeout(pending);pending=setTimeout(()=>cloud.sync(),700);return result;};
+    db.update=fn=>{const result=update(fn);clearTimeout(pending);pending=setTimeout(()=>cloud.sync(),100);return result;};
     setInterval(()=>cloud.resume(),15000);
     window.addEventListener("online",()=>cloud.resume());
-    window.addEventListener("north:local-change",()=>{clearTimeout(pending);pending=setTimeout(()=>cloud.sync(),700);});
+    window.addEventListener("north:local-change",()=>{clearTimeout(pending);pending=setTimeout(()=>cloud.sync(),100);});
+    document.addEventListener("visibilitychange",()=>{if(document.visibilityState === "visible")cloud.resume();});
     window.NorthBoot={prepare:()=>cloud.resume(),flush:async()=>{flushSaves();return await cloud.sync();}};
   }
   function settingsPanel(d) {
@@ -2250,11 +2248,7 @@
       try {
         if (a === "cloud-sync") await cloud.resume();
         else if (a === "cloud-local" || a === "cloud-remote") await cloud.resolve(a.slice(6));
-        if (cloudState === "conflict") {
-          updateCloudPanel();
-          notice(L("Choose the copy to keep below. Retry does not replace either copy.", "اختر النسخة التي تريد الاحتفاظ بها من الخيارات الظاهرة. إعادة المزامنة لا تستبدل أي نسخة."));
-          $("[data-cloud-conflict] summary")?.focus();
-        } else notice(cloudMessages()[cloudState], cloudState !== "saved");
+        notice(cloudMessages()[cloudState], cloudState !== "saved");
       } catch { notice(L("Could not complete sync. Your local data is preserved.", "تعذر إكمال المزامنة. بيانات جهازك محفوظة."), true); }
       finally { b.disabled = false; b.textContent = label; }
       return;

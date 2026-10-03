@@ -789,10 +789,14 @@ window.addEventListener("load", async () => {
   }
 });
 
-window.NorthAuth?.client?.auth.onAuthStateChange(async (event, session) => {
+window.NorthAuth?.client?.auth.onAuthStateChange((event, session) => {
   if (event === "SIGNED_OUT") { localStorage.removeItem(SESSION_KEY); showLanding(); }
   else if ((event === "SIGNED_IN" || event === "TOKEN_REFRESHED" || event === "USER_UPDATED") && session?.user) {
-    await enterCloud(session.user);
+    // Supabase auth callbacks hold an auth lock. Restore outside that callback.
+    setTimeout(() => {
+      if (authBusy) return; // The explicit sign-in flow restores the account itself.
+      enterCloud(session.user).catch(err => toast(window.NorthAuth.errorMessage(err,currentLang(),false)));
+    }, 0);
   }
 });
 
