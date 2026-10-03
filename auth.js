@@ -2,10 +2,34 @@
 (() => {
   const url='https://mqefttfbwkqucesjrqir.supabase.co';
   const key='sb_publishable_-Ya5KJs1cmv6C07-JMCu2g_IPxWRDcr';
-  const client=window.supabase?.createClient(url,key);
+  // Bound stalled network calls without converting them to credential errors.
+  const boundedFetch = async (input, options = {}) => {
+    const controller = new AbortController();
+    const abort = () => controller.abort();
+    if (options.signal?.aborted) abort();
+    options.signal?.addEventListener('abort', abort, {once:true});
+    const timer = setTimeout(abort, 15000);
+    try { return await fetch(input, {...options, signal:controller.signal}); }
+    finally { clearTimeout(timer); options.signal?.removeEventListener('abort', abort); }
+  };
+  const client=window.supabase?.createClient(url,key,{global:{fetch:boundedFetch}});
+  const redirect = () => window.location ? window.location.origin + window.location.pathname : undefined;
   const check=r=>{if(r.error)throw r.error;return r.data;};
   window.NorthAuth={
     client,
+    recoveryPending: !!window.location?.search?.includes("recovery=1"),
+    async resetPassword(email) {
+      if (!client) throw Error('network');
+      return check(await client.auth.resetPasswordForEmail(email, {redirectTo:redirect() + '?recovery=1'}));
+    },
+    async resendConfirmation(email) {
+      if (!client) throw Error('network');
+      return check(await client.auth.resend({type:'signup',email,options:{emailRedirectTo:redirect()}}));
+    },
+    async updatePassword(password) {
+      if (!client) throw Error('network');
+      return check(await client.auth.updateUser({password}));
+    },
     async login(email,password){if(!client)throw Error('network');return check(await client.auth.signInWithPassword({email,password}));},
     async signup(email,password,name,lang){
       if(!client)throw Error('network');
@@ -15,11 +39,18 @@
     async session(){if(!client)throw Error('network');return check(await client.auth.getSession()).session;},
     async logout(){if(!client)return;check(await client.auth.signOut({scope:'local'}));}
   };
+  client?.auth.onAuthStateChange?.(event => {
+    if (event === 'PASSWORD_RECOVERY') {
+      window.NorthAuth.recoveryPending = true;
+      window.dispatchEvent(new Event('north:password-recovery'));
+    }
+  });
 })();
 
 /* Safe public messages: never render a raw server response or credentials. */
 window.NorthAuth.errorMessage = (error, lang, signup) => {
   const messages = {
+    identity_changed: ['هذا البريد مرتبط محليًا بمعرّف حساب مختلف. احتفظنا ببياناتك؛ لا تنشئ حسابًا بديلًا. يلزم التحقق من الحساب الأصلي قبل المزامنة.', 'This device has data for a different account ID with the same email. Your local data was preserved. Verify the original account before syncing.'],
     invalid_credentials: ['البريد أو كلمة المرور غير صحيحين.', 'Incorrect email or password.'],
     email_not_confirmed: ['أكّد بريدك من رسالة التأكيد ثم سجّل الدخول.', 'Confirm your email, then sign in.'],
     weak_password: ['كلمة المرور لا تستوفي شروط الأمان. استخدم كلمة أطول وأقوى.', 'Use a longer, stronger password.'],
@@ -34,7 +65,7 @@ window.NorthAuth.errorMessage = (error, lang, signup) => {
   };
   const code = error?.code;
   if (messages[code]) return messages[code][lang === 'ar' ? 0 : 1];
-  if (error?.message === 'network' || error?.name === 'AuthRetryableFetchError' || /fetch|network|load failed/i.test(error?.message || ''))
+  if (error?.message === 'network' || ['AuthRetryableFetchError','AbortError'].includes(error?.name) || /fetch|network|load failed/i.test(error?.message || ''))
     return lang === 'ar' ? 'تعذر الاتصال بخدمة الحسابات. تحقق من الإنترنت وأعد تحميل الصفحة.' : 'Cannot reach the account service. Check your connection and reload.';
   const ref = typeof code === 'string' && /^[a-z_]{1,64}$/.test(code) ? code : (Number.isInteger(error?.status) ? String(error.status) : 'unknown');
   return (lang === 'ar' ? (signup ? 'تعذر إنشاء الحساب.' : 'تعذر تسجيل الدخول.') + ' رمز التشخيص: ' : (signup ? 'Could not create account.' : 'Could not sign in.') + ' Diagnostic code: ') + ref;

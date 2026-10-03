@@ -38,7 +38,7 @@ yourGoals:"Your goal portfolio",goalsHint:"Every important outcome, its current 
 planCascade:"From strategy to execution",plannerHint:"Keep the big picture intact while reducing it into actions you can execute.",goalSignals:"Signal center",notifHint:"Progress, risk, recovery and the wins that actually matter.",clearAll:"Clear all",
 profileSettings:"Profile & control",accountHint:"Identity, language and control over your private workspace.",saveProfile:"Save profile",preferences:"Preferences",language:"Language",languageHint:"Switch the entire interface.",
 onTrackLevel:"On-track level",onTrackHint:"The horizontal line your momentum should rise above.",backup:"Backup",backupHint:"Export before changing device or clearing browser data.",export:"Export",import:"Import",
-signOut:"Sign out",signOutHint:"Your local data stays on this browser.",defineGoal:"Define your next destination",goalName:"Goal name",deadline:"Deadline",category:"Category",whyGoal:"Why does this matter?",identityGoal:"Who are you becoming? (Identity)",
+forgotPassword:"Forgot password?",resendConfirmation:"Resend confirmation",newPassword:"New password",confirmPassword:"Confirm password",savePassword:"Save password",signOut:"Sign out",signOutHint:"Your local data stays on this browser.",defineGoal:"Define your next destination",goalName:"Goal name",deadline:"Deadline",category:"Category",whyGoal:"Why does this matter?",identityGoal:"Who are you becoming? (Identity)",
 startsZero:"This goal will start at zero momentum and zero progress.",breakItDown:"BREAK IT DOWN",sixMonths:"6 months",threeMonths:"3 months",thisMonth:"This month",thisWeek:"This week",cancel:"Cancel",createGoal:"Create goal",
 todayAction:"TODAY'S ACTION",moveGoal:"Move a goal today",task:"Task",linkedGoal:"Linked goal",momentumImpact:"Momentum impact",goalProgressImpact:"Goal progress",
 goodMorning:"Good morning",goodAfternoon:"Good afternoon",goodEvening:"Good evening",peace:"Hello",strongest:"Strongest right now",needsAttention:"Needs attention",allSafe:"All goals are above the line",
@@ -70,7 +70,7 @@ yourGoals:"محفظة أهدافك",goalsHint:"كل نتيجة مهمة، اتج
 planCascade:"من الرؤية إلى التنفيذ",plannerHint:"احتفظ بالصورة الكبرى، ثم حوّلها إلى مراحل وأعمال قابلة للتنفيذ.",goalSignals:"مركز الإشارات",notifHint:"التقدم، المخاطر، التعافي، والإنجازات التي تستحق انتباهك.",clearAll:"مسح الإشعارات",
 profileSettings:"الملف الشخصي والتحكم",accountHint:"هويتك، لغتك، وتحكمك في مساحة عملك الخاصة.",saveProfile:"حفظ الملف",preferences:"التفضيلات",language:"لغة الواجهة",languageHint:"اختر اللغة التي تريد إدارة THE NORTH بها.",
 onTrackLevel:"حدّ المسار المطلوب",onTrackHint:"الحدّ المرجعي الذي تريد أن يبقى زخم أهدافك فوقه.",backup:"النسخة الاحتياطية",backupHint:"احتفظ بنسخة من بياناتك قبل تغيير الجهاز أو حذف بيانات المتصفح.",export:"تصدير",import:"استيراد",
-signOut:"تسجيل الخروج",signOutHint:"سيتم تسجيل خروجك، بينما تبقى بيانات هذه النسخة محفوظة على الجهاز.",defineGoal:"حدد وجهتك واستراتيجيتك لهذا الهدف",goalName:"اسم الهدف",deadline:"الموعد النهائي",category:"القطاع",whyGoal:"لماذا تنجز هذا الهدف؟ (السبب)",identityGoal:"من هو الشخص الذي يحقق هذا الهدف؟ (الهوية)",
+forgotPassword:"نسيت كلمة المرور؟",resendConfirmation:"إعادة إرسال التأكيد",newPassword:"كلمة المرور الجديدة",confirmPassword:"تأكيد كلمة المرور",savePassword:"حفظ كلمة المرور",signOut:"تسجيل الخروج",signOutHint:"سيتم تسجيل خروجك، بينما تبقى بيانات هذه النسخة محفوظة على الجهاز.",defineGoal:"حدد وجهتك واستراتيجيتك لهذا الهدف",goalName:"اسم الهدف",deadline:"الموعد النهائي",category:"القطاع",whyGoal:"لماذا تنجز هذا الهدف؟ (السبب)",identityGoal:"من هو الشخص الذي يحقق هذا الهدف؟ (الهوية)",
 startsZero:"سيبدأ هذا الهدف بزخم 0 وتقدّم 0.",breakItDown:"حوّل الهدف إلى مراحل تنفيذ",sixMonths:"6 أشهر",threeMonths:"3 أشهر",thisMonth:"هذا الشهر",thisWeek:"هذا الأسبوع",cancel:"إلغاء",createGoal:"إنشاء الهدف",
 todayAction:"تنفيذ اليوم",moveGoal:"أضف عملاً يحرك أحد أهدافك",task:"العمل المطلوب",linkedGoal:"الهدف الذي سيحرّكه هذا العمل",momentumImpact:"قوة تأثير العمل في الزخم",goalProgressImpact:"أثرها في نسبة تقدم الهدف",
 goodMorning:"صباح الخير",goodAfternoon:"مساء الخير",goodEvening:"مساء الخير",peace:"السلام عليكم",strongest:"الأفضل الآن",needsAttention:"يحتاج انتباهك",allSafe:"كل الأهداف فوق الخط",
@@ -167,35 +167,35 @@ Object.assign(dict.en, {
   "nlPricingNav": "Pricing",
   "nlPricingLabel": "05 / INVESTMENT IN VELOCITY",
   "nlPricingTitle": "Transparent tiers for compounding momentum.",
-  "nlPricingSub": "Begin completely free. Upgrade when you are ready for autonomous synchronization and cognitive coaching.",
+  "nlPricingSub": "Cloud saving is included. Paid subscriptions are not available yet.",
   "tierCore": "Core",
   "tierCorePrice": "Free",
   "tierCorePeriod": "forever",
   "tierCoreStatus": "FREE FOREVER",
   "tierCoreDesc": "For individuals establishing their baseline execution rhythm.",
-  "tierCoreF1": "Identity Cascade (up to 3 active goals)",
+  "tierCoreF1": "Goals, projects and tasks",
   "tierCoreF2": "Deep Work Capsule & Pomodoro Timer",
   "tierCoreF3": "Visual Radar Momentum Trajectory Map",
-  "tierCoreF4": "100% Private, Offline Local Storage",
+  "tierCoreF4": "Local saving and account cloud sync",
   "tierCoreCta": "Start Free",
   "tierPro": "Pro",
-  "tierProBadge": "MOST POPULAR",
-  "tierProPrice": "$2.99",
-  "tierProPeriod": "/ month",
-  "tierProDesc": "For founders and executives who execute across multiple machines.",
-  "tierProF1": "Everything in Core, plus:",
-  "tierProF2": "Real-time encrypted multi-device cloud sync (Supabase)",
+  "tierProBadge": "NOT LAUNCHED",
+  "tierProPrice": "Coming later",
+  "tierProPeriod": "",
+  "tierProDesc": "A future subscription. Current tools remain available without payment.",
+  "tierProF1": "Currently available in your workspace:",
+  "tierProF2": "Account cloud saving",
   "tierProF3": "Advanced momentum audits & 30-day velocity analytics",
   "tierProF4": "Unlimited goal portfolios & executive capital budget tracker",
-  "tierProF5": "Exportable executive audit reports (PDF/JSON)",
+  "tierProF5": "JSON backup and finance CSV export",
   "tierProGoals": "✓ Unlimited goal portfolios & projects",
-  "tierProCta": "Upgrade to Pro",
-  "tierProNote": "Bank card payment integration in progress — start free today and upgrade with 1 click.",
+  "tierProCta": "Start free instead",
+  "tierProNote": "No checkout or payment is available.",
   "selectCoreCta": "Start with Core (Free)",
-  "selectProCta": "Select Pro ($2.99)",
-  "planScreenKicker": "STEP 2 OF 2 · CHOOSE YOUR VELOCITY",
-  "planScreenTitle": "Select your execution tier",
-  "planScreenSub": "Transparent, high-leverage plans built to compound your focus and momentum.",
+  "selectProCta": "Start the current free release",
+  "planScreenKicker": "THE NORTH / MEMBERSHIP",
+  "planScreenTitle": "Your current workspace",
+  "planScreenSub": "Start free. Future paid plans are not available for purchase.",
   "alreadyHaveAccount": "Already have an account? Sign in",
   "financesPaywallBadge": "👑 EXCLUSIVE TO PRO TIER",
   "financesPaywallTitle": "Executive Capital & Finance Management",
@@ -208,15 +208,15 @@ Object.assign(dict.en, {
   "goalLimitNotice": "You reached the limit for the Free Core plan (3 active goals). Upgrade to Pro for unlimited goals and projects.",
   "tierAi": "Executive AI",
   "tierAiBadge": "COMING SOON",
-  "tierAiPrice": "$24.99",
-  "tierAiPeriod": "/ month",
+  "tierAiPrice": "Not available",
+  "tierAiPeriod": "",
   "tierAiDesc": "An autonomous AI accountability coach that studies your performance data.",
   "tierAiF1": "Everything in Pro, plus:",
   "tierAiF2": "Autonomous AI Coach studying your focus patterns & velocity decay",
   "tierAiF3": "Automated detection of procrastination & strategic misalignment",
   "tierAiF4": "Weekly executive audio/text briefings to calibrate your week",
   "tierAiF5": "Dynamic habit calibration matched to your biological peak hours",
-  "tierAiCta": "Join Priority Waitlist",
+  "tierAiCta": "Not launched yet",
   "feedbackTitle": "Help Shape THE NORTH",
   "feedbackSub": "Your suggestions directly guide our engineering roadmap. Tell us what would make you 10x more effective.",
   "feedbackType": "Category",
@@ -316,35 +316,35 @@ Object.assign(dict.ar, {
   "nlPricingNav": "باقات الاشتراك",
   "nlPricingLabel": "05 / الاستثمار في سرعة الإنجاز",
   "nlPricingTitle": "باقات واضحة وشفافة لزخم تنفيذي لا يتوقف.",
-  "nlPricingSub": "ابدأ مجاناً بالكامل. طوّر نظامك للمزامنة السحابية الفورية والتدريب الإدراكي المتقدم.",
+  "nlPricingSub": "الحفظ السحابي متاح. الاشتراكات المدفوعة غير متاحة بعد.",
   "tierCore": "النواة (Core)",
   "tierCorePrice": "مجاناً",
   "tierCorePeriod": "مدى الحياة",
   "tierCoreStatus": "مجاناً مدى الحياة",
   "tierCoreDesc": "للأفراد والمطورين الراغبين في بناء إيقاع انضباط وتنفيذ يومي حقيقي.",
-  "tierCoreF1": "سلسلة الهوية المتسلسلة (حتى 3 أهداف نشطة)",
+  "tierCoreF1": "الأهداف والمشاريع والمهام",
   "tierCoreF2": "كبسولة العمل العميق ومؤقت البومودورو بدون مشتتات",
   "tierCoreF3": "رادار الزخم البصري وخريطة مسار الأهداف الحية",
-  "tierCoreF4": "خصوصية كاملة 100% مع تخزين محلي يعمل دون إنترنت",
+  "tierCoreF4": "حفظ محلي ومزامنة سحابية للحساب",
   "tierCoreCta": "ابدأ مجاناً",
   "tierPro": "المحترف (Pro)",
-  "tierProBadge": "الأكثر طلباً",
-  "tierProPrice": "2.99$",
-  "tierProPeriod": "/ شهرياً",
-  "tierProDesc": "للمؤسسين والقادة الذين يديرون مشاريعهم عبر أجهزة وحواسيب متعددة.",
-  "tierProF1": "كل ما في باقة Core، بالإضافة إلى:",
-  "tierProF2": "مزامنة سحابية مشفرة وفورية عبر جميع أجهزتك (Supabase)",
+  "tierProBadge": "لم يُطلق بعد",
+  "tierProPrice": "لاحقًا",
+  "tierProPeriod": "",
+  "tierProDesc": "اشتراك مستقبلي. الأدوات الحالية متاحة دون دفع.",
+  "tierProF1": "متاح حاليًا في مساحة عملك:",
+  "tierProF2": "الحفظ السحابي للحساب",
   "tierProF3": "تحليلات الزخم المتقدمة وتدقيق المسار لآخر 30 يوماً",
   "tierProF4": "نظام إدارة التدفقات المالية وتوزيع رأس المال الذكي",
-  "tierProF5": "تصدير تقارير تنفيذية ومشاركتها (PDF/JSON)",
+  "tierProF5": "نسخة JSON احتياطية وتصدير المال CSV",
   "tierProGoals": "✓ محفظة أهداف ومشاريع غير محدودة",
-  "tierProCta": "الترقية إلى Pro (2.99$)",
-  "tierProNote": "بوابة الدفع البنكي الإلكتروني قيد التفعيل — ابدأ بالباقة المجانية حالياً وستتمكن من الترقية بنقرة واحدة فور اكتمال الربط.",
+  "tierProCta": "ابدأ مجانًا",
+  "tierProNote": "لا توجد عملية دفع أو شراء متاحة.",
   "selectCoreCta": "البدء بالباقة العادية (مجاناً)",
-  "selectProCta": "اختيار باقة Pro (2.99$)",
-  "planScreenKicker": "الخطوة 2 من 2 · اختر سرعة انطلاقك",
-  "planScreenTitle": "اختر باقة إدارتك وتنفيذك",
-  "planScreenSub": "باقات واضحة وعالية المردود مصممة لمضاعفة تركيزك وزخم أهدافك.",
+  "selectProCta": "ابدأ الإصدار المجاني الحالي",
+  "planScreenKicker": "THE NORTH / العضوية",
+  "planScreenTitle": "مساحة عملك الحالية",
+  "planScreenSub": "ابدأ مجانًا. الباقات المدفوعة المستقبلية غير متاحة للشراء.",
   "alreadyHaveAccount": "لديك حساب بالفعل؟ تسجيل الدخول",
   "financesPaywallBadge": "👑 ميزة حصرية لمشتركي باقة PRO",
   "financesPaywallTitle": "إدارة التدفقات المالية وتوزيع رأس المال الذكي",
@@ -357,15 +357,15 @@ Object.assign(dict.ar, {
   "goalLimitNotice": "وصلت إلى الحد الأقصى للباقة العادية (3 أهداف نشطة). اشترك في باقة Pro لإضافة أهداف ومشاريع غير محدودة.",
   "tierAi": "المدرب الذكي (Executive AI)",
   "tierAiBadge": "قريباً · COMING SOON",
-  "tierAiPrice": "24.99$",
-  "tierAiPeriod": "/ شهرياً",
+  "tierAiPrice": "غير متاح",
+  "tierAiPeriod": "",
   "tierAiDesc": "مدرب ذكاء اصطناعي تنفيذي يقرأ بيانات حسابك ويوجهك أسبوعياً نحو القمة.",
   "tierAiF1": "كل ما في باقة Pro، بالإضافة إلى:",
   "tierAiF2": "مدرب ذكاء اصطناعي يحلل جلسات تركيزك وسرعة زخم أهدافك",
   "tierAiF3": "اكتشاف تلقائي للتسويف وهدر الانتباه وتنبيهك قبل فوات الأوان",
   "tierAiF4": "إحاطة استراتيجية أسبوعية مخصصة لإعادة توجيه جدول أعمالك",
   "tierAiF5": "معايرة ديناميكية لعاداتك وفق أوقات ذروة طاقتك اليومية",
-  "tierAiCta": "انضم لقائمة الانتظار المبكرة",
+  "tierAiCta": "لم يُطلق بعد",
   "feedbackTitle": "شاركنا رؤيتك لتطوير THE NORTH",
   "feedbackSub": "اقتراحاتك وملاحظاتك تساهم مباشرة في توجيه خارطة تطوير النظام.",
   "feedbackType": "نوع المقترح",
@@ -458,6 +458,7 @@ function showApp(){
   rollover();generateSignals();applyLang();renderAll();
 }
 function authTab(tab){
+  $("#recoveryPane")?.classList.toggle("hidden",tab!=="recovery");
   $$(".auth-tab").forEach(b=>b.classList.toggle("active",b.dataset.authTab===tab));
   $("#loginPane").classList.toggle("hidden",tab!=="login");$("#signupPane").classList.toggle("hidden",tab!=="signup");
 }
@@ -467,35 +468,53 @@ $$("[data-go-login]").forEach(b=>b.onclick=()=>openAuth("login"));
 $("#backToLandingBtn").onclick=showLanding;
 $("#planBackBtn")&&( $("#planBackBtn").onclick=showLanding );
 $("#planLangBtn")&&( $("#planLangBtn").onclick=toggleLang );
-$("#selectCoreBtn")&&( $("#selectCoreBtn").onclick=()=>{ localStorage.setItem("thenorth_tier","core"); openAuth("signup"); } );
-$("#selectProBtn")&&( $("#selectProBtn").onclick=()=>{
-  toast(currentLang()==="ar"?"بوابة الدفع البنكي الإلكتروني قيد الربط والتفعيل — تم تفعيل الباقة العادية لك حالياً، وستتمكن من الترقية بنقرة واحدة فور اكتمال الربط.":"Bank card payment integration in progress — Core tier activated for now. You will be able to upgrade with 1 click once live.");
-  localStorage.setItem("thenorth_tier","core");
-  openAuth("signup");
-} );
+$("#selectCoreBtn")&&( $("#selectCoreBtn").onclick=()=>{  openAuth("signup"); } );
+$("#selectProBtn")&&( $("#selectProBtn").onclick=()=>openAuth("signup") );
 $("#skipToLoginBtn")&&( $("#skipToLoginBtn").onclick=()=>openAuth("login") );
 $("#landingLogo").onclick=(e)=>{e.preventDefault();showLanding()};
 $$("[data-scroll-how]").forEach(b=>b.onclick=()=>($("#the-science")||$("#howItWorks")).scrollIntoView({behavior:"smooth"}));
-$$("[data-waitlist-ai]").forEach(b=>b.onclick=()=>{
-  const msg = currentLang() === "ar" ? "أدخل بريدك الإلكتروني للانضمام لقائمة الانتظار ذات الأولوية للمدرب الذكي:" : "Enter your email to join the Executive AI Coach priority waitlist:";
-  const email = prompt(msg);
-  if (email && email.includes("@")) {
-    try {
-      const waitlist = JSON.parse(localStorage.getItem("thenorth_ai_waitlist") || "[]");
-      if (!waitlist.includes(email)) waitlist.push(email);
-      localStorage.setItem("thenorth_ai_waitlist", JSON.stringify(waitlist));
-    } catch {}
-    toast(currentLang() === "ar" ? "✨ تم تسجيلك في قائمة الانتظار ذات الأولوية للمدرب الذكي!" : "✨ You are on the priority waitlist for Executive AI Coach!");
-  }
-});
+$$("[data-waitlist-ai]").forEach(b=>b.onclick=()=>toast(currentLang()==="ar" ? "المدرب الذكي غير متاح بعد. لم يتم إرسال تسجيل في قائمة انتظار." : "The AI coach is not available yet. No waitlist registration was submitted."));
 $("#authLangBtn").onclick=toggleLang;$("#landingLangBtn").onclick=toggleLang;$("#langBtn").onclick=toggleLang;$("#mobileLangBtn").onclick=toggleLang;$("#accountLangBtn").onclick=toggleLang;
+
+async function sendAccountEmail(kind, button) {
+  const input = $("#loginEmail");
+  if (!input.reportValidity()) return;
+  button.disabled = true;
+  try {
+    const email = input.value.trim().toLowerCase();
+    await window.NorthAuth[kind](email);
+    toast(currentLang()==="ar" ? "تحقق من بريدك. إذا كان الطلب صالحًا ستصلك رسالة؛ راجع البريد غير المرغوب فيه أيضًا." : "Check your inbox and spam folder. Eligible requests receive an email.");
+  } catch(err) { toast(window.NorthAuth.errorMessage(err,currentLang(),false)); }
+  finally { button.disabled=false; }
+}
+$("#resetPasswordBtn").onclick=e=>sendAccountEmail("resetPassword",e.currentTarget);
+$("#resendConfirmBtn").onclick=e=>sendAccountEmail("resendConfirmation",e.currentTarget);
+window.addEventListener("north:password-recovery",()=>openAuth("recovery"));
+$("#recoveryForm").addEventListener("submit",async e=>{
+  e.preventDefault(); const button=e.target.querySelector("button"), status=$("#recoveryStatus");
+  const password=$("#recoveryPassword").value;
+  if(password!==$("#recoveryConfirm").value){status.textContent=currentLang()==="ar"?"كلمتا المرور غير متطابقتين.":"Passwords do not match.";return;}
+  button.disabled=true;
+  try {
+    if(!await window.NorthAuth.session()) throw Error("expiredRecovery");
+    await window.NorthAuth.updatePassword(password);
+    window.NorthAuth.recoveryPending=false;
+    history.replaceState(null,"",location.pathname);
+    e.target.reset();
+    const session=await window.NorthAuth.session();
+    if(session)await enterCloud(session.user);else openAuth("login");
+    toast(currentLang()==="ar"?"تم تحديث كلمة المرور.":"Password updated.");
+  } catch {status.textContent=currentLang()==="ar"?"تعذر تغيير كلمة المرور. افتح رابط استعادة صالحًا أو اطلب رابطًا جديدًا من تسجيل الدخول.":"Could not update password. Open a valid recovery link or request a new one from Sign in.";}
+  finally {button.disabled=false;}
+});
 
 let authBusy=false;
 async function enterCloud(user) {
+  if(window.NorthAuth?.recoveryPending){openAuth("recovery");return;}
   const email=user.email.toLowerCase(), all=getAccounts();
   if(all[email]?.cloudUserId && all[email].cloudUserId!==user.id){
     localStorage.setItem("north_identity_recovery_"+Date.now(),JSON.stringify(all[email]));
-    delete all[email];
+    throw Object.assign(new Error("identity_changed"), {code:"identity_changed"});
   }
   if(!all[email])all[email]={data:freshData(user.user_metadata?.name||email.split("@")[0],email,user.user_metadata?.lang||document.documentElement.lang)};
   all[email].cloudUserId=user.id;
@@ -706,7 +725,13 @@ $("#clearNotifications").onclick=()=>{saveData(d=>{d.notifications=[];d.dismisse
 $("#saveProfileBtn").onclick=()=>{saveData(d=>{d.profile.name=$("#accountNameInput").value.trim()||d.profile.name;d.profile.threshold=clamp(Number($("#thresholdInput").value||60),10,90)});renderAll();toast(t("saved"))};
 $("#thresholdInput").addEventListener("change",()=>{saveData(d=>d.profile.threshold=clamp(Number($("#thresholdInput").value||60),10,90));renderAll()});
 $("#avatarInput").addEventListener("change",e=>{const f=e.target.files?.[0];if(!f)return;const r=new FileReader();r.onload=()=>{saveData(d=>d.profile.avatar=r.result);renderAll()};r.readAsDataURL(f)});
-$("#logoutBtn").onclick=async()=>{try{await window.NorthBoot?.flush();await window.NorthAuth.logout();localStorage.removeItem(SESSION_KEY);showLanding();}catch{toast(currentLang()==="ar"?"تعذر تسجيل الخروج. تحقق من الاتصال وأعد المحاولة.":"Could not sign out. Check your connection and retry.");}};
+$("#logoutBtn").onclick=async()=>{
+  try {
+    const saved = await window.NorthBoot?.flush();
+    if (saved !== true && !confirm(currentLang()==="ar" ? "لم يكتمل الحفظ السحابي. تبقى التغييرات على هذا الجهاز فقط. تسجيل الخروج رغم ذلك؟" : "Cloud saving is incomplete. Changes remain on this device only. Sign out anyway?")) return;
+    await window.NorthAuth.logout(); localStorage.removeItem(SESSION_KEY); window.NorthAuth.cachedUser=null; showLanding();
+  } catch {toast(currentLang()==="ar"?"تعذر تسجيل الخروج. أعد المحاولة.":"Could not sign out. Please retry.");}
+};
 $("#exportBtn").onclick=()=>{const blob=new Blob([JSON.stringify({schemaVersion:4,exportedAt:Date.now(),data:data()},null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=`lifeos-backup-${iso()}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),400)};
 $("#importInput").addEventListener("change",e=>{const f=e.target.files?.[0];if(!f)return;if(f.size>10000000){toast(currentLang()==="ar"?"الملف كبير جدًا":"File is too large");return;}const r=new FileReader();r.onload=()=>{try{window.LifeWorkspace.importData(JSON.parse(r.result));}catch{toast(currentLang()==="ar"?"ملف غير صالح. لم تتغير بياناتك.":"Invalid file. Your data was not changed.");}e.target.value="";};r.onerror=()=>toast(currentLang()==="ar"?"تعذر قراءة الملف":"Could not read file");r.readAsText(f)});
 
@@ -723,8 +748,14 @@ showLanding();
 window.addEventListener("load", async () => {
   try {
     const session = await window.NorthAuth.session();
+    if (window.NorthAuth.recoveryPending) { openAuth("recovery"); return; }
     if (session) { await enterCloud(session.user); return; }
-  } catch { /* Supabase unreachable - fall through */ }
+    localStorage.removeItem(SESSION_KEY);
+    return;
+  } catch (error) {
+    if (error?.code === "identity_changed") { toast(window.NorthAuth.errorMessage(error,currentLang(),false)); return; }
+    /* Supabase unreachable: preserve the local workspace. */
+  }
 
   const cachedEmail = localStorage.getItem(SESSION_KEY);
   if (cachedEmail) {

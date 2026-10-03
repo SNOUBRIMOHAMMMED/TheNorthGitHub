@@ -317,71 +317,7 @@
     }
     return d;
   }
-  // ── Auto-prune: keeps localStorage lean forever ────────────────────────────
-  // Runs silently on every save. Removes old data the user will never need again
-  // while keeping everything that matters.
-  function prune(d) {
-    const now = Date.now();
-    const msPerDay = 86400000;
-    // Cutoff dates (ms timestamps for comparison)
-    const taskCutoff    = now - 90  * msPerDay; // completed tasks  → keep 90 days
-    const sessionCutoff = now - 60  * msPerDay; // focus sessions   → keep 60 days
-    const notifCutoff   = now - 30  * msPerDay; // notifications    → keep 30 days
-    const habitCutoff   = day(now - 365 * msPerDay); // habit checks → keep 365 days
-    const HISTORY_LIMIT = 180; // goal history points
-
-    // 1. Completed tasks older than 90 days
-    if (Array.isArray(d.tasks)) {
-      d.tasks = d.tasks.filter(t => {
-        if (!t.done && t.status !== "done") return true; // keep all pending tasks
-        const completed = t.completedDate
-          ? new Date(t.completedDate + "T12:00:00").getTime()
-          : (t.updatedAt || 0);
-        return completed >= taskCutoff;
-      });
-    }
-
-    // 2. Focus sessions older than 60 days
-    if (Array.isArray(d.sessions)) {
-      d.sessions = d.sessions.filter(s => {
-        const ts = s.endedAt || s.startedAt || 0;
-        return ts >= sessionCutoff;
-      });
-    }
-
-    // 3. Notifications older than 30 days
-    if (Array.isArray(d.notifications)) {
-      d.notifications = d.notifications.filter(n => (n.ts || 0) >= notifCutoff);
-      // Also clean up dismissed keys for notifications that no longer exist
-      if (d.dismissed) {
-        const remaining = new Set(d.notifications.map(n => n.id));
-        for (const k of Object.keys(d.dismissed)) {
-          if (!remaining.has(k)) delete d.dismissed[k];
-        }
-      }
-    }
-
-    // 4. Trim goal history to last HISTORY_LIMIT points (keep most recent)
-    if (Array.isArray(d.goals)) {
-      d.goals.forEach(g => {
-        if (Array.isArray(g.history) && g.history.length > HISTORY_LIMIT) {
-          g.history = g.history.slice(-HISTORY_LIMIT);
-        }
-      });
-    }
-
-    // 5. Trim old habit check dates (keep last 365 days)
-    if (Array.isArray(d.habits)) {
-      d.habits.forEach(h => {
-        if (Array.isArray(h.checks) && h.checks.length > 0) {
-          h.checks = h.checks.filter(dateStr => dateStr >= habitCutoff);
-        }
-      });
-    }
-
-    return d;
-  }
-
+  // Historical work is user data; never remove it implicitly during a save.
   function store(storage) {
     let lastRaw, lastEmail, cached;
     function read() {
@@ -400,7 +336,6 @@
       if (!all[email]) throw Error("signedOut");
       const d = migrate(all[email].data);
       const result = fn(d);
-      prune(d); // ← silently clean old data on every save
       all[email].data = d;
       storage.setItem(ACCOUNT_KEY, JSON.stringify(all));
       return { data: d, result };
@@ -722,72 +657,50 @@
     }
   }
 
-  function habitStreak(checks = [], todayStr = day()) {
-    const set = new Set((checks || []).filter(Boolean));
-    let current = 0,
-      inGrace = false,
-      graceUsed = false,
-      cursor = new Date(todayStr + "T12:00:00");
-
-    if (!set.has(todayStr)) {
-      cursor.setDate(cursor.getDate() - 1);
-      if (!set.has(day(+cursor))) {
-        cursor.setDate(cursor.getDate() - 1);
-        if (set.has(day(+cursor))) {
-          inGrace = true;
-          while (set.has(day(+cursor))) {
-            current++;
-            cursor.setDate(cursor.getDate() - 1);
-          }
-        } else {
-          current = 0;
-        }
-      } else {
-        while (set.has(day(+cursor))) {
-          current++;
-          cursor.setDate(cursor.getDate() - 1);
-        }
-      }
-    } else {
+  function habitDue(frequency, dateStr) {
+    const weekday = new Date(dateStr + "T12:00:00").getDay();
+    return frequency !== "weekdays" || (weekday !== 5 && weekday !== 6);
+  }
+  function habitPeriod(dateStr, frequency, weekStart = 1) {
+    const dt = new Date(dateStr + "T12:00:00");
+    if (frequency === "weekly") dt.setDate(dt.getDate() - (dt.getDay() - Number(weekStart) + 7) % 7);
+    return day(+dt);
+  }
+  function habitStreak(checks = [], todayStr = day(), frequency = "daily", weekStart = 1) {
+    const previous = key => {
+      const dt = new Date(key + "T12:00:00");
+      do { dt.setDate(dt.getDate() - (frequency === "weekly" ? 7 : 1)); }
+      while (!habitDue(frequency, day(+dt)));
+      return day(+dt);
+    };
+    const set = new Set(checks.filter(k => /^\d{4}-\d{2}-\d{2}$/.test(k) && k <= todayStr && habitDue(frequency,k)).map(k => habitPeriod(k,frequency,weekStart)));
+    let cursor = habitPeriod(todayStr, frequency, weekStart);
+    if (!habitDue(frequency, cursor)) cursor = previous(cursor);
+    let current = 0, inGrace = false, graceUsed = false;
+    if (!set.has(cursor)) {
+      cursor = previous(cursor);
+      if (!set.has(cursor) && set.has(previous(cursor))) { inGrace = true; graceUsed = true; cursor = previous(cursor); }
+    }
+    while (set.has(cursor)) {
       current++;
-      cursor.setDate(cursor.getDate() - 1);
-      while (true) {
-        const dKey = day(+cursor);
-        if (set.has(dKey)) {
-          current++;
-          cursor.setDate(cursor.getDate() - 1);
-        } else if (!graceUsed) {
-          const prevDate = new Date(+cursor);
-          prevDate.setDate(prevDate.getDate() - 1);
-          if (set.has(day(+prevDate))) {
-            graceUsed = true;
-            cursor.setDate(cursor.getDate() - 1);
-          } else {
-            break;
-          }
-        } else {
-          break;
-        }
-      }
+      cursor = previous(cursor);
+      if (!set.has(cursor) && !graceUsed && set.has(previous(cursor))) { graceUsed = true; cursor = previous(cursor); }
     }
-
-    const sorted = [...set].filter((d) => /^\d{4}-\d{2}-\d{2}$/.test(d)).sort();
-    let best = 0,
-      temp = 0,
-      prev = null;
-    for (const dStr of sorted) {
-      const curDate = new Date(dStr + "T12:00:00");
-      if (prev) {
-        const diff = Math.round((curDate - prev) / 86400000);
-        if (diff === 1) temp++;
-        else if (diff === 2) temp++;
-        else if (diff > 2) temp = 1;
-      } else temp = 1;
-      if (temp > best) best = temp;
-      prev = curDate;
+    let best = 0, length = 0, used = false, prev;
+    for (const key of [...set].sort()) {
+      if (prev === previous(key)) length++;
+      else if (prev === previous(previous(key)) && !used) { length++; used = true; }
+      else { length = 1; used = false; }
+      best = Math.max(best, length); prev = key;
     }
-    if (current > best) best = current;
-    return { current, best, inGrace };
+    return {current, best:Math.max(best,current), inGrace};
+  }
+  function habitWeek(h, todayStr = day(), weekStart = 1) {
+    const start = habitPeriod(todayStr, "weekly", weekStart);
+    const dates = Array.from({length:7}, (_,i) => {const dt = new Date(start+"T12:00:00");dt.setDate(dt.getDate()+i);return day(+dt);});
+    const due = dates.filter(k => habitDue(h.frequency,k));
+    const count = due.filter(k => (h.checks || []).includes(k)).length;
+    return {dates, completed:h.frequency === "weekly" ? Math.min(1,count) : count, target:h.frequency === "weekly" ? 1 : due.length};
   }
 
   function toggleHabit(d, id, targetDate = day()) {
@@ -804,10 +717,13 @@
         if (!wasChecked) {
           const added = Math.min(100 - g.momentum, impact);
           g.momentum += added;
+          h.appliedMomentumByDate = h.appliedMomentumByDate || {};
+          h.appliedMomentumByDate[targetDate] = added;
           h.appliedMomentum = added;
         } else {
-          g.momentum = Math.max(0, g.momentum - (h.appliedMomentum || impact));
+          g.momentum = Math.max(0, g.momentum - (h.appliedMomentumByDate?.[targetDate] ?? h.appliedMomentum ?? impact));
         }
+        if (wasChecked && h.appliedMomentumByDate) delete h.appliedMomentumByDate[targetDate];
         let hist = g.history.find((x) => x.date === targetDate);
         if (hist) hist.value = g.momentum;
         else g.history.push({ date: targetDate, value: g.momentum });
@@ -819,6 +735,8 @@
   return {
     completeTask,
     habitStreak,
+    habitDue,
+    habitWeek,
     toggleHabit,
     VERSION,
     ACCOUNT_KEY,

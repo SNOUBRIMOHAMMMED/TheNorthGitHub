@@ -22,3 +22,26 @@ test('finish captures trailing pause duration without extra work',()=>{const d=b
 test('habitStreak calculates current and best streaks accurately',()=>{const checks=['2026-09-08','2026-09-09','2026-09-10','2026-09-11'];const s1=C.habitStreak(checks,'2026-09-11');assert.equal(s1.current,4);assert.equal(s1.best,4);const s2=C.habitStreak(checks,'2026-09-12');assert.equal(s2.current,4);assert.equal(s2.best,4);const s3=C.habitStreak([...checks,'2026-09-01','2026-09-02','2026-09-03','2026-09-04','2026-09-05'],'2026-09-11');assert.equal(s3.current,4);assert.equal(s3.best,5);});
 test('toggleHabit updates checks and boosts linked goal momentum',()=>{const d=base();d.goals[0].momentum=90;d.habits.push({id:'h1',title:'Read',checks:[],goalId:d.goals[0].id,impact:15});C.toggleHabit(d,'h1','2026-09-12');assert.ok(d.habits[0].checks.includes('2026-09-12'));assert.equal(d.goals[0].momentum,100);C.toggleHabit(d,'h1','2026-09-12');assert.ok(!d.habits[0].checks.includes('2026-09-12'));assert.equal(d.goals[0].momentum,90);});
 
+
+
+test('habit undo tracks capped contributions independently by date',()=>{
+ const d=base();d.goals[0].momentum=90;d.habits=[{id:'h',checks:[],goalId:'goal',impact:10}];
+ C.toggleHabit(d,'h','2026-09-20');C.toggleHabit(d,'h','2026-09-21');
+ C.toggleHabit(d,'h','2026-09-20');assert.equal(d.goals[0].momentum,90);
+ C.toggleHabit(d,'h','2026-09-21');assert.equal(d.goals[0].momentum,90);
+});
+test('weekly habits count distinct weeks; workday streak skips Friday and Saturday',()=>{
+ assert.equal(C.habitStreak(['2026-09-07','2026-09-08','2026-09-14'],'2026-09-15','weekly',1).current,2);
+ assert.equal(C.habitStreak(['2026-09-10','2026-09-13'],'2026-09-13','weekdays').current,2);
+ const h={frequency:'weekly',checks:['2026-09-14','2026-09-15']};
+ assert.equal(C.habitWeek(h,'2026-09-16',1).completed,1);assert.equal(C.habitWeek(h,'2026-09-16',1).target,1);
+ assert.equal(C.habitWeek({frequency:'weekdays'},'2026-09-16',1).target,5);
+});
+test('ordinary saves preserve older completed tasks, sessions, history and habit checks',()=>{
+ const d=base();d.tasks[0].done=true;d.tasks[0].completedDate='2020-01-01';
+ d.sessions=[{id:'old',startedAt:1577836800000,endedAt:1577840400000,totalDuration:3600000}];
+ d.habits=[{id:'h',checks:['2020-01-01']}];d.goals[0].history=Array.from({length:200},(_,i)=>({date:'2020-01-01',value:i%100}));
+ const mem=new Map([[C.SESSION_KEY,'qa'],[C.ACCOUNT_KEY,JSON.stringify({qa:{data:d}})]]);
+ const store=C.store({getItem:k=>mem.get(k),setItem:(k,v)=>mem.set(k,v)});store.update(x=>x.profile.name='Updated');
+ const saved=store.read();assert.equal(saved.tasks.length,1);assert.equal(saved.sessions.length,1);assert.equal(saved.habits[0].checks.length,1);assert.equal(saved.goals[0].history.length,200);
+});

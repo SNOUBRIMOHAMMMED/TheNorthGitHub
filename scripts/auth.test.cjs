@@ -8,3 +8,10 @@ test('logout invalidates this device session without signing out other devices',
 test('missing CDN fails closed rather than opening a local account',async()=>{const context={window:{}};vm.runInNewContext(source,context);await assert.rejects(context.window.NorthAuth.login('a@example.test','password'),/network/);});
 test('signup errors distinguish mail configuration from invalid credentials',()=>{const a=setup({});assert.match(a.errorMessage({code:'email_address_not_authorized'},'en',true),/SMTP/);assert.match(a.errorMessage({code:'over_email_send_rate_limit'},'en',true),/limit/);assert.match(a.errorMessage({code:'invalid_credentials'},'en',false),/Incorrect/);});
 test('unknown errors do not reveal raw server content',()=>{const a=setup({});const message=a.errorMessage({message:'secret sensitive response',status:500},'en',true);assert.match(message,/create account/);assert.match(message,/500/);assert.doesNotMatch(message,/secret/);});
+
+test('recovery and confirmation use Supabase Auth and propagate failures',async()=>{
+ const calls=[];const a=setup({resetPasswordForEmail:async(email,options)=>{calls.push({email,options});return {data:{}}},resend:async(options)=>{calls.push(options);return {data:{}}},updateUser:async(options)=>{calls.push(options);return {data:{user:{id:'u'}}}}});
+ await a.resetPassword('a@example.test');await a.resendConfirmation('a@example.test');await a.updatePassword('test-only-password');
+ assert.equal(calls[0].email,'a@example.test');assert.equal(calls[1].type,'signup');assert.equal(calls[2].password,'test-only-password');
+ const broken=setup({resetPasswordForEmail:async()=>({error:new Error('delivery')})});await assert.rejects(broken.resetPassword('a@example.test'),/delivery/);
+});
