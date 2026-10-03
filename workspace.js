@@ -968,6 +968,8 @@
     const totalCycles = d.settings.cycles || 4;
 
     return `<div class="lx-focus-screen v3-focus-screen ${a.phase === "break" ? "is-break" : ""}">
+      <button type="button" class="v3-zen-exit-btn" data-action="zen-mode">✕ ${L("Exit Zen", "خروج من وضع زن")}</button>
+      <button type="button" class="v3-zen-cancel-btn" data-action="session-cancel">🗑️ ${L("Cancel session", "إلغاء الجلسة")}</button>
       <div class="lx-focus-top">
         ${btn("← " + L("Workspace", "الرئيسية"), "navigate", 'data-to="home" class="v3-back-btn"')}
         <div class="v3-focus-pill-top">
@@ -975,7 +977,6 @@
           <span>${a.phase === "break" ? L("Recovery Break", "استراحة") : esc(goal?.name || catName(a.categoryId))}</span>
         </div>
         ${btn("🧘 " + L("Zen", "زن"), "zen-mode", 'class="v3-zen-btn" title="Zen Focus"')}
-      <button type="button" class="v3-zen-exit-btn" data-action="zen-mode">✕ ${L("Exit Zen", "خروج من وضع زن")}</button>
       </div>
       
       <div class="v3-focus-header">
@@ -3267,3 +3268,9 @@
   document.addEventListener("lifeos:render", restoreWorkspaceRoute);
   restoreWorkspaceRoute();
 })();
+
+  window.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && document.body.classList.contains("v3-zen-mode-active")) {
+      document.body.classList.remove("v3-zen-mode-active");
+    }
+  });
