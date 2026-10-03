@@ -1670,3 +1670,214 @@ html[dir="rtl"] .v3-next-phase-card small {
   transform: translateY(-2px) !important;
   box-shadow: 0 8px 32px rgba(255, 255, 255, 0.32) !important;
 }
+
+
+/* ==========================================================================
+   V3 POLISH: TASK FOCUS PILL, IMMERSIVE ZEN MODE, TOPBAR CLUSTER
+   ========================================================================== */
+
+/* High-Contrast, Obvious Task Focus Pill */
+.lx-task-focus-pill {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  background: rgba(139, 92, 246, 0.18) !important;
+  border: 1px solid rgba(139, 92, 246, 0.45) !important;
+  color: #DDD6FE !important;
+  padding: 6px 14px !important;
+  border-radius: 99px !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  transition: all 0.15s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+  flex-shrink: 0 !important;
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+.lx-task-focus-pill .v3-btn-icon {
+  font-size: 10px !important;
+  color: #C4B5FD !important;
+}
+
+.lx-task-focus-pill:hover {
+  background: #8B5CF6 !important;
+  color: #FFFFFF !important;
+  border-color: #8B5CF6 !important;
+  box-shadow: 0 0 16px rgba(139, 92, 246, 0.55) !important;
+  transform: scale(1.05) !important;
+}
+
+.lx-task-focus-pill:hover .v3-btn-icon {
+  color: #FFFFFF !important;
+}
+
+.lx-task-focus-pill:active {
+  transform: scale(0.95) !important;
+}
+
+/* Zen Mode: 100% In-App Immersive Pure Black Focus */
+body.v3-zen-mode-active {
+  overflow: hidden !important;
+  background: #000000 !important;
+}
+
+body.v3-zen-mode-active .sidebar,
+body.v3-zen-mode-active .bottom-nav,
+body.v3-zen-mode-active .lx-topbar,
+body.v3-zen-mode-active .mobile-header,
+body.v3-zen-mode-active .lx-focus-top,
+body.v3-zen-mode-active .lx-focus-extras,
+body.v3-zen-mode-active .v3-session-dots-wrap,
+body.v3-zen-mode-active .v3-next-phase-card,
+body.v3-zen-mode-active .v3-focus-header p,
+body.v3-zen-mode-active .v3-zen-btn {
+  display: none !important;
+}
+
+body.v3-zen-mode-active .content,
+body.v3-zen-mode-active .app-main {
+  padding: 0 !important;
+  margin: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  max-width: 100vw !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: #000000 !important;
+}
+
+body.v3-zen-mode-active .v3-focus-screen {
+  padding: 0 !important;
+  margin: auto !important;
+  max-width: 480px !important;
+}
+
+.v3-zen-exit-btn {
+  display: none;
+}
+
+body.v3-zen-mode-active .v3-zen-exit-btn {
+  display: inline-flex !important;
+  position: fixed !important;
+  top: 24px !important;
+  inset-inline-end: 24px !important;
+  z-index: 99999 !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
+  color: #FFFFFF !important;
+  padding: 8px 18px !important;
+  border-radius: 99px !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  backdrop-filter: blur(20px) !important;
+  transition: all 0.15s ease !important;
+}
+
+body.v3-zen-mode-active .v3-zen-exit-btn:hover {
+  background: rgba(255, 255, 255, 0.16) !important;
+  transform: scale(1.05) !important;
+}
+
+/* Mobile Header: Sleek Cluster Layout */
+.mobile-header {
+  height: 58px !important;
+  background: rgba(0, 0, 0, 0.92) !important;
+  backdrop-filter: blur(24px) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  padding: 0 16px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 100 !important;
+}
+
+.v3-header-start {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.v3-header-page-title {
+  font-size: 15px;
+  font-weight: 750;
+  color: #FFFFFF;
+  letter-spacing: -0.2px;
+}
+
+.v3-header-cluster {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 99px;
+  padding: 3px 6px;
+}
+
+.v3-hdr-btn {
+  background: transparent !important;
+  border: none !important;
+  color: rgba(255, 255, 255, 0.8) !important;
+  font-size: 12px !important;
+  font-weight: 650 !important;
+  padding: 5px 8px !important;
+  border-radius: 99px !important;
+  cursor: pointer !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transition: all 0.15s ease !important;
+}
+
+.v3-hdr-btn:hover {
+  background: rgba(255, 255, 255, 0.12) !important;
+  color: #FFFFFF !important;
+}
+
+.v3-menu-svg {
+  width: 18px;
+  height: 18px;
+  stroke: #FFFFFF;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  display: block;
+}
+
+.v3-hdr-avatar {
+  width: 28px !important;
+  height: 28px !important;
+  border-radius: 50% !important;
+  background: rgba(139, 92, 246, 0.25) !important;
+  border: 1.5px solid #8B5CF6 !important;
+  color: #FFFFFF !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  transition: transform 0.15s ease !important;
+}
+
+.v3-hdr-avatar:hover {
+  transform: scale(1.08) !important;
+}
+
+/* Dial Center Clean Text */
+.v3-timer-dial-meta {
+  font-size: 13px !important;
+  font-weight: 550 !important;
+  color: rgba(255, 255, 255, 0.5) !important;
+  margin-top: 6px !important;
+  letter-spacing: 0.5px !important;
+  text-align: center !important;
+  max-width: 180px !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}

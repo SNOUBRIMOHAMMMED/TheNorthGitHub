@@ -30,9 +30,7 @@
   const currentEmail = () => localStorage.getItem(C.SESSION_KEY) || "";
   // Only server-managed app_metadata represents an entitlement.
   const userTier = () => {
-    const user = window.NorthAuth?.cachedUser;
-    return user?.email?.toLowerCase() === currentEmail().toLowerCase() &&
-      user.app_metadata?.tier === "pro" ? "pro" : "core";
+    return "pro"; // All features unlocked for everyone
   };
   const ar = () => document.documentElement.lang === "ar";
   const L = (en, arabic) => (ar() ? arabic : en);
@@ -57,7 +55,7 @@
     notifications: ["Signals", "الإشارات"],
     account: ["Settings", "الإعدادات"],
   };
-  const primaryRoutes = ["home", "goals", "tasks", "focus", "analytics", "finances"];
+  const primaryRoutes = ["home", "goals", "tasks", "habits", "finances", "analytics", "focus"];
   const secondaryRoutes = Object.keys(labels).filter(k => !primaryRoutes.includes(k) && k !== "account");
   const name = (k) => (labels[k] ? L(...labels[k]) : k);
   const catName = (k) =>
@@ -300,12 +298,13 @@
     const primary = primaryRoutes;
     const secondary = secondaryRoutes;
     $(".side-nav").innerHTML = primary.map(navItem).join("") +
-      `<details class="lx-nav-more" ${secondary.includes(route) ? "open" : ""}><summary>${L("More", "المزيد")}</summary>${secondary.map(navItem).join("")}</details>`;
+      `<details class="lx-nav-more"><summary>${L("More", "المزيد")}</summary>${secondary.map(navItem).join("")}</details>`;
     const dockIcon = (k) => {
       const flat = {
         home: '<path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1Z"/>',
         goals: '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/><path d="M16.5 7.5 21 3"/>',
         tasks: '<rect x="3" y="4" width="18" height="16" rx="3"/><path d="m8 12 2.5 2.5L16 9"/><path d="M8 8h8M8 16h4"/>',
+        finances: '<rect width="20" height="14" x="2" y="5" rx="3"/><line x1="2" x2="22" y1="10" y2="10"/><circle cx="16" cy="15" r="1.5"/>',
         focus: '<circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M10 2h4M12 2v2"/>',
         account: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/>',
         more: '<path d="M5 6h14M5 12h14M5 18h14"/>'
@@ -313,15 +312,14 @@
       if (flat[k]) return `<svg viewBox="0 0 24 24" aria-hidden="true">${flat[k]}</svg>`;
       return icon(k);
     };
-    const mobileRoutes = ["home", "goals", "tasks", "focus", "account"];
+    const mobileRoutes = ["home", "goals", "tasks", "finances", "account"];
     const bottomNavEl = $(".bottom-nav");
     if (bottomNavEl) {
       bottomNavEl.innerHTML = mobileRoutes.map(k => {
         const isAct = route === k || (k === "account" && route === "account");
-        const labelText = k === "focus" ? L("Pomodoro", "التركيز") : (k === "account" ? L("Settings", "الإعدادات") : name(k));
-        const activeTag = (k === "focus" && d.activeSession) ? `<span class="v3-dock-active-tag">ACTIVE</span>` : '';
+        const labelText = k === "finances" ? L("Finances", "المال") : (k === "account" ? L("Settings", "الإعدادات") : name(k));
         return `<button class="bottom-item ${isAct ? "active" : ""}" data-route="${k}" aria-label="${labelText}" ${isAct ? 'aria-current="page"' : ""}>
-          <span class="dock-icon-wrap">${activeTag}${dockIcon(k)}<i class="active-dot" aria-hidden="true"></i></span>
+          <span class="dock-icon-wrap">${dockIcon(k)}<i class="active-dot" aria-hidden="true"></i></span>
           <small>${labelText}</small>
         </button>`;
       }).join("");
@@ -332,25 +330,20 @@
     // Mobile header: hide the big wordmark text, show page name as small label
     const mh = $(".mobile-header");
     if (mh) {
-      const wordmark = mh.querySelector(".north-name");
-      if (wordmark) wordmark.style.display = "none";
-      let pageLabel = mh.querySelector(".lx-mobile-page");
-      if (!pageLabel) {
-        pageLabel = document.createElement("span");
-        pageLabel.className = "lx-mobile-page";
-        mh.querySelector(".side-brand")?.after(pageLabel);
-      }
-      pageLabel.textContent = name(route);
-      if (!mh.querySelector("[data-action=menu]")) {
-        const menuButton = document.createElement("button");
-        menuButton.type = "button"; menuButton.dataset.action = "menu";
-        menuButton.className = "north-mobile-menu";
-        menuButton.setAttribute("aria-haspopup", "dialog");
-        mh.append(menuButton);
-      }
-      const menuButton = mh.querySelector("[data-action=menu]");
-      menuButton.innerHTML = dockIcon("more");
-      menuButton.setAttribute("aria-label", L("More sections", "المزيد من الأقسام"));
+      const initial = (db.read()?.profile?.name || (isAdmin() ? "محمد" : "N")).slice(0, 1).toUpperCase();
+      mh.innerHTML = `<div class="v3-header-start">
+        <span class="brand-mark lifeos-mark" aria-hidden="true"></span>
+        <span class="v3-header-page-title">${name(route)}</span>
+      </div>
+      <div class="v3-header-cluster">
+        <button type="button" class="v3-hdr-btn" data-action="language">${ar() ? "EN" : "عربي"}</button>
+        <button type="button" class="v3-hdr-btn v3-hdr-menu" data-action="menu" aria-label="${L("Explore", "الأقسام")}">
+          <svg viewBox="0 0 24 24" class="v3-menu-svg"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/></svg>
+        </button>
+        <button type="button" class="v3-hdr-avatar" data-action="navigate" data-to="account" aria-label="${L("Settings", "الإعدادات")}">
+          <span>${esc(initial)}</span>
+        </button>
+      </div>`;
     }
     $("#lxCommand").setAttribute(
       "aria-label",
@@ -981,7 +974,8 @@
           <span class="v3-dot"></span>
           <span>${a.phase === "break" ? L("Recovery Break", "استراحة") : esc(goal?.name || catName(a.categoryId))}</span>
         </div>
-        ${btn("🧘 " + L("Zen", "زن"), "zen-mode", 'class="v3-zen-btn" title="Fullscreen / ملء الشاشة"')}
+        ${btn("🧘 " + L("Zen", "زن"), "zen-mode", 'class="v3-zen-btn" title="Zen Focus"')}
+      <button type="button" class="v3-zen-exit-btn" data-action="zen-mode">✕ ${L("Exit Zen", "خروج من وضع زن")}</button>
       </div>
       
       <div class="v3-focus-header">
@@ -1053,7 +1047,18 @@
   function taskRow(t, d) {
     const all = C.reportSessions(d),
       actual = C.duration(all, 0, Infinity, (s) => s.taskId === t.id);
-    return `<div class="lx-task-row ${t.done ? "is-done" : ""}"><button class="lx-check" data-action="task-toggle" data-id="${t.id}" role="checkbox" aria-checked="${!!t.done}" aria-label="${esc(t.title)}">${t.done ? "✓" : ""}</button><button class="lx-task-title" data-action="edit" data-kind="tasks" data-id="${t.id}"><strong>${esc(t.title)}</strong><small>${esc(d.projects.find((p) => p.id === t.projectId)?.name || d.goals.find((g) => g.id === t.goalId)?.name || L("Independent task", "مهمة مستقلة"))} · ${dateText(t.date)} ${t.estimatedHours ? " · " + hrs(actual) + " / " + t.estimatedHours + L("h", "س") : ""}</small></button><span class="lx-priority ${t.priority}">${L(t.priority || "medium", { high: "عالية", medium: "متوسطة", low: "منخفضة" }[t.priority] || "متوسطة")}</span>${btn(icon("focus"), "task-focus", `data-id="${t.id}" aria-label="${L("Focus on", "ركز على")} ${esc(t.title)}"`)}</div>`;
+    return `<div class="lx-task-row ${t.done ? "is-done" : ""}">
+      <button class="lx-check" data-action="task-toggle" data-id="${t.id}" role="checkbox" aria-checked="${!!t.done}" aria-label="${esc(t.title)}">${t.done ? "✓" : ""}</button>
+      <button class="lx-task-title" data-action="edit" data-kind="tasks" data-id="${t.id}">
+        <strong>${esc(t.title)}</strong>
+        <small>${esc(d.projects.find((p) => p.id === t.projectId)?.name || d.goals.find((g) => g.id === t.goalId)?.name || L("Independent task", "مهمة مستقلة"))} · ${dateText(t.date)} ${t.estimatedHours ? " · " + hrs(actual) + " / " + t.estimatedHours + L("h", "س") : ""}</small>
+      </button>
+      <span class="lx-priority ${t.priority}">${L(t.priority || "medium", { high: "عالية", medium: "متوسطة", low: "منخفضة" }[t.priority] || "متوسطة")}</span>
+      <button type="button" class="lx-task-focus-pill" data-action="task-focus" data-id="${t.id}" title="${L("Start Focus Session", "ابدأ جلسة تركيز")}">
+        <span class="v3-btn-icon">▶</span>
+        <span>${L("Focus", "تركيز")}</span>
+      </button>
+    </div>`;
   }
   function tasks(d) {
     const list = d.tasks
@@ -2056,7 +2061,7 @@
       document.querySelector('[data-view-panel="account"]').prepend(panel);
     }
     panel.innerHTML = cloudPanel() +
-      `<section class="lx-card lx-margin" style="margin-bottom:16px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.08)"><div class="lx-card-head"><div><div class="lx-eyebrow">${L("MEMBERSHIP", "العضوية والاشتراك")}</div><h2>${L("THE NORTH Plans & Upgrades", "باقات THE NORTH والترقية")}</h2></div>${btn(L("View Plans", "عرض الباقات"), "pricing", 'class="lx-btn lx-primary"')}</div><p class="lx-muted">${L("Choose your velocity tier. Autonomous AI Executive Coach coming soon.", "اختر باقة سرعتك التنفيذية. المدرب التنفيذي الذكي قريباً.")}</p></section>` +
+      "" +
       `<section class="lx-card lx-margin" style="margin-bottom:16px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.08)"><div class="lx-card-head"><div><div class="lx-eyebrow">${L("FEEDBACK", "صوتك وملاحظاتك")}</div><h2>${L("Help Shape THE NORTH", "شاركنا رؤيتك لتطوير التطبيق")}</h2></div>${btn("💡 " + L("Share feedback", "شاركنا اقتراحك"), "feedback")}</div><p class="lx-muted">${L("Tell us what would make you 10x more effective. Your suggestions directly guide our engineering roadmap.", "أخبرنا بما يضاعف كفاءتك 10 مرات. ملاحظاتك تقود خارطة تطويرنا مباشرة دون إزعاج.")}</p></section>` +
       `<h2>${L("Your operating preferences", "تفضيلات نظامك")}</h2><form id="lxSettingsForm"><div class="lx-fields-three">${select(
       L("Theme", "المظهر"),
@@ -2266,8 +2271,15 @@
     if (a === "navigate") navigate(b.dataset.to);
     if (a === "language") window.LifeLegacy.toggleLang();
     if (a === "zen-mode") {
-      if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(()=>{});
-      else document.exitFullscreen();
+      const isZen = document.body.classList.toggle("v3-zen-mode-active");
+      try {
+        if (isZen && document.documentElement.requestFullscreen) {
+          document.documentElement.requestFullscreen().catch(() => {});
+        } else if (!isZen && document.fullscreenElement && document.exitFullscreen) {
+          document.exitFullscreen().catch(() => {});
+        }
+      } catch {}
+      return;
     }
     if (a === "shutdown") {
       const today = C.day();
@@ -2337,7 +2349,7 @@
           </div>`,
       );
     if (a === "feedback") openFeedbackModal();
-    if (a === "pricing") openPricingModal();
+    if (a === "pricing") return;
     if (a === "upgrade-pro") {
       $("#lxDialog").close();
       notice(L("Bank card payment integration is in progress. Core tier is active — you will be notified immediately once direct card payment goes live.", "بوابة الدفع البنكي الإلكتروني قيد الربط والتفعيل — تم تفعيل الباقة العادية لك حالياً، وستصلك رسالة إشعار للترقية فور اكتمال الربط."));
@@ -3026,7 +3038,7 @@
     const timer = $("#lxTimer");
     if (timer) {
       timer.textContent = fmtMinSec(time);
-      $("#lxTimerMeta").textContent =
+      $("#lxTimerMeta").textContent = a.phase === "break" ? L("Break Time", "فترة راحة") : L("Deep Focus", "جلسة تركيز"); // 
         (a.phase === "break"
           ? L("Break", "استراحة")
           : a.status === "completed"
