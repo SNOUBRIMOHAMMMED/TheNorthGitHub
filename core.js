@@ -732,7 +732,27 @@
     return h;
   }
 
+  function goalProgress(goal, data) {
+    if (!goal) return 0;
+    if (goal.progressMode === "time") {
+      const target = Number(goal.targetHours);
+      if (!(target > 0) || !Number.isFinite(target)) return 0;
+      const worked = duration(reportSessions(data), 0, Infinity, s => s.goalId === goal.id);
+      return Math.round(Math.max(0, Math.min(100, worked / (target * 3600000) * 100)) * 10) / 10;
+    }
+    return num(goal.progress, 0, 100);
+  }
+  function plannedGoalProgress(goal, now = Date.now()) {
+    if (!goal?.startDate || !goal.deadline) return null;
+    const start = +new Date(goal.startDate + "T00:00:00");
+    const end = +new Date(goal.deadline + "T23:59:59");
+    if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) return null;
+    return Math.round(Math.max(0, Math.min(100, (now-start)/(end-start)*100)));
+  }
+
   return {
+    goalProgress,
+    plannedGoalProgress,
     completeTask,
     habitStreak,
     habitDue,

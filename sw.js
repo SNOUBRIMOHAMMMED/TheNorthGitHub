@@ -1,8 +1,8 @@
 /* Offline shell only. Never intercept external traffic or clear other apps' caches. */
-const CACHE = "lifeos-v4-20261003-save-fix";
+const CACHE = "lifeos-v4-20261003-system-fix";
 const ASSETS = [
   "north-brand.css",
-  "north-brand.css?v=20261003",
+  "north-brand.css?v=20261003-system-fix",
   "landing-motion.js",
   "landing-motion.js?v=3",
   "assets/north-summit.webp",
@@ -24,11 +24,11 @@ const ASSETS = [
   "cloud-sync.js",
   "cloud-sync.js?v=auto2",
   "core.js",
-  "core.js?v=auto2",
+  "core.js?v=20261003-system-fix",
   "app.js",
-  "app.js?v=auto2",
+  "app.js?v=20261003-system-fix",
   "workspace.js",
-  "workspace.js?v=20261003-save-fix",
+  "workspace.js?v=20261003-system-fix",
   "manifest.webmanifest",
   "brand-mark.svg",
   "icon-180.png",

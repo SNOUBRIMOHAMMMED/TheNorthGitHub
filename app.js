@@ -405,12 +405,12 @@ function applyLang(){
     [...cat.options].forEach((opt,i)=>{ if(categoryKeys[i]) opt.textContent=t(categoryKeys[i]); });
   }
   const ar=lang==="ar";
-  $("#authLangBtn").textContent=ar?"English":"العربية";
+  if($("#authLangBtn")) $("#authLangBtn").textContent=ar?"English":"العربية";
   if($("#planLangBtn")) $("#planLangBtn").textContent=ar?"English":"العربية";
-  $("#landingLangBtn").textContent=ar?"English":"العربية";
-  $("#langBtn").textContent=ar?"English":"العربية";
-  $("#mobileLangBtn").textContent=ar?"EN":"AR";
-  $("#accountLangBtn").textContent=ar?"English":"العربية";
+  if($("#landingLangBtn")) $("#landingLangBtn").textContent=ar?"English":"العربية";
+  if($("#langBtn")) $("#langBtn").textContent=ar?"English":"العربية";
+  if($("#mobileLangBtn")) $("#mobileLangBtn").textContent=ar?"EN":"AR";
+  if($("#accountLangBtn")) $("#accountLangBtn").textContent=ar?"English":"العربية";
   if(account())renderAll();
 }
 function toggleLang(){
@@ -474,7 +474,7 @@ $("#skipToLoginBtn")&&( $("#skipToLoginBtn").onclick=()=>openAuth("login") );
 $("#landingLogo").onclick=(e)=>{e.preventDefault();showLanding()};
 $$("[data-scroll-how]").forEach(b=>b.onclick=()=>($("#the-science")||$("#howItWorks")).scrollIntoView({behavior:"smooth"}));
 $$("[data-waitlist-ai]").forEach(b=>b.onclick=()=>toast(currentLang()==="ar" ? "المدرب الذكي غير متاح بعد. لم يتم إرسال تسجيل في قائمة انتظار." : "The AI coach is not available yet. No waitlist registration was submitted."));
-$("#authLangBtn").onclick=toggleLang;$("#landingLangBtn").onclick=toggleLang;$("#langBtn").onclick=toggleLang;$("#mobileLangBtn").onclick=toggleLang;$("#accountLangBtn").onclick=toggleLang;
+if($("#authLangBtn")) $("#authLangBtn").onclick=toggleLang;if($("#landingLangBtn")) $("#landingLangBtn").onclick=toggleLang;if($("#langBtn")) $("#langBtn").onclick=toggleLang;if($("#mobileLangBtn")) $("#mobileLangBtn").onclick=toggleLang;if($("#accountLangBtn")) $("#accountLangBtn").onclick=toggleLang;
 
 async function sendAccountEmail(kind, button) {
   const input = $("#loginEmail");

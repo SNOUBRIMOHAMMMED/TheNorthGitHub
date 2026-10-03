@@ -88,6 +88,7 @@
     home: ["Home", "الرئيسية"],
     goals: ["Goals", "الأهداف"],
     tasks: ["Tasks", "المهام"],
+    focus: ["Focus", "التركيز"],
     finances: ["Finances", "المال"],
     analytics: ["Analytics", "التحليلات"],
     dashboard: ["Momentum", "زخم الأهداف"],
@@ -97,7 +98,7 @@
   };
   const primaryRoutes = ["home", "goals", "tasks", "finances", "analytics"];
   const secondaryRoutes = ["dashboard", "planner", "notifications", "account"];
-  const name = (k) => (labels[k] ? L(...labels[k]) : k);
+  const name = (k) => (labels[k] ? L(...labels[k]) : k === "projects" ? L("Projects", "المشاريع") : k);
   const catName = (k) =>
     ({
       "Deep Work": L("Deep Work", "عمل عميق"),
@@ -337,8 +338,9 @@
   function chrome(d) {
     const primary = primaryRoutes;
     const secondary = secondaryRoutes;
+    const moreOpen = !!$(".side-nav .lx-nav-more")?.open;
     $(".side-nav").innerHTML = primary.map(navItem).join("") +
-      `<details class="lx-nav-more"><summary>${L("More", "المزيد")}</summary>${secondary.map(navItem).join("")}</details>`;
+      `<details class="lx-nav-more" ${moreOpen ? "open" : ""}><summary>${L("More", "المزيد")}</summary>${secondary.map(navItem).join("")}</details>`;
     const dockIcon = (k) => {
       const flat = {
         home: '<path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1Z"/>',
@@ -506,6 +508,8 @@
         return home(d);
       case "tasks":
         return tasks(d);
+      case "focus":
+        return focus(d);
       case "goals":
         return goals(d);
       case "finances":
@@ -526,29 +530,7 @@
   }
 
   function calcGoalProgress(g, d) {
-    if (!g) return 0;
-    const ts = d.tasks.filter((t) => t.goalId === g.id && !t.archived);
-    const all = C.reportSessions(d);
-    const timeMs = C.duration(all, 0, Infinity, (s) => s.goalId === g.id);
-    const timeHours = timeMs / 3600000;
-    let targetHours = g.targetHours || 0;
-    if (!targetHours) {
-      if (g.deadline) {
-        const created = g.createdAt || (Date.now() - 30 * 86400000);
-        const totalDays = Math.max(7, Math.ceil((+new Date(g.deadline + "T23:59:59") - created) / 86400000));
-        targetHours = Math.max(5, Math.round(totalDays * 0.5));
-      } else {
-        targetHours = Math.max(10, (ts.length || 1) * 2);
-      }
-    }
-    const timeScore = Math.min(100, (timeHours / targetHours) * 100);
-    if (ts.length > 0) {
-      const doneCount = ts.filter((t) => t.done).length;
-      const taskScore = (doneCount / ts.length) * 100;
-      if (ts.every((t) => t.done)) return 100;
-      return Math.min(100, Math.max(0, Math.round(taskScore * 0.65 + timeScore * 0.35)));
-    }
-    return Math.min(100, Math.max(0, Math.round(timeScore)));
+    return C.goalProgress(g, d);
   }
 
   function goalBoard(d) {
@@ -562,7 +544,7 @@
           const values = points.length
             ? points.map((h) => h.value)
             : [g.momentum || 0, g.momentum || 0];
-          return `<button class="lx-goal-tile" data-route="goals" data-id="${esc(g.id)}"><strong>${esc(g.name)}</strong><span class="lx-goal-value">${g.progress}% <small>${L("of 100%", "من 100%")}</small></span><svg viewBox="0 0 240 70" role="img" aria-label="${L("Recorded momentum history", "سجل زخم الهدف الفعلي")}" preserveAspectRatio="none"><path d="M0 69H240" stroke="var(--lx-line)"/><polyline points="${values.map((v, i) => `${(i * 240) / Math.max(1, values.length - 1)},${65 - Math.max(0, Math.min(100, v)) * 0.6}`).join(" ")}" fill="none" stroke="currentColor" stroke-width="3"/></svg><small>${L("Momentum history · progress below", "سجل الزخم · نسبة الإنجاز أدناه")}</small>${progress(g.progress)}<small>${g.deadline ? L("Destination date: ", "موعد الوصول: ") + dateText(g.deadline) : L("Set a destination date", "حدد موعد الوصول")} · ${100 - g.progress}% ${L("remaining", "متبقٍ")}</small></button>`;
+          return `<button class="lx-goal-tile" data-route="goals" data-id="${esc(g.id)}"><strong>${esc(g.name)}</strong><span class="lx-goal-value">${calcGoalProgress(g, d)}% <small>${L("of 100%", "من 100%")}</small></span><svg viewBox="0 0 240 70" role="img" aria-label="${L("Recorded momentum history", "سجل زخم الهدف الفعلي")}" preserveAspectRatio="none"><path d="M0 69H240" stroke="var(--lx-line)"/><polyline points="${values.map((v, i) => `${(i * 240) / Math.max(1, values.length - 1)},${65 - Math.max(0, Math.min(100, v)) * 0.6}`).join(" ")}" fill="none" stroke="currentColor" stroke-width="3"/></svg><small>${L("Momentum history · progress below", "سجل الزخم · نسبة الإنجاز أدناه")}</small>${progress(calcGoalProgress(g, d))}<small>${g.deadline ? L("Destination date: ", "موعد الوصول: ") + dateText(g.deadline) : L("Set a destination date", "حدد موعد الوصول")} · ${100 - calcGoalProgress(g, d)}% ${L("remaining", "متبقٍ")}</small></button>`;
         })
         .join("") ||
       empty(L("Your first goal starts here.", "ابدأ هنا بأول هدف لك."), "goals")
@@ -601,31 +583,27 @@
     { id: "other", icon: "📋", en: "Other", ar: "أخرى ومتنوعات", color: "#64748B", type: "expense" }
   ];
 
-  function getCategoryInfo(catName) {
-    if (!catName) return { id: "other", icon: "🏷️", en: "Other", ar: "أخرى", color: "#64748B" };
-    const lower = String(catName).toLowerCase().trim();
-    for (const c of financeCategories) {
-      if (
-        c.id === lower ||
-        c.en.toLowerCase() === lower ||
-        c.ar.toLowerCase() === lower ||
-        c.en.toLowerCase().includes(lower) ||
-        lower.includes(c.id) ||
-        (lower.includes("karya") && c.id === "housing") ||
-        (lower.includes("rent") && c.id === "housing") ||
-        (lower.includes("makla") && c.id === "food") ||
-        (lower.includes("masrof") && c.id === "pocket") ||
-        (lower.includes("credi") && c.id === "debt") ||
-        (lower.includes("jop") && c.id === "salary") ||
-        (lower.includes("job") && c.id === "salary") ||
-        (lower.includes("cource") && c.id === "education") ||
-        (lower.includes("book") && c.id === "education") ||
-        (lower.includes("fee") && c.id === "bank") ||
-        (lower.includes("phone") && c.id === "telecom") ||
-        (lower.includes("internet") && c.id === "internet")
-      ) return c;
+  function getCategoryInfo(catName, type) {
+    const raw = String(catName || "").trim();
+    const lower = raw.toLowerCase();
+    const candidates = financeCategories.filter(c => !type || c.type === type);
+    const exact = candidates.find(c => [c.id, c.en, c.ar].some(v => v.toLowerCase() === lower));
+    if (exact) return exact;
+    const aliases = {salary: ["salary", "job", "jop"], housing:["karya", "rent", "housing"], food:["makla", "food", "dining"], pocket:["masrof", "pocket"], debt:["credi", "debt"], education:["cource", "course", "book", "education"], bank:["fee", "bank"], telecom:["phone", "mobile"], internet:["internet"], tools:["tools"], subscriptions:["subscription"], savings:["saving", "invest"]};
+    const alias = candidates.find(c => aliases[c.id]?.some(v => lower.includes(v)));
+    if (alias) return alias;
+    return {id: raw ? "custom:" + lower : "other", icon:"🏷️", en:raw || "Other", ar:raw || "أخرى", color:"#818CF8", type};
+  }
+
+  function expenseGroups(rows) {
+    const groups = new Map();
+    for (const row of rows.filter(x => x.type !== "income")) {
+      const info = getCategoryInfo(row.category, "expense");
+      const entry = groups.get(info.id) || {...info, amount:0};
+      entry.amount += Math.round(Number(row.amount || 0) * 100);
+      groups.set(info.id, entry);
     }
-    return { id: "custom", icon: "🏷️", en: catName, ar: catName, color: "#818CF8" };
+    return [...groups.values()].sort((a,b) => b.amount-a.amount);
   }
 
   function getStartingBalance(d, m) {
@@ -633,36 +611,21 @@
       return d.settings.monthlyStartingBalance[m];
     }
     if (typeof d?.settings?.startingBalance === "number") return d.settings.startingBalance;
-    return 8000;
+    return 0;
   }
 
   function getDebts(d) {
-    if (Array.isArray(d?.settings?.debts) && d.settings.debts.length > 0) return d.settings.debts;
-    return [
-      { id: "debt_credi_mohammed", name: "Credi mohammed", totalAmount: 2500, paidAmount: 500, note: "سلفة والتزامات شخصية" }
-    ];
+    return Array.isArray(d?.settings?.debts) ? d.settings.debts : [];
   }
 
   function getFinancePlan(d, m) {
-    if (d?.settings?.financePlans && d.settings.financePlans[m]) {
-      return d.settings.financePlans[m];
-    }
+    const saved = d?.settings?.financePlans?.[m];
     return {
-      income: [
-        { source: "Salary", amount: 5000, label: "الراتب (Salary)" },
-        { source: "Business / Dividends", amount: 2000, label: "أرباح واستثمارات (Business)" }
-      ],
-      expenses: [
-        { category: "Housing / Rent (Lkarya)", amount: 3000, label: "الكراء / السكن (Lkarya)" },
-        { category: "Food & Dining (lmakla)", amount: 1000, label: "الأكل والمطاعم (lmakla)" },
-        { category: "Phone & Mobile", amount: 30, label: "الهاتف (Mobile phone)" },
-        { category: "Internet", amount: 30, label: "الإنترنت (Internet)" },
-        { category: "Subscriptions", amount: 50, label: "الاشتراكات والبرامج" }
-      ]
+      income: (saved?.income || []).map(x => ({...x, source: x.source || x.category || ""})),
+      expenses: saved?.expenses || []
     };
   }
 
-  
   async function setStartingBalance(m, amount) {
     return mutate((d) => {
       if (!d.settings) d.settings = {};
@@ -714,21 +677,23 @@
       remainingDebts = Math.max(0, totalDebts - paidDebts),
       savingsRate = income > 0 ? Math.max(0, Math.round(((income - spent) / income) * 100)) : 0;
 
-    const totalDays = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate();
-    const currentDay = new Date().getDate();
+    const now = new Date(), [year, monthNumber] = curMonth.split("-").map(Number);
+    const totalDays = new Date(year, monthNumber, 0).getDate();
+    const currentMonth = C.day().slice(0, 7);
+    const currentDay = curMonth < currentMonth ? totalDays : curMonth > currentMonth ? 0 : now.getDate();
     const monthProgress = currentDay / totalDays;
-    const spentRatio = plannedSpent > 0 ? spent / plannedSpent : (income > 0 ? spent / income : 0);
+    const spentRatio = plannedSpent > 0 ? spent / plannedSpent : 0;
 
     let advice = "";
-    if (spentRatio > monthProgress + 0.15) {
+    if (plannedSpent > 0 && spentRatio > monthProgress + 0.15) {
       advice = `<div class="lx-advice-card warning">⚠️ <strong>${L("Burn Rate Alert", "تنبيه سرعة الإنفاق")}</strong>: ${L("Your expenses are outpacing this month’s timeline. Watch discretionary purchases.", "سرعة إنفاقك تسبق الأيام المتبقية من الشهر. حاول ضبط المصاريف الجانبية.")}</div>`;
     } else if (remainingDebts > 0 && paidDebts === 0) {
       advice = `<div class="lx-advice-card info">🤝 <strong>${L("Debt Repayment", "إدارة الالتزامات")}</strong>: ${L("You have active debts. Logging installments regularly helps achieve full financial freedom.", "لديك ديون مستحقة مسجلة. ننصح بتسجيل دفعات منتظمة لتصفيتها وتحقيق الاستقرار المالي.")}</div>`;
-    } else if (income > 0 && spentRatio < monthProgress - 0.08) {
+    } else if (plannedSpent > 0 && income > 0 && spentRatio < monthProgress - 0.08) {
       advice = `<div class="lx-advice-card good">✅ <strong>${L("Masterful Discipline", "انضباط مالي ممتاز")}</strong>: ${L("Spending is well under your monthly planned targets. Great savings discipline!", "المصاريف أقل من المخطط لها ومعدل الادخار إيجابي. استمر على هذا النهج المميز!")}</div>`;
     }
 
-    const categoriesOptions = financeCategories.map(c => `<option value="${esc(c.en)}">${c.icon} ${esc(ar() ? c.ar : c.en)}</option>`).join("");
+    const categoriesOptions = financeCategories.filter(c => c.type === "expense").map(c => `<option value="${esc(c.en)}">${c.icon} ${esc(ar() ? c.ar : c.en)}</option>`).join("");
 
     return (
       `<div class="lx-page-head v3-finance-page-head">
@@ -743,9 +708,10 @@
             <span class="v3-finance-month-label">${formatFinanceMonth(curMonth)}</span>
             <button type="button" class="v3-month-arrow-btn" data-action="finance-month-next" title="${L("Next month", "الشهر التالي")}">›</button>
           </div>
-          ${btn("✏️ " + L("Starting Balance", "الرصيد الافتتاحي"), "finance-start-balance", 'class="lx-btn lx-secondary"')}
+          <details class="lx-details"><summary>${L("Budget & export", "الميزانية والتصدير")}</summary><div class="lx-menu-actions">          ${btn("✏️ " + L("Starting Balance", "الرصيد الافتتاحي"), "finance-start-balance", 'class="lx-btn lx-secondary"')}
           ${btn("⚙️ " + L("Budget Plan", "خطة الميزانية"), "finance-plan-edit", 'class="lx-btn lx-secondary"')}
           ${btn("📥 " + L("Export CSV", "تصدير CSV"), "export-finance", 'class="lx-btn lx-secondary"')}
+</div></details>
           ${btn("+ " + L("Transaction", "معاملة"), "new", 'data-kind="finances"', true)}
         </div>
       </div>` +
@@ -772,7 +738,7 @@
           <strong class="v3-kpi-val" dir="auto" style="color:#10B981">${money(income)}</strong>
           <div class="v3-kpi-sub">
             <span>${L("Plan:", "المخطط:")} ${money(plannedIncome)}</span>
-            <span class="v3-kpi-badge ${income >= plannedIncome ? 'good' : 'neutral'}">${plannedIncome > 0 ? Math.round((income / plannedIncome) * 100) : 100}%</span>
+            <span class="v3-kpi-badge ${income >= plannedIncome ? 'good' : 'neutral'}">${plannedIncome > 0 ? Math.round((income / plannedIncome) * 100) + "%" : L("No plan", "لم تُحدّد خطة")}</span>
           </div>
         </div>
 
@@ -784,7 +750,7 @@
           <strong class="v3-kpi-val" dir="auto" style="color:#F43F5E">${money(spent)}</strong>
           <div class="v3-kpi-sub">
             <span>${L("Plan:", "المخطط:")} ${money(plannedSpent)}</span>
-            <span class="v3-kpi-badge ${spent <= plannedSpent ? 'good' : 'warning'}">${spent <= plannedSpent ? (L("Saved:", "وفرت:") + " " + money(plannedSpent - spent)) : (L("Over:", "تجاوز:") + " " + money(spent - plannedSpent))}</span>
+            <span class="v3-kpi-badge ${spent <= plannedSpent ? 'good' : 'warning'}">${plannedSpent <= 0 ? L("No budget", "لم تُحدّد ميزانية") : spent <= plannedSpent ? (L("Saved:", "وفرت:") + " " + money(plannedSpent - spent)) : (L("Over:", "تجاوز:") + " " + money(spent - plannedSpent))}</span>
           </div>
         </div>
 
@@ -855,7 +821,7 @@
                 <span>${L("Today marker", "مؤشر تقدم الشهر")} (${Math.round(monthProgress * 100)}%)</span>
                 <span>100%</span>
               </div>
-              <p class="lx-muted" style="margin-top:14px;">${L("Keep the spent bar behind the today marker to ensure positive cash flow at month end.", "احرص على بقاء شريط الإنفاق متأخرًا عن مؤشر اليوم لضمان فائض مالي بنهاية الشهر.")}</p>
+              <p class="lx-muted" style="margin-top:14px;">${plannedSpent > 0 ? L("Compare spending with the budget you set. The date marker is a pacing guide, not a prediction.", "قارن الإنفاق بميزانيتك. مؤشر الأيام يساعد على تنظيم الصرف ولا يتنبأ بالرصيد.") : L("Set a monthly budget to compare your spending with your plan.", "حدّد ميزانية شهرية لمقارنة مصاريفك بخطتك.")}</p>
             </section>
 
             <section class="lx-card">
@@ -864,8 +830,8 @@
                 <button type="button" class="lx-btn lx-secondary" data-action="finance-tab" data-tab="plan">${L("All Categories", "كل الفئات")}</button>
               </div>
               <div class="v3-top-cat-list">
-                ${financeCategories.filter(c => c.type === "expense").map(c => {
-                  const catSpent = rows.filter(x => x.type !== "income" && getCategoryInfo(x.category).id === c.id).reduce((s, x) => s + Math.round(Number(x.amount || 0) * 100), 0);
+                ${expenseGroups(rows).map(c => {
+                  const catSpent = c.amount;
                   if (!catSpent) return "";
                   const pct = spent > 0 ? Math.round((catSpent / spent) * 100) : 0;
                   return `<div class="v3-cat-bar-row">
@@ -887,7 +853,7 @@
             </div>
             <div class="lx-tx-list">
               ${rows.slice(0, 6).map((x) => {
-                const catInfo = getCategoryInfo(x.category || "");
+                const catInfo = getCategoryInfo(x.category || "", x.type === "income" ? "income" : "expense");
                 return `<button class="lx-list-button lx-tx-item" data-action="edit" data-kind="finances" data-id="${esc(x.id)}">
                   <span class="lx-cat-icon" style="background:${catInfo.color}20">${catInfo.icon}</span>
                   <div class="lx-tx-details">
@@ -911,9 +877,9 @@
               </div>
               <div class="v3-plan-list">
                 ${plan.expenses.map((pe) => {
-                  const catInfo = getCategoryInfo(pe.category);
+                  const catInfo = getCategoryInfo(pe.category, "expense");
                   const pTarget = Math.round(Number(pe.amount || 0) * 100);
-                  const act = rows.filter(x => x.type !== "income" && (getCategoryInfo(x.category).id === catInfo.id || x.category === pe.category)).reduce((s, x) => s + Math.round(Number(x.amount || 0) * 100), 0);
+                  const act = rows.filter(x => x.type !== "income" && (getCategoryInfo(x.category, x.type === "income" ? "income" : "expense").id === catInfo.id || x.category === pe.category)).reduce((s, x) => s + Math.round(Number(x.amount || 0) * 100), 0);
                   const pct = pTarget > 0 ? Math.round((act / pTarget) * 100) : 0;
                   const diff = pTarget - act;
                   return `<div class="v3-plan-row">
@@ -941,9 +907,9 @@
               </div>
               <div class="v3-plan-list">
                 ${plan.income.map((pi) => {
-                  const catInfo = getCategoryInfo(pi.source);
+                  const catInfo = getCategoryInfo(pi.source, "income");
                   const pTarget = Math.round(Number(pi.amount || 0) * 100);
-                  const act = rows.filter(x => x.type === "income" && (getCategoryInfo(x.category).id === catInfo.id || x.category === pi.source || x.title.toLowerCase().includes(pi.source.toLowerCase()))).reduce((s, x) => s + Math.round(Number(x.amount || 0) * 100), 0);
+                  const act = rows.filter(x => x.type === "income" && (getCategoryInfo(x.category, x.type === "income" ? "income" : "expense").id === catInfo.id || x.category === pi.source || x.title.toLowerCase().includes(pi.source.toLowerCase()))).reduce((s, x) => s + Math.round(Number(x.amount || 0) * 100), 0);
                   const diff = act - pTarget;
                   const pct = pTarget > 0 ? Math.round((act / pTarget) * 100) : 0;
                   return `<div class="v3-plan-row">
@@ -1033,7 +999,7 @@
                   return true;
                 })
                 .map((x) => {
-                  const catInfo = getCategoryInfo(x.category || "");
+                  const catInfo = getCategoryInfo(x.category || "", x.type === "income" ? "income" : "expense");
                   return `<div class="lx-list-button lx-tx-item" style="cursor:default">
                     <span class="lx-cat-icon" style="background:${catInfo.color}20">${catInfo.icon}</span>
                     <div class="lx-tx-details">
@@ -1091,7 +1057,7 @@
         id: g.id,
         name: g.name,
         momentum: g.momentum || 0,
-        progress: g.progress || 0,
+        progress: calcGoalProgress(g, d) || 0,
         color: col,
         path: pts.join(" ")
       };
@@ -1131,10 +1097,7 @@
   }
 
   function plannedProgress(g) {
-    const start = +new Date((g.startDate || "") + "T00:00:00");
-    const end = +new Date((g.deadline || "") + "T23:59:59");
-    return Number.isFinite(start) && Number.isFinite(end) && end > start
-      ? Math.round(Math.max(0, Math.min(100, (Date.now() - start) / (end - start) * 100))) : null;
+    return C.plannedGoalProgress(g);
   }
   function goalTone(d, g) {
     if (/^#[\da-f]{6}$/i.test(g.color || "")) return g.color;
@@ -1160,15 +1123,7 @@
         ${gs.length ? gs.map((g, i) => {
           const c = colors[i % colors.length];
           const actual = calcGoalProgress(g, d);
-          let planned = 50;
-          if (g.deadline) {
-            const created = g.createdAt || (Date.now() - 30 * 86400000);
-            const totalDays = Math.max(7, Math.ceil((+new Date(g.deadline + "T23:59:59") - created) / 86400000));
-            const passedDays = Math.max(1, Math.ceil((Date.now() - created) / 86400000));
-            planned = Math.min(100, Math.round((passedDays / totalDays) * 100));
-          } else {
-            planned = Math.min(100, Math.round(actual * 1.15) || 50);
-          }
+          const planned = plannedProgress(g);
           return `<article class="v3-goal-card" data-route="goals" data-id="${esc(g.id)}" style="border-inline-start: 4px solid ${c.color}">
             <div class="v3-goal-card-head">
               <span class="v3-goal-icon" style="background:${c.bg};color:${c.color};border-color:${c.color}30">
@@ -1186,7 +1141,7 @@
                 <small>${L("Actual", "الفعلي")}</small>
               </div>
               <div class="v3-metric-col">
-                <strong>${planned}%</strong>
+                <strong>${planned === null ? "—" : planned + "%"}</strong>
                 <small>${L("Planned", "المخطط")}</small>
               </div>
             </div>
@@ -1213,10 +1168,10 @@
     const linked = d.goals.find(g => g.id === next?.goalId);
     const minutes = d.settings.focusMinutes || 25;
     const goalRows = goals.map(g => {
-      const actual = Math.max(0, Math.min(100, Number(g.progress) || 0));
+      const actual = Math.max(0, Math.min(100, Number(calcGoalProgress(g, d)) || 0));
       // Planned progress is meaningful only when an explicit start and deadline exist.
       const planned = plannedProgress(g);
-      return `<button class="north-goal" style="--goal-tone:${goalTone(d,g)}" data-route="goals" data-id="${esc(g.id)}"><div class="north-goal-title">${icon("goals")}<strong>${esc(g.name)}</strong></div><p>${esc(g.why || g.category || L("Your next destination", "وجهتك القادمة"))}</p><div class="north-goal-values" aria-label="${L("Actual", "الفعلي")} ${Math.round(actual)}%, ${L("Planned", "المخطط")} ${planned===null?L("not set", "غير محدد"):planned+'%'}"><span><b>${Math.round(actual)}%</b><small>${L("Actual", "الفعلي")}</small></span><span><b>${planned === null ? "—" : planned + "%"}</b><small>${L("Planned", "المخطط")}</small></span></div><div class="north-track" dir="ltr"><i style="width:${actual}%"></i>${planned === null ? "" : `<em style="left:${planned}%" title="${L("Planned", "المخطط")} ${planned}%"></em>`}</div><small>${planned === null ? L("Set a start date and deadline to compare your plan.", "حدّد تاريخ البداية والنهاية لمقارنة خطتك.") : dateText(g.deadline)}</small></button>`;
+      return `<button class="north-goal" style="--goal-tone:${goalTone(d,g)}" data-route="goals" data-id="${esc(g.id)}"><div class="north-goal-title">${icon("goals")}<strong>${esc(g.name)}</strong></div><p>${esc(g.why || g.category || L("Your next destination", "وجهتك القادمة"))}</p><div class="north-goal-values" aria-label="${L("Actual", "الفعلي")} ${actual}%, ${L("Planned", "المخطط")} ${planned===null?L("not set", "غير محدد"):planned+'%'}"><span><b>${actual}%</b><small>${L("Actual", "الفعلي")}</small></span><span><b>${planned === null ? "—" : planned + "%"}</b><small>${L("Planned", "المخطط")}</small></span></div><div class="north-track" dir="ltr"><i style="width:${actual}%"></i>${planned === null ? "" : `<em style="left:${planned}%" title="${L("Planned", "المخطط")} ${planned}%"></em>`}</div><small>${planned === null ? L("Set a start date and deadline to compare your plan.", "حدّد تاريخ البداية والنهاية لمقارنة خطتك.") : dateText(g.deadline)}</small></button>`;
     }).join("");
     return `<div class="north-home"><header class="north-welcome"><p>${new Intl.DateTimeFormat(ar()?"ar-MA":"en-GB",{weekday:"long",day:"numeric",month:"long",year:"numeric"}).format(new Date())}</p><div>${L(new Date().getHours()<12?"Good morning":"Welcome back",new Date().getHours()<12?"صباح الخير":"مرحبًا بعودتك")} ${esc(d.profile.name || "")}</div><h1>${L("Your goals in sight.", "أهدافك أمامك.")}<span class="north-welcome-desktop"> ${L("Your next step clear.", "وخطوتك واضحة.")}</span></h1></header>` +
       `<section class="north-goals" aria-label="${L("Priority goals", "أهدافك الرئيسية")}">${goalRows || empty(L("Define your first destination.", "حدّد وجهتك الأولى."),"goals")}</section><div class="north-home-grid"><section class="lx-card north-next"><div class="lx-eyebrow">${L("YOUR NEXT STEP", "خطوتك التالية")}</div>${linked ? `<p class="north-linked">${icon("goals")} ${esc(linked.name)}</p>` : ""}<h2>${esc(next?.title || L("Make room for meaningful work", "امنح عملك المهم وقتًا للتركيز"))}</h2><p>${L("One task. Your full attention. Progress you can measure.", "مهمة واحدة. انتباه كامل. وتقدم تستطيع قياسه.")}</p>${d.activeSession ? btn(L("Resume focus", "استأنف التركيز"),"navigate",'data-to="focus"',true) : next ? btn(icon("focus") + " " + L("Start focus", "ابدأ التركيز") + " · " + minutes + " " + L("min", "دقيقة"),"home-focus",`data-id="${esc(next.id)}"`,true) : btn(L("Choose your focus", "اختر عملك وابدأ"),"navigate",'data-to="focus"',true)}</section><section class="lx-card north-today"><h2>${L("Deep work today", "العمل العميق اليوم")}</h2><div class="north-time"><strong dir="auto">${hrs(tt.deep)}</strong><span> / ${d.settings.dailyHours} ${L("hours", "ساعات")}</span></div>${workGauge(tt.deep,d.settings.dailyHours*3600000)}<p>${L("Time measures effort, not goal completion.", "الوقت يقيس الجهد، وليس نسبة اكتمال الهدف.")}</p><div class="lx-task-list">${due.slice(0,2).map(t=>taskRow(t,d)).join("")}</div></section></div><section class="lx-card north-week"><div class="lx-card-head"><div><h2>${L("Focus time this week", "وقت التركيز هذا الأسبوع")}</h2><p>${L("Your actual sessions, day by day.", "جلساتك الفعلية، يومًا بيوم.")}</p></div>${btn(L("Details", "التفاصيل"),"navigate",'data-to="analytics"')}</div>${dayChart(tt.all,d)}</section><details class="lx-card north-details"><summary>${L("More about your goals and daily review", "تفاصيل أهدافك ومراجعة يومك")}</summary>${goalBoard(d)}${momentumMap(d)}${btn(L("Daily review", "مراجعة اليوم"),"shutdown")}</details></div>`;
@@ -1235,15 +1190,15 @@
           ${task.body ? `<p class="lx-muted" style="font-size:13px;margin:4px 0 16px;">${esc(task.body)}</p>` : ''}
         </div>
         <div class="v3-qf-mode-select">
-          <button type="button" class="v3-mode-card active" data-qf-mode="pomodoro">
+          <button type="button" class="v3-mode-card active" data-action="qf-mode" data-qf-mode="pomodoro">
             <span class="v3-mode-icon">🍅</span>
             <div class="v3-mode-info">
-              <strong>${L("Pomodoro (25 min)", "بومودورو (25 دقيقة)")}</strong>
-              <small>${L("25m focus · 5m recovery break", "25 دقيقة تركيز · 5 دقائق راحة")}</small>
+              <strong>${L("Pomodoro", "بومودورو") + " · " + d.settings.focusMinutes + " " + L("min", "دقيقة")}</strong>
+              <small>${d.settings.focusMinutes + " " + L("min focus", "دقيقة تركيز") + " · " + d.settings.shortBreak + " " + L("min break", "دقائق راحة")}</small>
             </div>
             <span class="v3-mode-check">✓</span>
           </button>
-          <button type="button" class="v3-mode-card" data-qf-mode="countdown">
+          <button type="button" class="v3-mode-card" data-action="qf-mode" data-qf-mode="countdown">
             <span class="v3-mode-icon">⏱️</span>
             <div class="v3-mode-info">
               <strong>${L("Custom Countdown", "عد تنازلي مخصص")}</strong>
@@ -1255,10 +1210,10 @@
         <div id="v3CountdownRow" class="v3-qf-durations hidden">
           <span class="v3-dur-label">${L("Duration: ", "المدة: ")}</span>
           <div class="v3-dur-pills-wrap">
-            <button type="button" class="v3-dur-pill" data-dur="15">15 ${L("min", "د")}</button>
-            <button type="button" class="v3-dur-pill active" data-dur="25">25 ${L("min", "د")}</button>
-            <button type="button" class="v3-dur-pill" data-dur="45">45 ${L("min", "د")}</button>
-            <button type="button" class="v3-dur-pill" data-dur="60">60 ${L("min", "د")}</button>
+            <button type="button" class="v3-dur-pill" data-action="qf-duration" data-dur="15">15 ${L("min", "د")}</button>
+            <button type="button" class="v3-dur-pill active" data-action="qf-duration" data-dur="25">25 ${L("min", "د")}</button>
+            <button type="button" class="v3-dur-pill" data-action="qf-duration" data-dur="45">45 ${L("min", "د")}</button>
+            <button type="button" class="v3-dur-pill" data-action="qf-duration" data-dur="60">60 ${L("min", "د")}</button>
           </div>
         </div>
         <div class="v3-qf-actions">
@@ -1282,11 +1237,11 @@
     ) +
     `<div class="v3-focus-idle-container">
       <div class="v3-focus-quick-bar">
-        <form id="v3QuickTaskFocusForm" class="v3-quick-task-form">
-          <input name="quickTitle" type="text" placeholder="${L("Type a task to focus on right now...", "اكتب مهمة سريعة للتركيز عليها فوراً...")}" required>
+        <form id="lxQuickTaskFocusForm" class="v3-quick-task-form">
+          ${select(L("Linked goal", "الهدف المرتبط"), "goalId", [["", L("Choose a goal", "اختر الهدف")], ...d.goals.filter(g=>!g.archived).map(g=>[g.id,g.name])], "", "required")}<input name="quickTitle" type="text" placeholder="${L("Type a task to focus on right now...", "اكتب مهمة سريعة للتركيز عليها فوراً...")}" required>
           <button type="submit" class="v3-apple-start-btn compact">
             <span class="v3-btn-icon">▶</span>
-            <span>${L("Start 25m", "تركيز 25 دقيقة")}</span>
+            <span>${L("Start focus", "ابدأ التركيز")} · ${d.settings.focusMinutes} ${L("min", "دقيقة")}</span>
           </button>
         </form>
       </div>
@@ -1390,7 +1345,7 @@
         <button type="button" class="v3-paused-cancel-btn" data-action="session-cancel">🗑️ ${L("Cancel session", "إلغاء الجلسة والتراجع")}</button>
       </div>` : ""}
 
-      <div class="v3-session-dots-wrap" ${a.type === "pomodoro" ? "" : 'hidden'}>
+      <div class="v3-session-dots-wrap" style="${a.type === "pomodoro" ? "" : "display:none"}">
         <div class="v3-dots-row">
           ${Array.from({ length: totalCycles }, (_, i) => {
             const isDone = i < ((a.cyclesCompleted || 0) % totalCycles);
@@ -1493,7 +1448,7 @@
             .filter((g) => g.projectId === p.id)
             .map(
               (g) =>
-                `<button class="lx-list-button" data-route="goals" data-id="${g.id}">${esc(g.name)} <span>${g.progress}%</span></button>`,
+                `<button class="lx-list-button" data-route="goals" data-id="${g.id}">${esc(g.name)} <span>${calcGoalProgress(g, d)}%</span></button>`,
             )
             .join("") || "<p>—</p>"
         }<h3>${L("Time this week", "الوقت هذا الأسبوع")}</h3>${dayChart(
@@ -1544,15 +1499,7 @@
     const ts = d.tasks.filter((t) => t.goalId === g.id && !t.archived);
     const hs = (d.habits || []).filter((h) => h.goalId === g.id && !h.archived);
     const actual = calcGoalProgress(g, d);
-    let planned = 50;
-    if (g.deadline) {
-      const created = g.createdAt || (Date.now() - 30 * 86400000);
-      const totalDays = Math.max(7, Math.ceil((+new Date(g.deadline + "T23:59:59") - created) / 86400000));
-      const passedDays = Math.max(1, Math.ceil((Date.now() - created) / 86400000));
-      planned = Math.min(100, Math.round((passedDays / totalDays) * 100));
-    } else {
-      planned = Math.min(100, Math.round(actual * 1.15) || 50);
-    }
+    const planned = plannedProgress(g);
     const allSessions = C.reportSessions(d);
     const timeMs = C.duration(allSessions, 0, Infinity, (s) => s.goalId === g.id);
 
@@ -1593,11 +1540,11 @@
             <div class="v3-gd-track"><div class="v3-gd-fill actual" style="width:${actual}%;"></div></div>
           </div>
           <div class="v3-gd-bar-row">
-            <div class="v3-gd-bar-label"><span>${L("Planned", "المخطط")}</span><strong>${planned}%</strong></div>
-            <div class="v3-gd-track outline"><div class="v3-gd-fill planned" style="width:${planned}%;"></div></div>
+            <div class="v3-gd-bar-label"><span>${L("Planned", "المخطط")}</span><strong>${planned === null ? "—" : planned + "%"}</strong></div>
+            <div class="v3-gd-track outline"><div class="v3-gd-fill planned" style="width:${planned ?? 0}%;"></div></div>
           </div>
         </div>
-        <small class="v3-gd-note">${L("Calculated automatically from logged focus time and completed actions.", "تُحسب تلقائياً من ساعات التركيز الفعلية والمهام المنجزة.")}</small>
+        <small class="v3-gd-note">${g.progressMode === "time" ? L("Time invested / target hours. Breaks are excluded.", "الوقت المستثمر ÷ الساعات المستهدفة. لا تُحتسب الراحة.") : L("Outcome progress you record. Time and completed tasks are tracked separately.", "تقدم النتيجة الذي تسجله. يُعرض الوقت والمهام المنجزة بشكل منفصل.")}</small>
       </section>
 
       <section class="v3-gd-section">
@@ -1675,7 +1622,7 @@
             'data-kind="goals"',
             true,
           ),
-        L("Core strategic objectives. Focus sessions logged on tasks linked to this goal automatically advance its progress percentage.", "الأهداف الاستراتيجية الكبرى. أي جلسة تركيز تنجزها في المهام التابعة للهدف تزيد من نسبة تقدمه وساعاته تلقائياً."),
+        L("Track your outcome or choose a time target. Completing a task does not automatically complete the goal.", "تابع تقدم النتيجة أو اختر هدف ساعات. إكمال مهمة لا يعني اكتمال الهدف تلقائيًا."),
       ) +
       `<div class="lx-grid-three">${
         d.goals
@@ -1685,7 +1632,7 @@
             const hs = (d.habits || []).filter((h) => h.goalId === g.id && !h.archived);
             const doneTs = ts.filter((t) => t.done).length;
             const idTag = g.identity ? `<div class="lx-identity-tag">👑 ${esc(g.identity)}</div>` : "";
-            return `<article class="lx-card lx-goal-card">${idTag}<div class="lx-eyebrow">${esc(g.horizon ? L(g.horizon, { annual: "سنوي", quarterly: "ربع سنوي", monthly: "شهري", weekly: "أسبوعي" }[g.horizon] || g.horizon) : L("Long term", "بعيد المدى"))}</div><h2><button class="lx-text-button" data-route="goals" data-id="${g.id}">${esc(g.name)}</button></h2><p>${esc(g.why || "")}</p><div class="lx-split"><strong>${g.progress}%</strong><small>${dateText(g.deadline)}</small></div>${progress(g.progress)}<p>${hrs(C.duration(C.reportSessions(d), 0, Infinity, (s) => s.goalId === g.id))} ${L("invested", "مستثمرة")}</p><div class="lx-mini-stats">${stat(name("tasks"), `${doneTs}/${ts.length}`)}${stat(name("habits"), `${hs.length}`)}${stat(L("Momentum", "الزخم"), `${g.momentum || 0}%`)}</div></article>`;
+            return `<article class="lx-card lx-goal-card">${idTag}<div class="lx-eyebrow">${esc(g.horizon ? L(g.horizon, { annual: "سنوي", quarterly: "ربع سنوي", monthly: "شهري", weekly: "أسبوعي" }[g.horizon] || g.horizon) : L("Long term", "بعيد المدى"))}</div><h2><button class="lx-text-button" data-route="goals" data-id="${g.id}">${esc(g.name)}</button></h2><p>${esc(g.why || "")}</p><div class="lx-split"><strong>${calcGoalProgress(g, d)}%</strong><small>${dateText(g.deadline)}</small></div>${progress(calcGoalProgress(g, d))}<p>${hrs(C.duration(C.reportSessions(d), 0, Infinity, (s) => s.goalId === g.id))} ${L("invested", "مستثمرة")}</p><div class="lx-mini-stats">${stat(name("tasks"), `${doneTs}/${ts.length}`)}${stat(name("habits"), `${hs.length}`)}${stat(L("Momentum", "الزخم"), `${g.momentum || 0}%`)}</div></article>`;
           })
           .join("") ||
         empty(
@@ -1775,7 +1722,7 @@
         })
         .join(
           "",
-        )}</section><section class="lx-card"><h2>${L("Projects · this week", "المشاريع · هذا الأسبوع")}</h2>${d.projects.map((p) => `<div class="lx-list-line"><span>${esc(p.name)}</span><strong>${hrs(C.duration(tt.all, C.week(now, d.settings.weekStart), Infinity, (s) => s.projectId === p.id))}</strong></div>`).join("") || "<p>—</p>"}</section><section class="lx-card"><h2>${L("Your rhythm", "إيقاعك")}</h2><p>${L("Most tracked hour", "الساعة الأكثر تسجيلًا")}: <b dir="ltr">${hours[bestHour] ? String(bestHour).padStart(2, "0") + ":00 – " + String(bestHour + 1).padStart(2, "0") + ":00" : "—"}</b></p><p>${L("Best day · last 30 days", "أفضل يوم · آخر 30 يومًا")}: ${best?.[1] ? dateText(best[0]) : "—"}</p><p>${L("Average daily deep work · 7 days", "متوسط العمل العميق اليومي · 7 أيام")}: ${hrs(C.duration(tt.all, C.midnight(now) - 6 * 86400000, Infinity, (s) => s.categoryId === "Deep Work") / 7)}</p><p>${L("Time tracked describes effort, not quality.", "الوقت المسجل يصف الجهد، وليس جودته.")}</p></section></div><div class="lx-grid-two"><section class="lx-card"><h2>${L("Execution", "التنفيذ")}</h2><p>${L("Tasks completed", "المهام المكتملة")}: ${d.tasks.filter((t) => !t.archived && t.done).length} / ${d.tasks.filter((t) => !t.archived).length}</p>${progress(percent(d.tasks.filter((t) => !t.archived && t.done).length, d.tasks.filter((t) => !t.archived).length))}<p>${L("Habits today", "عادات اليوم")}: ${d.habits.filter((h) => !h.archived && h.checks?.includes(C.day())).length} / ${d.habits.filter((h) => !h.archived).length}</p>${progress(percent(d.habits.filter((h) => !h.archived && h.checks?.includes(C.day())).length, d.habits.filter((h) => !h.archived).length))}</section><section class="lx-card"><h2>${L("Goals progress", "تقدم الأهداف")}</h2>${d.goals.filter((g) => !g.archived).map((g) => `<div class="lx-list-line"><span>${esc(g.name)}</span><strong>${g.progress}%</strong></div>${progress(g.progress)}`).join("") || "<p>—</p>"}</section></div><div class="lx-grid-two"><section class="lx-card"><h2>${L("Focus time by week", "وقت التركيز حسب الأسبوع")}</h2>${weeklyChart(tt.all, d)}</section><section class="lx-card"><h2>${L("Time per goal · this month", "الوقت لكل هدف · هذا الشهر")}</h2>${d.goals.map((g) => `<button class="lx-list-button" data-route="goals" data-id="${g.id}">${esc(g.name)}<strong>${hrs(C.duration(tt.all, +new Date(new Date().getFullYear(), new Date().getMonth(), 1), Infinity, (s) => s.goalId === g.id))}</strong></button>`).join("") || "<p>—</p>"}</section></div><section class="lx-card"><h2>${L("Session history", "سجل الجلسات")}</h2>${
+        )}</section><section class="lx-card"><h2>${L("Projects · this week", "المشاريع · هذا الأسبوع")}</h2>${d.projects.map((p) => `<div class="lx-list-line"><span>${esc(p.name)}</span><strong>${hrs(C.duration(tt.all, C.week(now, d.settings.weekStart), Infinity, (s) => s.projectId === p.id))}</strong></div>`).join("") || "<p>—</p>"}</section><section class="lx-card"><h2>${L("Your rhythm", "إيقاعك")}</h2><p>${L("Most tracked hour", "الساعة الأكثر تسجيلًا")}: <b dir="ltr">${hours[bestHour] ? String(bestHour).padStart(2, "0") + ":00 – " + String(bestHour + 1).padStart(2, "0") + ":00" : "—"}</b></p><p>${L("Best day · last 30 days", "أفضل يوم · آخر 30 يومًا")}: ${best?.[1] ? dateText(best[0]) : "—"}</p><p>${L("Average daily deep work · 7 days", "متوسط العمل العميق اليومي · 7 أيام")}: ${hrs(C.duration(tt.all, C.midnight(now) - 6 * 86400000, Infinity, (s) => s.categoryId === "Deep Work") / 7)}</p><p>${L("Time tracked describes effort, not quality.", "الوقت المسجل يصف الجهد، وليس جودته.")}</p></section></div><div class="lx-grid-two"><section class="lx-card"><h2>${L("Execution", "التنفيذ")}</h2><p>${L("Tasks completed", "المهام المكتملة")}: ${d.tasks.filter((t) => !t.archived && t.done).length} / ${d.tasks.filter((t) => !t.archived).length}</p>${progress(percent(d.tasks.filter((t) => !t.archived && t.done).length, d.tasks.filter((t) => !t.archived).length))}<p>${L("Habits today", "عادات اليوم")}: ${d.habits.filter((h) => !h.archived && h.checks?.includes(C.day())).length} / ${d.habits.filter((h) => !h.archived).length}</p>${progress(percent(d.habits.filter((h) => !h.archived && h.checks?.includes(C.day())).length, d.habits.filter((h) => !h.archived).length))}</section><section class="lx-card"><h2>${L("Goals progress", "تقدم الأهداف")}</h2>${d.goals.filter((g) => !g.archived).map((g) => `<div class="lx-list-line"><span>${esc(g.name)}</span><strong>${calcGoalProgress(g, d)}%</strong></div>${progress(calcGoalProgress(g, d))}`).join("") || "<p>—</p>"}</section></div><div class="lx-grid-two"><section class="lx-card"><h2>${L("Focus time by week", "وقت التركيز حسب الأسبوع")}</h2>${weeklyChart(tt.all, d)}</section><section class="lx-card"><h2>${L("Time per goal · this month", "الوقت لكل هدف · هذا الشهر")}</h2>${d.goals.map((g) => `<button class="lx-list-button" data-route="goals" data-id="${g.id}">${esc(g.name)}<strong>${hrs(C.duration(tt.all, +new Date(new Date().getFullYear(), new Date().getMonth(), 1), Infinity, (s) => s.goalId === g.id))}</strong></button>`).join("") || "<p>—</p>"}</section></div><section class="lx-card"><h2>${L("Session history", "سجل الجلسات")}</h2>${
         d.sessions
           .slice(0, historyLimit)
           .map((s) => sessionRow(s, d))
@@ -2155,6 +2102,7 @@
         )}</div>` +
         `<details class="lx-details" style="margin-top:12px"><summary>${L("Advanced options · optional", "خيارات إضافية · اختياري")}</summary><div style="margin-top:10px">` +
         `<div class="lx-fields-two">${select(L("Domain", "المجال"), "category", d.categories.map((c) => [c, catName(c)]), o.category || "Personal")}${field(L("Outcome progress (%)", "تقدم النتيجة (%)"), "progress", o.progress || 0, "number", 'min="0" max="100" step="0.5"')}</div>` +
+        select(L("Progress measurement", "طريقة قياس التقدم"), "progressMode", [["outcome", L("Outcome · recorded percentage", "النتيجة · نسبة تسجلها")], ["time", L("Time invested / target hours", "الوقت المستثمر ÷ الساعات المستهدفة")]], o.progressMode || "outcome") +
         field(L("Target hours (estimated total)", "الساعات المستهدفة (إجمالي)"), "targetHours", o.targetHours || 0, "number", 'min="0" max="100000" step="0.5"') +
         select(name("projects"), "projectId", options(d.projects), o.projectId) +
         [["m6", L("6-month milestone", "مرحلة ستة أشهر")], ["m3", L("Quarter milestone", "مرحلة ربع السنة")], ["month", L("Month milestone", "مرحلة الشهر")], ["week", L("Week milestone", "مرحلة الأسبوع")]].map(([k, label]) => field(label, k, o.plan?.[k] || "")).join("") +
@@ -2421,7 +2369,6 @@
     }
     panel.innerHTML = cloudPanel() +
       "" +
-      `<section class="lx-card lx-margin" style="margin-bottom:16px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.08)"><div class="lx-card-head"><div><div class="lx-eyebrow">${L("FEEDBACK", "صوتك وملاحظاتك")}</div><h2>${L("Help Shape THE NORTH", "شاركنا رؤيتك لتطوير التطبيق")}</h2></div>${btn("💡 " + L("Share feedback", "شاركنا اقتراحك"), "feedback")}</div><p class="lx-muted">${L("Tell us what would make you 10x more effective. Your suggestions directly guide our engineering roadmap.", "أخبرنا بما يضاعف كفاءتك 10 مرات. ملاحظاتك تقود خارطة تطويرنا مباشرة دون إزعاج.")}</p></section>` +
       `<h2>${L("Your operating preferences", "تفضيلات نظامك")}</h2><form id="lxSettingsForm"><div class="lx-fields-three">${select(
       L("Theme", "المظهر"),
       "theme",
@@ -2672,15 +2619,15 @@
       const curM = financeMonth || C.day().slice(0, 7);
       const plan = getFinancePlan(d, curM);
       const dlg = $("#lxDialog");
-      let expHtml = plan.expenses.map((e, idx) => `
+      let expHtml = [...plan.expenses, ...Array.from({length:3},()=>({category:"",amount:0}))].map((e, idx) => `
         <div style="display:grid;grid-template-columns:1fr 100px;gap:8px;margin-bottom:8px;">
           <input type="text" name="exp_cat_${idx}" value="${esc(e.category)}" class="lx-input" placeholder="${L("Category", "الفئة")}" />
           <input type="number" step="any" min="0" name="exp_amt_${idx}" value="${e.amount}" class="lx-input" placeholder="${L("Amount", "المبلغ")}" />
         </div>
       `).join("");
-      let incHtml = plan.income.map((i, idx) => `
+      let incHtml = [...plan.income, ...Array.from({length:3},()=>({source:"",amount:0}))].map((i, idx) => `
         <div style="display:grid;grid-template-columns:1fr 100px;gap:8px;margin-bottom:8px;">
-          <input type="text" name="inc_cat_${idx}" value="${esc(i.category)}" class="lx-input" placeholder="${L("Source", "المصدر")}" />
+          <input type="text" name="inc_cat_${idx}" value="${esc(i.source || i.category || "")}" class="lx-input" placeholder="${L("Source", "المصدر")}" />
           <input type="number" step="any" min="0" name="inc_amt_${idx}" value="${i.amount}" class="lx-input" placeholder="${L("Amount", "المبلغ")}" />
         </div>
       `).join("");
@@ -2899,7 +2846,6 @@
           <div class="lx-menu-actions" style="margin-top:16px;display:flex;flex-direction:column;gap:8px">
             ${btn("👑 " + L("Membership & Plans", "باقات الاشتراك والعضوية"), "pricing", 'class="lx-btn lx-primary"')}
             ${btn("💡 " + L("Share feedback & ideas", "شاركنا اقتراحك وملاحظاتك"), "feedback")}
-            ${btn(icon("account") + name("account"), "navigate", 'data-to="account"')}
           </div>`,
       );
     if (a === "feedback") openFeedbackModal();
@@ -2951,6 +2897,21 @@
       navigate("focus");
       return;
     }
+    if (a === "qf-mode") {
+      const dialog = $("#lxDialog");
+      dialog.querySelectorAll("[data-qf-mode]").forEach(x => {
+        const selected = x === b;
+        x.classList.toggle("active", selected);
+        x.setAttribute("aria-pressed", String(selected));
+        const check = x.querySelector(".v3-mode-check"); if(check) check.textContent = selected ? "✓" : "";
+      });
+      dialog.querySelector("#v3CountdownRow")?.classList.toggle("hidden", b.dataset.qfMode !== "countdown");
+      return;
+    }
+    if (a === "qf-duration") {
+      $("#lxDialog").querySelectorAll("[data-dur]").forEach(x => {x.classList.toggle("active", x === b); x.setAttribute("aria-pressed", String(x === b));});
+      return;
+    }
     if (a === "qf-launch") {
       const taskId = b.dataset.taskId;
       const goalId = b.dataset.goalId;
@@ -2958,7 +2919,7 @@
       const dialog = $("#lxDialog");
       const isPomo = dialog?.querySelector('[data-qf-mode="pomodoro"]')?.classList.contains("active") !== false;
       const durPill = dialog?.querySelector(".v3-dur-pill.active");
-      const targetMinutes = isPomo ? 25 : (Number(durPill?.dataset.dur) || 25);
+      const targetMinutes = isPomo ? db.read().settings.focusMinutes : (Number(durPill?.dataset.dur) || 25);
       const type = isPomo ? "pomodoro" : "countdown";
       const t = db.read().tasks.find((x) => x.id === taskId);
       
@@ -3183,6 +3144,19 @@
     if (submitButton) submitButton.disabled = true;
     let result;
     try {
+      if (form.id === "lxQuickTaskFocusForm") {
+        const title = (data.quickTitle || "").trim();
+        result = await mutate(d => {
+          const goal = d.goals.find(g => g.id === data.goalId && !g.archived);
+          if (!goal || !title) throw Error("invalidData");
+          if (d.activeSession) throw Error("activeSession");
+          const task = {id:C.id(), title, goalId:goal.id, projectId:goal.projectId || "", date:C.day(), priority:"medium", status:"todo", done:false, subtasks:[]};
+          d.tasks.unshift(task);
+          C.createSession(d, {taskId:task.id, type:"pomodoro", categoryId:"Deep Work"});
+        });
+        if (result) navigate("focus");
+        return;
+      }
       if (form.id === "lxQuickTxForm") {
         const type = data.type || "expense";
         const amount = parseFloat(data.amount);
@@ -3190,8 +3164,8 @@
         const title = (data.title || "").trim() || category;
         const curM = financeMonth || C.day().slice(0, 7);
         const todayStr = C.day();
-        const date = todayStr.startsWith(curM) ? todayStr : (curM + "-01");
-        if (!amount || amount <= 0) {
+        const date = data.date || (todayStr.startsWith(curM) ? todayStr : (curM + "-01"));
+        if (!Number.isFinite(amount) || amount <= 0) {
           notice(L("Please enter a valid amount.", "يرجى إدخال مبلغ صحيح."), true);
           if (submitButton) submitButton.disabled = false;
           return;
@@ -3199,7 +3173,7 @@
         await mutate((d) => {
           if (!Array.isArray(d.finances)) d.finances = [];
           d.finances.unshift({
-            id: C.uid(),
+            id: C.id(),
             title,
             amount,
             type,
@@ -3224,15 +3198,15 @@
       }
       if (form.id === "lxFinancePlanForm") {
         const m = data.month;
-        const curPlan = getFinancePlan(db.read(), m);
-        const newExpenses = curPlan.expenses.map((e, idx) => ({
-          category: data[`exp_cat_${idx}`] || e.category,
-          amount: parseFloat(data[`exp_amt_${idx}`]) || 0
-        })).filter(x => x.category);
-        const newIncome = curPlan.income.map((i, idx) => ({
-          category: data[`inc_cat_${idx}`] || i.category,
-          amount: parseFloat(data[`inc_amt_${idx}`]) || 0
-        })).filter(x => x.category);
+        const readRows = (prefix, field) => Object.keys(data).filter(k => k.startsWith(prefix + "_cat_")).map(k => {
+          const index = k.slice((prefix + "_cat_").length);
+          return {[field]: String(data[k] || "").trim(), amount: Number(data[prefix + "_amt_" + index]) || 0};
+        }).filter(x => x[field]);
+        const newExpenses = readRows("exp", "category");
+        const newIncome = readRows("inc", "source");
+        if ([...newExpenses, ...newIncome].some(x => !Number.isFinite(x.amount) || x.amount < 0)) {
+          notice(L("Enter valid non-negative amounts.", "أدخل مبالغ صحيحة غير سالبة."), true); return;
+        }
         await setFinancePlan(m, { expenses: newExpenses, income: newIncome });
         $("#lxDialog")?.close();
         notice(L("Budget plan saved.", "تم حفظ خطة الميزانية."));
@@ -3240,7 +3214,7 @@
         return;
       }
       if (form.id === "lxDebtForm") {
-        const id = data.id || C.uid();
+        const id = data.id || C.id();
         const name = (data.name || "").trim();
         const totalAmount = parseFloat(data.totalAmount) || 0;
         const paidAmount = parseFloat(data.paidAmount) || 0;
@@ -3278,9 +3252,9 @@
             if (!Array.isArray(d.finances)) d.finances = [];
             const curM = financeMonth || C.day().slice(0, 7);
             const todayStr = C.day();
-            const date = todayStr.startsWith(curM) ? todayStr : (curM + "-01");
+            const date = data.date || (todayStr.startsWith(curM) ? todayStr : (curM + "-01"));
             d.finances.unshift({
-              id: C.uid(),
+              id: C.id(),
               title: L("Debt Payment: ", "سداد دين: ") + (debt?.name || ""),
               amount: paymentAmount,
               type: "expense",
@@ -3408,6 +3382,10 @@
             ),
             true,
           );
+          return;
+        }
+        if (kind === "goals" && data.progressMode === "time" && !(Number(data.targetHours) > 0)) {
+          notice(L("Enter target hours to measure time progress.", "حدد ساعات مستهدفة لقياس تقدم الوقت."), true);
           return;
         }
         result = await mutate((d) => {
@@ -3605,6 +3583,11 @@
     }
   }
   function onChange(e) {
+    if (e.target.form?.id === "lxQuickTxForm" && e.target.name === "type") {
+      const select = e.target.form.querySelector('[name="category"]');
+      select.innerHTML = financeCategories.filter(c => c.type === e.target.value)
+        .map(c => `<option value="${esc(c.en)}">${c.icon} ${esc(ar() ? c.ar : c.en)}</option>`).join("");
+    }
     if (e.target.name === "calendarDay") {
       calendarDay = e.target.value || C.day();
       render();
