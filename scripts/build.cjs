@@ -7,6 +7,7 @@ fs.mkdirSync(out, { recursive: true });
 for (const f of [
   "index.html",
   "north-brand.css",
+  "workspace-ui.css",
   "landing-motion.js",
   "styles.css",
   "executive.css",
