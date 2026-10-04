@@ -597,7 +597,11 @@
       if (a.segmentStartedAt !== null) closeSegment(a, now);
       list.push(a);
     }
-    return list;
+    return list.map(s => {
+      if (s.goalId || !s.taskId) return s;
+      const task = d.tasks.find(t => t.id === s.taskId);
+      return task?.goalId ? { ...s, goalId: task.goalId } : s;
+    });
   }
   function completeTask(d, taskId, done) {
     const t = d.tasks.find((t) => t.id === taskId);
@@ -754,7 +758,7 @@
   function goalProgress(goal, data) {
     if (!goal) return 0;
     if (goal.progressMode === "time") {
-      const target = Number(goal.targetHours);
+      const target = goalTargetHours(goal);
       if (!(target > 0) || !Number.isFinite(target)) return 0;
       const worked = duration(reportSessions(data), 0, Infinity, s => s.goalId === goal.id);
       return Math.round(Math.max(0, Math.min(100, worked / (target * 3600000) * 100)) * 10) / 10;
@@ -769,8 +773,28 @@
     return Math.round(Math.max(0, Math.min(100, (now-start)/(end-start)*100)));
   }
 
+  function goalTargetHours(goal) {
+    const explicit = Number(goal?.targetHours);
+    if (Number.isFinite(explicit) && explicit > 0) return explicit;
+    const daily = Number(goal?.dailyMinutes);
+    const start = Date.parse(goal?.startDate);
+    const end = Date.parse(goal?.deadline);
+    if (!(daily > 0) || !Number.isFinite(daily) || !Number.isFinite(start) || !Number.isFinite(end) || end < start) return 0;
+    return (Math.round((end - start) / 86400000) + 1) * daily / 60;
+  }
+
+  function goalPlannedHours(goal, now = Date.now()) {
+    if (!goal?.startDate || !goal.deadline) return null;
+    const start = +new Date(goal.startDate + "T00:00:00");
+    const end = +new Date(goal.deadline + "T23:59:59");
+    if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) return null;
+    return goalTargetHours(goal) * Math.max(0, Math.min(1, (now - start) / (end - start)));
+  }
+
   return {
     recordDebtPayment,
+    goalTargetHours,
+    goalPlannedHours,
     goalProgress,
     plannedGoalProgress,
     completeTask,

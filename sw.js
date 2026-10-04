@@ -1,8 +1,8 @@
 /* Offline shell only. Never intercept external traffic or clear other apps' caches. */
-const CACHE = "lifeos-v4-20261004-backend-review";
+const CACHE = "lifeos-v4-20261004-goal-time";
 const ASSETS = [
   "north-brand.css",
-  "north-brand.css?v=20261004-backend-review",
+  "north-brand.css?v=20261004-goal-time",
   "landing-motion.js",
   "landing-motion.js?v=3",
   "assets/north-summit.webp",
@@ -20,15 +20,15 @@ const ASSETS = [
   "executive.css",
   "executive.css?v=auto2",
   "auth.js",
-  "auth.js?v=20261004-backend-review",
+  "auth.js?v=20261004-goal-time",
   "cloud-sync.js",
-  "cloud-sync.js?v=20261004-backend-review",
+  "cloud-sync.js?v=20261004-goal-time",
   "core.js",
-  "core.js?v=20261004-backend-review",
+  "core.js?v=20261004-goal-time",
   "app.js",
-  "app.js?v=20261004-backend-review",
+  "app.js?v=20261004-goal-time",
   "workspace.js",
-  "workspace.js?v=20261004-backend-review",
+  "workspace.js?v=20261004-goal-time",
   "manifest.webmanifest",
   "brand-mark.svg",
   "icon-180.png",

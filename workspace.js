@@ -1456,6 +1456,9 @@
     const planned = plannedProgress(g);
     const allSessions = C.reportSessions(d);
     const timeMs = C.duration(allSessions, 0, Infinity, (s) => s.goalId === g.id);
+    const targetMs = C.goalTargetHours(g) * 3600000;
+    const todayMs = C.duration(allSessions, C.midnight(Date.now()), Infinity, s => s.goalId === g.id);
+    const goalSessions = allSessions.filter(s => s.goalId === g.id && s.status !== "cancelled");
 
     return `<div class="v3-goal-detail-page">
       <div class="v3-gd-top-nav">
@@ -1501,6 +1504,23 @@
         <small class="v3-gd-note">${g.progressMode === "time" ? L("Time invested / target hours. Breaks are excluded.", "الوقت المستثمر ÷ الساعات المستهدفة. لا تُحتسب الراحة.") : L("Outcome progress you record. Time and completed tasks are tracked separately.", "تقدم النتيجة الذي تسجله. يُعرض الوقت والمهام المنجزة بشكل منفصل.")}</small>
       </section>
 
+      <section class="lx-card">
+        <h3>${L("Work invested in this goal", "العمل المنجز في هذا الهدف")}</h3>
+        <div class="lx-fields-two">
+          <p>${L("Actual work", "الوقت الفعلي")}: <strong>${hrs(timeMs)}</strong></p>
+          <p>${L("Today", "اليوم")}: <strong>${hrs(todayMs)}</strong></p>
+          <p>${L("This week", "هذا الأسبوع")}: <strong>${hrs(C.duration(allSessions, C.week(Date.now(), d.settings.weekStart), Infinity, s => s.goalId === g.id))}</strong></p>
+          <p>${L("Total planned", "إجمالي الوقت المخطط")}: <strong>${targetMs ? hrs(targetMs) : L("Not configured", "لم تُحدد الخطة")}</strong></p>
+          <p>${L("Remaining", "المتبقي")}: <strong>${targetMs ? hrs(Math.max(0, targetMs - timeMs)) : "—"}</strong></p>
+        </div>
+        <p>${L("Planned by today", "المخطط حتى اليوم")}: <strong>${targetMs && planned !== null ? hrs(C.goalPlannedHours(g) * 3600000) : L("Set the plan dates", "حدد تاريخ بداية الخطة ونهايتها")}</strong></p>
+        ${!targetMs || planned === null ? btn(L("Set work plan", "حدد خطة العمل"), "edit", `data-kind="goals" data-id="${g.id}"`) : ""}
+        <small>${L("Focus and manual work are included. Breaks are excluded.", "تُحتسب جلسات التركيز والوقت اليدوي، وتُستبعد فترات الراحة.")}</small>
+      </section>
+      <section class="lx-card">
+        <h3>${L("Work log", "سجل الإنجاز")}</h3>
+        ${goalSessions.length ? goalSessions.slice(0, 10).map(s => `<div class="lx-list-line"><div><strong>${esc(d.tasks.find(t => t.id === s.taskId)?.title || s.title || g.name)}</strong><p>${esc(s.notes || "")}</p><small>${esc(C.day(s.startedAt))}</small></div><strong>${hrs(C.duration([s]))}</strong></div>`).join("") : `<p>${L("Your saved sessions will appear here.", "ستظهر جلسات العمل المحفوظة هنا.")}</p>`}
+      </section>
       <section class="v3-gd-section">
         <div class="v3-section-title-row">
           <div>
@@ -1511,12 +1531,12 @@
         </div>
         <div class="v3-gd-habits-list">
           ${hs.length ? hs.map((h) => {
-            const strk = C.habitStreak(h.checks || [], C.day());
+            const strk = C.habitStreak(h.checks || [], C.day(), h.frequency, d.settings.weekStart);
             const isDone = h.checks?.includes(C.day());
             return `<div class="v3-gd-habit-card">
               <div class="v3-gd-habit-streak">
                 <span>${strk.inGrace ? "🛡️" : "🔥"}</span>
-                <strong>${strk.current} ${L("days", "يوم")}</strong>
+                <strong>${strk.current} ${h.frequency === "weekly" ? L("weeks", "أسبوع") : L("days", "يوم")}</strong>
               </div>
               <div class="v3-gd-habit-title">
                 <strong>${esc(h.title)}</strong>
@@ -1539,9 +1559,9 @@
         </div>
         <div class="v3-gd-tasks-list">
           ${ts.length ? ts.map((t) => {
-            const mins = t.estimatedHours ? Math.round(t.estimatedHours * 60) : 25;
+            const worked = C.duration(allSessions, 0, Infinity, s => s.taskId === t.id);
             return `<div class="v3-gd-task-card ${t.done ? 'is-done' : ''}">
-              <span class="v3-task-time-pill">${mins} ${L("min", "دقيقة")}</span>
+              <span class="v3-task-time-pill">${hrs(worked)} ${L("worked", "منجز")}</span>
               <div class="v3-gd-task-text">
                 <strong>${esc(t.title)}</strong>
               </div>
@@ -2042,7 +2062,7 @@
           o.why || "",
           'rows="2"',
         ) +
-        field(L("Plan start date", "تاريخ بداية الخطة"), "startDate", o.startDate || "", "date") +
+        field(L("Plan start date", "تاريخ بداية الخطة"), "startDate", o.startDate || (o.id ? "" : C.day()), "date") +
         `<div class="lx-fields-two">${field(L("Deadline", "الموعد النهائي"), "deadline", o.deadline || "", "date")}${select(
           L("Horizon", "الأفق الزمني"),
           "horizon",
@@ -2054,10 +2074,11 @@
           ],
           o.horizon || "annual",
         )}</div>` +
+        select(L("Progress measurement", "طريقة قياس التقدم"), "progressMode", [["outcome", L("Outcome · recorded percentage", "النتيجة · نسبة تسجلها")], ["time", L("Time invested / target hours", "الوقت المستثمر ÷ الساعات المستهدفة")]], o.progressMode || (o.id ? "outcome" : "time")) +
+        field(L("Target hours (estimated total)", "الساعات المستهدفة (إجمالي)"), "targetHours", o.targetHours || 0, "number", 'min="0" max="100000" step="0.5"') +
+        field(L("Daily minutes (used when total hours is zero)", "دقائق يومية (لحساب الإجمالي عندما تكون الساعات صفرًا)"), "dailyMinutes", o.dailyMinutes || 0, "number", 'min="0" max="1440" step="1"') +
         `<details class="lx-details" style="margin-top:12px"><summary>${L("Advanced options · optional", "خيارات إضافية · اختياري")}</summary><div style="margin-top:10px">` +
         `<div class="lx-fields-two">${select(L("Domain", "المجال"), "category", d.categories.map((c) => [c, catName(c)]), o.category || "Personal")}${field(L("Outcome progress (%)", "تقدم النتيجة (%)"), "progress", o.progress || 0, "number", 'min="0" max="100" step="0.5"')}</div>` +
-        select(L("Progress measurement", "طريقة قياس التقدم"), "progressMode", [["outcome", L("Outcome · recorded percentage", "النتيجة · نسبة تسجلها")], ["time", L("Time invested / target hours", "الوقت المستثمر ÷ الساعات المستهدفة")]], o.progressMode || "outcome") +
-        field(L("Target hours (estimated total)", "الساعات المستهدفة (إجمالي)"), "targetHours", o.targetHours || 0, "number", 'min="0" max="100000" step="0.5"') +
         select(name("projects"), "projectId", options(d.projects), o.projectId) +
         [["m6", L("6-month milestone", "مرحلة ستة أشهر")], ["m3", L("Quarter milestone", "مرحلة ربع السنة")], ["month", L("Month milestone", "مرحلة الشهر")], ["week", L("Week milestone", "مرحلة الأسبوع")]].map(([k, label]) => field(label, k, o.plan?.[k] || "")).join("") +
         area(L("Notes", "ملاحظات"), "notes", o.notes || "") +
@@ -3330,6 +3351,7 @@
           "impact",
           "progressImpact",
           "targetHours",
+          "dailyMinutes",
           "progress",
           "amount",
           "value",
@@ -3349,7 +3371,11 @@
           );
           return;
         }
-        if (kind === "goals" && data.progressMode === "time" && !(Number(data.targetHours) > 0)) {
+        if (kind === "goals" && data.startDate && data.deadline && data.deadline < data.startDate) {
+          notice(L("The deadline must follow the start date.", "يجب أن تأتي نهاية الخطة بعد بدايتها."), true);
+          return;
+        }
+        if (kind === "goals" && data.progressMode === "time" && !(C.goalTargetHours(data) > 0)) {
           notice(L("Enter target hours to measure time progress.", "حدد ساعات مستهدفة لقياس تقدم الوقت."), true);
           return;
         }
@@ -3360,9 +3386,7 @@
           if (
             kind === "tasks" &&
             wasDone &&
-            (item.goalId !== data.goalId ||
-              item.impact !== data.impact ||
-              item.progressImpact !== data.progressImpact)
+            ["goalId", "impact", "progressImpact"].some(k => k in data && item[k] !== data[k])
           )
             C.completeTask(d, id, false);
           Object.assign(item, data, { updatedAt: Date.now(), archived: false });
@@ -3400,7 +3424,7 @@
           }
           if (!old) d[kind].unshift(item);
           if (kind === "tasks")
-            C.completeTask(d, item.id, data.status === "done");
+            C.completeTask(d, item.id, "status" in data ? data.status === "done" : wasDone);
           if (form.dataset.source) {
             const source = d.inbox?.find((x) => x.id === form.dataset.source);
             if (source) {
@@ -3449,7 +3473,9 @@
         });
         if (result) {
           $("#lxDialog").close();
-          navigate("analytics");
+          const savedSession = result.data.sessions.find(s => s.id === form.dataset.id);
+          if (savedSession?.goalId) navigate("goals", savedSession.goalId);
+          else navigate("analytics");
           notice(L("Session saved. Well done.", "حُفظت الجلسة. أحسنت."));
         }
       }

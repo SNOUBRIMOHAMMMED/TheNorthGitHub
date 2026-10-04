@@ -23,4 +23,9 @@ test('simplified workspace task form saves and omitted subtasks do not erase exi
  await save('existing',{title:'Edited task',status:'todo',subtaskText:'[x] Done\nNext'});
  tasks=JSON.parse(mem.get(C.ACCOUNT_KEY)).qa.data.tasks;
  assert.deepEqual(tasks.find(t=>t.id==='existing').subtasks,[{title:'Done',done:true},{title:'Next',done:false}]);
+ await save('existing',{title:'Finished task',status:'done'});
+ await save('existing',{title:'Renamed completed task'});
+ tasks=JSON.parse(mem.get(C.ACCOUNT_KEY)).qa.data.tasks;
+ assert.equal(tasks.find(t=>t.id==='existing').done,true);
+ assert.equal(tasks.find(t=>t.id==='existing').status,'done');
 });
