@@ -52,6 +52,8 @@ test('legacy rollover keeps complete history and never penalizes the current day
  const today=C.day(),yesterday=C.day(C.midnight(Date.now())-86400000);const d=C.migrate({profile:{name:'QA'},tasks:[],goals:[{id:'g',name:'Goal',momentum:80,history:Array.from({length:150},(_,i)=>({date:C.day(C.midnight(Date.now())-(i+2)*86400000),value:80}))}],lastOpened:yesterday});
  const ctx={data:()=>d,iso:()=>today,window:{LifeCore:C},Date,clamp:n=>Math.max(0,Math.min(100,n)),saveData(){},ensureToday(){}};
  vm.runInNewContext(source.slice(start,end)+';rollover();',ctx);assert.equal(d.goals[0].momentum,75);assert.equal(d.goals[0].history.length,151);assert.equal(d.goals[0].history.some(h=>h.date===today),false);
+ d.lastOpened=yesterday;d.goals[0].momentum=80;d.goals[0].history.find(h=>h.date===yesterday).value=80;
+ ctx.rollover();assert.equal(d.goals[0].history.find(h=>h.date===yesterday).value,75,'the closed-day chart and current momentum agree');assert.equal(d.goals[0].history.length,151);
 });
 test('a failed finance save keeps the form open and never reports success',async()=>{
  const mem=new Map([[C.SESSION_KEY,'qa'],[C.ACCOUNT_KEY,JSON.stringify({qa:{data:C.migrate({profile:{name:'QA'},goals:[],tasks:[]})}})]]);let closed=0,resets=0;const message={className:'',textContent:'',classList:{remove(){}}};

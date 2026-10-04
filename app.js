@@ -584,7 +584,8 @@ function rollover(){
       const dt=new Date(start);dt.setDate(dt.getDate()+i);const day=window.LifeCore.day(+dt);
       const hadAction=d.tasks.some(x=>x.goalId===g.id&&x.done&&x.completedDate===day)||d.habits.some(h=>h.goalId===g.id&&h.checks?.includes(day))||(d.sessions||[]).some(s=>s.goalId===g.id&&window.LifeCore.day(s.startedAt)===day);
       if(!hadAction)g.momentum=clamp(g.momentum-5);
-      if(!g.history.some(h=>h.date===day))g.history.push({date:day,value:g.momentum});
+      const history=g.history.find(h=>h.date===day);
+      if(history)history.value=g.momentum;else g.history.push({date:day,value:g.momentum});
     }
     // Retain the full goal history; the current day is not a missed day.
   });
