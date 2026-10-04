@@ -168,6 +168,10 @@
       h.impact = num(h.impact, 0, 50);
       h.frequency = typeof h.frequency === "string" ? h.frequency : "daily";
     });
+    d.inbox.forEach(i => {
+      if (!i.title && typeof i.text === "string") i.title = i.text;
+      if (!i.createdAt && Number.isFinite(i.ts)) i.createdAt = i.ts;
+    });
     d.schemaVersion = VERSION;
     return d;
   }
