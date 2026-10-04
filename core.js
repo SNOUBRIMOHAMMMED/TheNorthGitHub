@@ -172,6 +172,13 @@
     return d;
   }
   function validateImport(input) {
+    const source = input?.data || input;
+    if (!source || typeof source !== 'object' || Array.isArray(source)) throw Error('invalidData');
+    // Migration can fill missing legacy fields, but must never turn corrupt data into empty lists.
+    for (const key of ['goals','tasks','projects','notes','events','habits','inbox','finances','health','learning','sessions','notifications']) {
+      if (source[key] !== undefined && !Array.isArray(source[key])) throw Error('invalidData');
+      if (source[key]?.some(item => !item || typeof item !== 'object' || Array.isArray(item))) throw Error('invalidData');
+    }
     const d = migrate(input.data || input);
     const collections = [
       "goals",
@@ -271,7 +278,7 @@
         !Array.isArray(s.segments) ||
         s.segments.some(
           (x) =>
-            !Number.isFinite(x.start) ||
+            !x || !Number.isFinite(x.start) ||
             !Number.isFinite(x.end) ||
             x.end < x.start,
         )
@@ -293,7 +300,7 @@
         (a.segmentStartedAt !== null && !Number.isFinite(a.segmentStartedAt)) ||
         a.segments.some(
           (s) =>
-            !Number.isFinite(s.start) ||
+            !s || !Number.isFinite(s.start) ||
             !Number.isFinite(s.end) ||
             s.end < s.start,
         )
@@ -594,7 +601,7 @@
   }
   function completeTask(d, taskId, done) {
     const t = d.tasks.find((t) => t.id === taskId);
-    if (!t) return;
+    if (!t || t.archived) return;
     const next = done ?? !t.done;
     if (next === !!t.done) return;
     t.done = next;
@@ -603,10 +610,10 @@
     const g = d.goals.find((g) => g.id === t.goalId);
     if (g) {
       if (next) {
-        t.appliedMomentum = Math.min(100 - g.momentum, Number(t.impact || 0));
+        t.appliedMomentum = Math.min(100 - g.momentum, num(t.impact, 0, 100));
         t.appliedProgress = Math.min(
           100 - g.progress,
-          Number(t.progressImpact || 0),
+          num(t.progressImpact, 0, 100),
         );
         g.momentum += t.appliedMomentum;
         g.progress += t.appliedProgress;
@@ -713,7 +720,7 @@
     if (h.goalId) {
       const g = d.goals.find((g) => g.id === h.goalId);
       if (g && !g.archived) {
-        const impact = num(h.impact, 0, 50) || 5;
+        const impact = num(h.impact ?? 5, 0, 50);
         if (!wasChecked) {
           const added = Math.min(100 - g.momentum, impact);
           g.momentum += added;
@@ -730,6 +737,18 @@
       }
     }
     return h;
+  }
+
+  function recordDebtPayment(d, debtId, amount, {deductBalance = false, date = day(), title = ''} = {}) {
+    const debt = d.settings?.debts?.find(x => x.id === debtId);
+    if (!debt) throw Error('debtNotFound');
+    const cents = value => Math.round(Number(value) * 100);
+    const total = cents(debt.totalAmount), paid = cents(debt.paidAmount || 0), payment = cents(amount);
+    if (![total,paid,payment].every(Number.isSafeInteger) || paid < 0 || payment <= 0 || payment > total - paid) throw Error('invalidPayment');
+    debt.paidAmount = (paid + payment) / 100;
+    debt.updatedAt = Date.now();
+    if (deductBalance) d.finances.unshift({id:id(), debtId, title:title || debt.name, amount:payment / 100, type:'expense', category:'Debts / سداد ديون', date, createdAt:Date.now()});
+    return debt;
   }
 
   function goalProgress(goal, data) {
@@ -751,6 +770,7 @@
   }
 
   return {
+    recordDebtPayment,
     goalProgress,
     plannedGoalProgress,
     completeTask,

@@ -6,6 +6,15 @@ test('invalid cloud credentials never fall back to local authentication',async()
 test('authenticated session restores the same cloud identity',async()=>{const session={user:{id:'u',email:'a@example.test'}};const a=setup({getSession:async()=>({data:{session}})});assert.equal((await a.session()).user.id,'u');});
 test('logout invalidates this device session without signing out other devices',async()=>{let scope;const a=setup({signOut:async options=>{scope=options.scope;return {data:{}};}});await a.logout();assert.equal(scope,'local');});
 test('missing CDN fails closed rather than opening a local account',async()=>{const context={window:{}};vm.runInNewContext(source,context);await assert.rejects(context.window.NorthAuth.login('a@example.test','password'),/network/);});
+test('numeric passwords do not trigger OTP requests when the network fails',async()=>{
+ let calls=0;const a=setup({signInWithPassword:async()=>({error:{name:'AuthRetryableFetchError'}}),verifyOtp:async()=>{calls++;return {data:{}}}});
+ await assert.rejects(a.login('a@example.test','123456'));assert.equal(calls,0);
+});
+test('OTP login and explicit verification use the same confirmed-session flow',async()=>{
+ const types=[];const a=setup({signInWithPassword:async()=>({error:{code:'invalid_credentials'}}),verifyOtp:async({type})=>{types.push(type);return type==='signup'?{error:{code:'otp_expired'}}:{data:{session:{user:{id:'confirmed'}}}}}});
+ assert.equal((await a.login('a@example.test','123456')).session.user.id,'confirmed');assert.deepEqual(types,['signup','email']);
+ const invalid=setup({verifyOtp:async()=>({data:{session:null}})});await assert.rejects(invalid.verifyOtp('a@example.test','123456'),e=>e.code==='otp_expired');
+});
 test('signup errors distinguish mail configuration from invalid credentials',()=>{const a=setup({});assert.match(a.errorMessage({code:'email_address_not_authorized'},'en',true),/SMTP/);assert.match(a.errorMessage({code:'over_email_send_rate_limit'},'en',true),/limit/);assert.match(a.errorMessage({code:'invalid_credentials'},'en',false),/Incorrect/);});
 test('unknown errors do not reveal raw server content',()=>{const a=setup({});const message=a.errorMessage({message:'secret sensitive response',status:500},'en',true);assert.match(message,/create account/);assert.match(message,/500/);assert.doesNotMatch(message,/secret/);});
 

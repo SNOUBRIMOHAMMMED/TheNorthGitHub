@@ -379,12 +379,11 @@ Object.assign(dict.ar, {
   "giveFeedback": "شاركنا اقتراحك / طلب ميزة"
 });
 function t(k){return dict[currentLang()][k]||k}
-function getAccounts(){try{return JSON.parse(localStorage.getItem(APP_KEY)||"{}")}catch{return {}}}
-function setAccounts(v){try{localStorage.setItem(APP_KEY,JSON.stringify(v));window.dispatchEvent(new Event("north:local-change"))}catch(e){toast(currentLang()==="ar"?"تعذر الحفظ. تحقق من مساحة التخزين وصدّر نسخة احتياطية.":"Could not save. Check storage and export a backup.");throw e}}
+function getAccounts(){try{const value=JSON.parse(localStorage.getItem(APP_KEY)||"{}");return value && typeof value==="object" && !Array.isArray(value) ? value : {}}catch{return {}}}
+function setAccounts(v){try{const raw=localStorage.getItem(APP_KEY); if(raw){const previous=JSON.parse(raw);if(!previous||typeof previous!=="object"||Array.isArray(previous))throw Error("invalidData")} const next=JSON.stringify(v);if(raw===next)return;localStorage.setItem(APP_KEY,next);window.dispatchEvent(new Event("north:local-change"))}catch(e){toast(currentLang()==="ar"?"تعذر الحفظ. تحقق من مساحة التخزين وصدّر نسخة احتياطية.":"Could not save. Check storage and export a backup.");throw e}}
 function currentEmail(){return localStorage.getItem(SESSION_KEY)||""}
 function account(){return getAccounts()[currentEmail()]||null}
 function currentLang(){return account()?.data?.profile?.lang === "ar" ? "ar" : account()?.data?.profile?.lang === "en" ? "en" : document.documentElement.lang === "ar" ? "ar" : "en"}
-async function hash(text){const b=new TextEncoder().encode(text);const h=await crypto.subtle.digest("SHA-256",b);return [...new Uint8Array(h)].map(x=>x.toString(16).padStart(2,"0")).join("")}
 function freshData(name,email,lang="en"){return {profile:{name,email,lang,avatar:"",threshold:60},goals:[],tasks:[],notifications:[],dismissed:{},range:7,lastOpened:iso(),lastActivityByGoal:{}}}
 function saveData(mutator, updatedData){
   const all=getAccounts(), email=currentEmail(); if(!all[email])return;
@@ -581,13 +580,13 @@ function rollover(){
   const diff=Math.max(1,Math.round((end-start)/86400000));
   d.goals.forEach(g=>{
     if(g.archived||g.progress>=100)return;
-    for(let i=1;i<=diff;i++){
+    for(let i=0;i<diff;i++){
       const dt=new Date(start);dt.setDate(dt.getDate()+i);const day=window.LifeCore.day(+dt);
       const hadAction=d.tasks.some(x=>x.goalId===g.id&&x.done&&x.completedDate===day)||d.habits.some(h=>h.goalId===g.id&&h.checks?.includes(day))||(d.sessions||[]).some(s=>s.goalId===g.id&&window.LifeCore.day(s.startedAt)===day);
       if(!hadAction)g.momentum=clamp(g.momentum-5);
       if(!g.history.some(h=>h.date===day))g.history.push({date:day,value:g.momentum});
     }
-    g.history=g.history.slice(-120);
+    // Retain the full goal history; the current day is not a missed day.
   });
   d.lastOpened=today;d.dismissed={};saveData(null,d);
 }
@@ -716,16 +715,12 @@ $("#taskForm").addEventListener("submit",e=>{
 });
 function toggleTask(id){
   saveData(d=>{
-    if(window.LifeCore?.completeTask){
-      window.LifeCore.completeTask(d,id);
-      const tk=d.tasks.find(x=>x.id===id);
-      const g=d.goals.find(x=>x.id===tk?.goalId);
-      if(tk&&g&&tk.done){
-        d.notifications.unshift({id:"done-"+id+"-"+Date.now(),type:"success",title:`${g.name} ${t("movedUp")}`,body:`${t("completed")}: ${tk.title}. ${t("momentum")}: ${Math.round(g.momentum)}.`,ts:Date.now()});
-      }
-      return;
+    window.LifeCore.completeTask(d,id);
+    const tk=d.tasks.find(x=>x.id===id);
+    const g=d.goals.find(x=>x.id===tk?.goalId);
+    if(tk&&g&&tk.done&&!tk.archived){
+      d.notifications.unshift({id:"done-"+id+"-"+Date.now(),type:"success",title:`${g.name} ${t("movedUp")}`,body:`${t("completed")}: ${tk.title}. ${t("momentum")}: ${Math.round(g.momentum)}.`,ts:Date.now()});
     }
-    const tk=d.tasks.find(x=>x.id===id);if(!tk)return;const g=d.goals.find(x=>x.id===tk.goalId);if(!g)return;if(!tk.done){tk.done=true;tk.completedDate=iso();g.momentum=clamp(g.momentum+tk.impact);g.progress=clamp(g.progress+tk.progressImpact);updateHistory(g);d.notifications.unshift({id:"done-"+id+"-"+Date.now(),type:"success",title:`${g.name} ${t("movedUp")}`,body:`${t("completed")}: ${tk.title}. ${t("momentum")}: ${Math.round(g.momentum)}.`,ts:Date.now()})}else{tk.done=false;tk.completedDate="";g.momentum=clamp(g.momentum-tk.impact);g.progress=clamp(g.progress-tk.progressImpact);updateHistory(g)}
   });generateSignals();renderAll();
 }
 function deleteGoal(id){
@@ -733,8 +728,7 @@ function deleteGoal(id){
   saveData(d=>{
     const g=d.goals.find(x=>x.id===id);
     if(g)g.archived=true;
-    d.tasks.forEach(t=>{if(t.goalId===id)t.goalId="";});
-    d.habits.forEach(h=>{if(h.goalId===id)h.goalId="";});
+    // Archiving keeps task, habit and session relationships recoverable.
   });
   renderAll();
 }
@@ -789,12 +783,14 @@ window.addEventListener("load", async () => {
   }
 });
 
+let authEventVersion=0;
 window.NorthAuth?.client?.auth.onAuthStateChange((event, session) => {
-  if (event === "SIGNED_OUT") { localStorage.removeItem(SESSION_KEY); showLanding(); }
+  const version=++authEventVersion;
+  if (event === "SIGNED_OUT") { localStorage.removeItem(SESSION_KEY); if(window.NorthAuth)window.NorthAuth.cachedUser=null; showLanding(); }
   else if ((event === "SIGNED_IN" || event === "TOKEN_REFRESHED" || event === "USER_UPDATED") && session?.user) {
     // Supabase auth callbacks hold an auth lock. Restore outside that callback.
     setTimeout(() => {
-      if (authBusy) return; // The explicit sign-in flow restores the account itself.
+      if (authBusy || version!==authEventVersion) return; // Ignore stale callbacks after sign-out or account switch.
       enterCloud(session.user).catch(err => toast(window.NorthAuth.errorMessage(err,currentLang(),false)));
     }, 0);
   }

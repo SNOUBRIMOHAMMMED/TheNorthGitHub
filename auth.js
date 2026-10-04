@@ -15,6 +15,17 @@
   const client=window.supabase?.createClient(url,key,{global:{fetch:boundedFetch}});
   const redirect = () => window.location ? window.location.origin + window.location.pathname : undefined;
   const check=r=>{if(r.error)throw r.error;return r.data;};
+  async function verifyEmailCode(email, token) {
+    if (!client) throw Error('network');
+    let failure;
+    for (const type of ['signup','email']) {
+      const result = await client.auth.verifyOtp({email,token:String(token||'').trim(),type});
+      if (!result.error && result.data?.session) return result.data;
+      failure = result.error || Object.assign(Error('No session'),{code:'otp_expired'});
+      if (result.error && (result.error.name === 'AuthRetryableFetchError' || result.error.status >= 500)) throw result.error;
+    }
+    throw failure;
+  }
   window.NorthAuth={
     client,
     recoveryPending: !!window.location?.search?.includes("recovery=1"),
@@ -35,30 +46,11 @@
       try {
         return check(await client.auth.signInWithPassword({email,password}));
       } catch(err) {
-        const trimmed = String(password||"").trim();
-        if (/^\d{6}$/.test(trimmed)) {
-          try {
-            const v1 = await client.auth.verifyOtp({ email, token: trimmed, type: 'signup' });
-            if (v1.data?.session) return v1.data;
-          } catch {}
-          try {
-            const v2 = await client.auth.verifyOtp({ email, token: trimmed, type: 'email' });
-            if (v2.data?.session) return v2.data;
-          } catch {}
-        }
+        if (err?.code === 'invalid_credentials' && /^\d{6}$/.test(String(password||'').trim())) return verifyEmailCode(email,password);
         throw err;
       }
     },
-    async verifyOtp(email, token){
-      if(!client) throw Error('network');
-      const trimmed = String(token||"").trim();
-      let r = await client.auth.verifyOtp({ email, token: trimmed, type: 'signup' });
-      if (!r.error && r.data?.session) return r.data;
-      let r2 = await client.auth.verifyOtp({ email, token: trimmed, type: 'email' });
-      if (!r2.error && r2.data?.session) return r2.data;
-      if (r.error) throw r.error;
-      return r.data;
-    },
+    verifyOtp:verifyEmailCode,
     async signup(email,password,name,lang){
       if(!client)throw Error('network');
       const redirectTo = typeof window !== 'undefined' && window.location ? (window.location.origin + window.location.pathname) : undefined;
@@ -80,6 +72,7 @@ window.NorthAuth.errorMessage = (error, lang, signup) => {
   const messages = {
     identity_changed: ['هذا البريد مرتبط محليًا بمعرّف حساب مختلف. احتفظنا ببياناتك؛ لا تنشئ حسابًا بديلًا. يلزم التحقق من الحساب الأصلي قبل المزامنة.', 'This device has data for a different account ID with the same email. Your local data was preserved. Verify the original account before syncing.'],
     invalid_credentials: ['البريد أو كلمة المرور غير صحيحين.', 'Incorrect email or password.'],
+    otp_expired: ['رمز التأكيد غير صالح أو انتهت صلاحيته. اطلب رمزًا جديدًا.', 'This confirmation code is invalid or expired. Request a new code.'],
     email_not_confirmed: ['أكّد بريدك من رسالة التأكيد ثم سجّل الدخول.', 'Confirm your email, then sign in.'],
     weak_password: ['كلمة المرور لا تستوفي شروط الأمان. استخدم كلمة أطول وأقوى.', 'Use a longer, stronger password.'],
     email_address_invalid: ['تحقق من كتابة عنوان البريد الإلكتروني.', 'Check your email address.'],

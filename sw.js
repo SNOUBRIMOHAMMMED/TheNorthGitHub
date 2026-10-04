@@ -1,8 +1,8 @@
 /* Offline shell only. Never intercept external traffic or clear other apps' caches. */
-const CACHE = "lifeos-v4-20261004-task-delete";
+const CACHE = "lifeos-v4-20261004-backend-review";
 const ASSETS = [
   "north-brand.css",
-  "north-brand.css?v=20261004-task-delete",
+  "north-brand.css?v=20261004-backend-review",
   "landing-motion.js",
   "landing-motion.js?v=3",
   "assets/north-summit.webp",
@@ -20,15 +20,15 @@ const ASSETS = [
   "executive.css",
   "executive.css?v=auto2",
   "auth.js",
-  "auth.js?v=auto2",
+  "auth.js?v=20261004-backend-review",
   "cloud-sync.js",
-  "cloud-sync.js?v=auto2",
+  "cloud-sync.js?v=20261004-backend-review",
   "core.js",
-  "core.js?v=20261004-task-delete",
+  "core.js?v=20261004-backend-review",
   "app.js",
-  "app.js?v=20261004-task-delete",
+  "app.js?v=20261004-backend-review",
   "workspace.js",
-  "workspace.js?v=20261004-task-delete",
+  "workspace.js?v=20261004-backend-review",
   "manifest.webmanifest",
   "brand-mark.svg",
   "icon-180.png",

@@ -194,6 +194,8 @@
   ];
   function error(e) {
     const messages = {
+      invalidPayment:L("Payment must not exceed the remaining debt.","مبلغ السداد يجب ألا يتجاوز المبلغ المتبقي من الدين."),
+      debtNotFound:L("This debt no longer exists. Reopen the list.","هذا الدين غير موجود. أعد فتح القائمة."),
       activeSession: L(
         "A session is already active. Resume or finish it first.",
         "لديك جلسة نشطة. استأنفها أو أنهها أولًا.",
@@ -631,7 +633,7 @@
       if (!d.settings) d.settings = {};
       if (!d.settings.monthlyStartingBalance) d.settings.monthlyStartingBalance = {};
       d.settings.monthlyStartingBalance[m] = amount;
-      d.settings.startingBalance = amount;
+
     });
   }
 
@@ -1104,57 +1106,7 @@
     const tones = ["#c9b4e9", "#df847a", "#68b7ad"];
     return tones[Math.max(0, d.goals.indexOf(g)) % tones.length];
   }
-  function homeGoalCards(d) {
-    const gs = d.goals.filter(g => !g.archived).slice(0, 3);
-    const colors = [
-      { color: "#8B5CF6", bg: "rgba(139,92,246,0.14)", icon: '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/>' },
-      { color: "#EF4444", bg: "rgba(239,68,68,0.14)", icon: '<path d="m21 16-9 5-9-5V8l9-5 9 5v8z"/><path d="m3.27 6.96 8.73 4.89 8.73-4.89M12 22.08V12"/>' },
-      { color: "#10B981", bg: "rgba(16,185,129,0.14)", icon: '<path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 6h10M6 10h10"/>' }
-    ];
-    return `<section class="v3-goals-section">
-      <div class="v3-section-title-row">
-        <div>
-          <span class="v3-section-kicker">🎯 ${L("YOUR GOALS", "أهدافك")}</span>
-          <h2 class="v3-section-title">${L("Active Horizons", "أهدافك")}</h2>
-        </div>
-        ${btn(L("All goals", "كل الأهداف") + " ›", "navigate", 'data-to="goals" class="v3-view-all-link"')}
-      </div>
-      <div class="v3-goals-grid">
-        ${gs.length ? gs.map((g, i) => {
-          const c = colors[i % colors.length];
-          const actual = calcGoalProgress(g, d);
-          const planned = plannedProgress(g);
-          return `<article class="v3-goal-card" data-route="goals" data-id="${esc(g.id)}" style="border-inline-start: 4px solid ${c.color}">
-            <div class="v3-goal-card-head">
-              <span class="v3-goal-icon" style="background:${c.bg};color:${c.color};border-color:${c.color}30">
-                <svg viewBox="0 0 24 24" aria-hidden="true">${c.icon}</svg>
-              </span>
-              <div class="v3-goal-titles">
-                <strong>${esc(g.name)}</strong>
-                ${g.identity ? `<small class="v3-goal-id-tag">👑 ${esc(g.identity)}</small>` : ''}
-              </div>
-              <span class="v3-chevron">›</span>
-            </div>
-            <div class="v3-goal-metrics-row">
-              <div class="v3-metric-col">
-                <strong>${actual}%</strong>
-                <small>${L("Actual", "الفعلي")}</small>
-              </div>
-              <div class="v3-metric-col">
-                <strong>${planned === null ? "—" : planned + "%"}</strong>
-                <small>${L("Planned", "المخطط")}</small>
-              </div>
-            </div>
-            <div class="v3-goal-track">
-              <div class="v3-goal-fill" style="width:${actual}%;background:${c.color}"></div>
-              <div class="v3-goal-marker" style="left:${planned}%"></div>
-            </div>
-            <div class="v3-goal-marker-sub">${planned}%</div>
-          </article>`;
-        }).join("") : `<div class="v3-empty-card"><p>${L("No goals created yet.", "لم تضف أهدافاً بعد.")}</p>${btn("+ " + L("Create your first goal", "أضف أول هدف لك"), "new", 'data-kind="goals"', true)}</div>`}
-      </div>
-    </section>`;
-  }
+
   function workGauge(value, max) {
     const pct = Math.max(0, Math.min(100, percent(value, max)));
     return `<div class="north-gauge" style="--gauge:${pct}%" role="progressbar" aria-label="${L("Daily deep work", "العمل العميق اليومي")}" aria-valuenow="${Math.round(pct)}" aria-valuemin="0" aria-valuemax="100"><div><strong>${hrs(value)}</strong><small>${L("of", "من")} ${hrs(max)}</small></div></div>`;
@@ -2338,8 +2290,10 @@
   const cloud = supabase && window.NorthCloud ? window.NorthCloud.create({
     client:supabase, read:()=>db.read(), storage:localStorage,
     email:()=>localStorage.getItem(C.SESSION_KEY),
+    ownerId:()=>JSON.parse(localStorage.getItem(C.ACCOUNT_KEY)||"{}")[localStorage.getItem(C.SESSION_KEY)]?.cloudUserId,
+    validate:payload=>C.validateImport({...db.read(),...payload,activeSession:null}),
     apply:payload=>{
-      const validated=C.validateImport({...db.read(),...payload});
+      const validated=C.validateImport({...db.read(),...payload,activeSession:null});
       db.update(d=>{for(const k of Object.keys(payload)) if(k!=="activeSession") d[k]=validated[k];});
       window.LifeLegacy?.renderAll?.(); render();
     },
@@ -2742,11 +2696,12 @@
     }
     if (a === "finance-debt-confirm-delete") {
       const debtId = b.dataset.id;
-      await mutate((d) => {
+      const saved = await mutate((d) => {
         if (!d.settings) d.settings = {};
         if (!Array.isArray(d.settings.debts)) d.settings.debts = [];
         d.settings.debts = d.settings.debts.filter(x => x.id !== debtId);
       });
+      if (!saved) return;
       $("#lxDialog")?.close();
       notice(L("Debt removed.", "تم حذف الدين."));
       window.LifeLegacy.renderAll();
@@ -3155,9 +3110,10 @@
   }
   async function submit(e) {
     const form = e.target;
-    if (!form.id.startsWith("lx")) return;
+    const formId = form.getAttribute?.("id") || (typeof form.id === "string" ? form.id : "");
+    if (!formId.startsWith("lx")) return;
     e.preventDefault();
-    if (form.id !== "lxFeedbackForm") {
+    if (formId !== "lxFeedbackForm") {
       try { flushSaves(); } catch {}
     }
     const data = Object.fromEntries(new FormData(form));
@@ -3165,7 +3121,7 @@
     if (submitButton) submitButton.disabled = true;
     let result;
     try {
-      if (form.id === "lxQuickTaskFocusForm") {
+      if (formId === "lxQuickTaskFocusForm") {
         const title = (data.quickTitle || "").trim();
         result = await mutate(d => {
           const goal = d.goals.find(g => g.id === data.goalId && !g.archived);
@@ -3178,7 +3134,7 @@
         if (result) navigate("focus");
         return;
       }
-      if (form.id === "lxQuickTxForm") {
+      if (formId === "lxQuickTxForm") {
         const type = data.type || "expense";
         const amount = parseFloat(data.amount);
         const category = data.category || "General";
@@ -3191,7 +3147,7 @@
           if (submitButton) submitButton.disabled = false;
           return;
         }
-        await mutate((d) => {
+        const saved = await mutate((d) => {
           if (!Array.isArray(d.finances)) d.finances = [];
           d.finances.unshift({
             id: C.id(),
@@ -3203,44 +3159,47 @@
             createdAt: Date.now()
           });
         });
+        if (!saved) return;
         form.reset();
         notice(L("Transaction saved.", "تم تسجيل المعاملة بنجاح."));
         window.LifeLegacy.renderAll();
         return;
       }
-      if (form.id === "lxStartBalanceForm") {
+      if (formId === "lxStartBalanceForm") {
         const m = data.month;
-        const amount = parseFloat(data.amount) || 0;
-        await setStartingBalance(m, amount);
+        const amount = Number(data.amount || 0);
+        if (!Number.isFinite(amount)) throw Error("invalidData");
+        if (!await setStartingBalance(m, amount)) return;
         $("#lxDialog")?.close();
         notice(L("Starting balance updated.", "تم تحديث الرصيد الافتتاحي."));
         window.LifeLegacy.renderAll();
         return;
       }
-      if (form.id === "lxFinancePlanForm") {
+      if (formId === "lxFinancePlanForm") {
         const m = data.month;
         const readRows = (prefix, field) => Object.keys(data).filter(k => k.startsWith(prefix + "_cat_")).map(k => {
           const index = k.slice((prefix + "_cat_").length);
-          return {[field]: String(data[k] || "").trim(), amount: Number(data[prefix + "_amt_" + index]) || 0};
+          return {[field]: String(data[k] || "").trim(), amount: Number(data[prefix + "_amt_" + index] || 0)};
         }).filter(x => x[field]);
         const newExpenses = readRows("exp", "category");
         const newIncome = readRows("inc", "source");
         if ([...newExpenses, ...newIncome].some(x => !Number.isFinite(x.amount) || x.amount < 0)) {
           notice(L("Enter valid non-negative amounts.", "أدخل مبالغ صحيحة غير سالبة."), true); return;
         }
-        await setFinancePlan(m, { expenses: newExpenses, income: newIncome });
+        if (!await setFinancePlan(m, { expenses: newExpenses, income: newIncome })) return;
         $("#lxDialog")?.close();
         notice(L("Budget plan saved.", "تم حفظ خطة الميزانية."));
         window.LifeLegacy.renderAll();
         return;
       }
-      if (form.id === "lxDebtForm") {
+      if (formId === "lxDebtForm") {
         const id = data.id || C.id();
         const name = (data.name || "").trim();
-        const totalAmount = parseFloat(data.totalAmount) || 0;
-        const paidAmount = parseFloat(data.paidAmount) || 0;
+        const totalAmount = Number(data.totalAmount || 0);
+        const paidAmount = Number(data.paidAmount || 0);
+        if (!name || ![totalAmount,paidAmount].every(Number.isFinite) || totalAmount < 0 || paidAmount < 0 || paidAmount > totalAmount) throw Error("invalidData");
         const notes = (data.notes || "").trim();
-        await mutate((d) => {
+        const saved = await mutate((d) => {
           if (!d.settings) d.settings = {};
           if (!Array.isArray(d.settings.debts)) d.settings.debts = [];
           const idx = d.settings.debts.findIndex(x => x.id === id);
@@ -3248,12 +3207,13 @@
           if (idx >= 0) d.settings.debts[idx] = item;
           else d.settings.debts.push(item);
         });
+        if (!saved) return;
         $("#lxDialog")?.close();
         notice(L("Debt saved.", "تم حفظ بيانات الدين."));
         window.LifeLegacy.renderAll();
         return;
       }
-      if (form.id === "lxDebtPayForm") {
+      if (formId === "lxDebtPayForm") {
         const debtId = data.debtId;
         const paymentAmount = parseFloat(data.paymentAmount) || 0;
         const deductBalance = form.querySelector("[name=deductBalance]")?.checked;
@@ -3262,36 +3222,20 @@
           if (submitButton) submitButton.disabled = false;
           return;
         }
-        await mutate((d) => {
-          if (!d.settings) d.settings = {};
-          if (!Array.isArray(d.settings.debts)) d.settings.debts = [];
-          const debt = d.settings.debts.find(x => x.id === debtId);
-          if (debt) {
-            debt.paidAmount = Math.min(Number(debt.totalAmount), Number(debt.paidAmount || 0) + paymentAmount);
-          }
-          if (deductBalance) {
-            if (!Array.isArray(d.finances)) d.finances = [];
-            const curM = financeMonth || C.day().slice(0, 7);
-            const todayStr = C.day();
-            const date = data.date || (todayStr.startsWith(curM) ? todayStr : (curM + "-01"));
-            d.finances.unshift({
-              id: C.id(),
-              title: L("Debt Payment: ", "سداد دين: ") + (debt?.name || ""),
-              amount: paymentAmount,
-              type: "expense",
-              category: "Debts / سداد ديون",
-              date,
-              createdAt: Date.now()
-            });
-          }
-        });
+        const curM = financeMonth || C.day().slice(0, 7);
+        const todayStr = C.day();
+        const date = data.date || (todayStr.startsWith(curM) ? todayStr : curM + "-01");
+        const saved = await mutate(d => C.recordDebtPayment(d, debtId, paymentAmount, {
+          deductBalance, date, title: L("Debt Payment: ", "سداد دين: ") + (d.settings.debts.find(x=>x.id===debtId)?.name || "")
+        }));
+        if (!saved) return;
         $("#lxDialog")?.close();
-        notice(L("Payment recorded successfully.", "تم تسجيل دفعة السداد وخصمها من الرصيد."));
+        notice(deductBalance ? L("Payment recorded and deducted from balance.", "تم تسجيل دفعة السداد وخصمها من الرصيد.") : L("Payment recorded.", "تم تسجيل دفعة السداد."));
         window.LifeLegacy.renderAll();
         return;
       }
 
-      if (form.id === "lxFeedbackForm") {
+      if (formId === "lxFeedbackForm") {
         const cat = data.fbCategory || "feature";
         const msg = String(data.fbMessage || "").trim();
         const eml = String(data.fbEmail || "").trim();
@@ -3315,7 +3259,7 @@
         notice(L("Feedback received. Thank you.", "تم استلام اقتراحك. شكرًا لك."));
         return;
       }
-      if (form.id === "lxBudgetForm") {
+      if (formId === "lxBudgetForm") {
         const budget = Array.from(form.querySelectorAll("[data-budget-row]"))
           .map((row) => ({
             name: row.querySelector("[data-budget-name]").value.trim(),
@@ -3348,7 +3292,7 @@
           notice(L("Allocation updated", "تم تحديث توزيع الدخل"));
         }
       }
-      if (form.id === "lxMoneyTodo") {
+      if (formId === "lxMoneyTodo") {
         if (!data.title.trim()) return;
         await mutate((d) => {
           d.settings.moneyTodos = d.settings.moneyTodos || [];
@@ -3360,12 +3304,12 @@
           });
         });
       }
-      if (form.id === "lxFocusForm") {
+      if (formId === "lxFocusForm") {
         result = await mutate((d) => C.createSession(d, data));
         if (result) navigate("focus");
         else if (db.read()?.activeSession) activeDialog();
       }
-      if (form.id === "lxEntityForm") {
+      if (formId === "lxEntityForm") {
         const kind = form.dataset.kind,
           id = form.dataset.id;
         let attachment;
@@ -3479,7 +3423,7 @@
           );
         }
       }
-      if (form.id === "lxManualForm") {
+      if (formId === "lxManualForm") {
         result = await mutate((d) => {
           const task = d.tasks.find((t) => t.id === data.taskId),
             goal = d.goals.find((g) => g.id === (task?.goalId || data.goalId));
@@ -3495,7 +3439,7 @@
           notice(L("Time saved", "تم حفظ الوقت"));
         }
       }
-      if (form.id === "lxSummaryForm") {
+      if (formId === "lxSummaryForm") {
         result = await mutate((d) => {
           if (d.activeSession?.id !== form.dataset.id) throw Error("noSession");
           Object.assign(d.activeSession, data, {
@@ -3509,7 +3453,7 @@
           notice(L("Session saved. Well done.", "حُفظت الجلسة. أحسنت."));
         }
       }
-      if (form.id === "lxDistractionForm") {
+      if (formId === "lxDistractionForm") {
         result = await mutate((d) => {
           if (!d.activeSession) throw Error("noSession");
           const entry = {
@@ -3531,7 +3475,7 @@
           );
         }
       }
-      if (["lxSettingsForm", "lxPomodoroForm"].includes(form.id)) {
+      if (["lxSettingsForm", "lxPomodoroForm"].includes(formId)) {
         for (const k of [
           "dailyHours",
           "weeklyHours",
@@ -3558,7 +3502,7 @@
           delete data.categories;
           Object.assign(d.settings, data);
         });
-        if (result) { if (form.id === "lxPomodoroForm") $("#lxDialog").close(); render(); notice(L("Preferences saved", "تم حفظ التفضيلات")); }
+        if (result) { if (formId === "lxPomodoroForm") $("#lxDialog").close(); render(); notice(L("Preferences saved", "تم حفظ التفضيلات")); }
       }
     } catch (err) {
       if (err.message === "fileTooLarge")
@@ -3709,7 +3653,7 @@
     const timer = $("#lxTimer");
     if (timer) {
       timer.textContent = fmtMinSec(time);
-      $("#lxTimerMeta").textContent = a.phase === "break" ? L("Break Time", "فترة راحة") : L("Deep Focus", "جلسة تركيز"); // 
+      $("#lxTimerMeta").textContent =
         (a.phase === "break"
           ? L("Break", "استراحة")
           : a.status === "completed"
@@ -3719,15 +3663,7 @@
               : L("In focus", "في التركيز")) +
         " · " +
         L("Worked ", "عملت ") +
-        hrs(duration) +
-        (a.phaseDuration
-          ? " · " +
-            L("Target ", "الهدف ") +
-            hrs(a.phaseDuration) +
-            " · " +
-            percent(phase, a.phaseDuration) +
-            "%"
-          : "");
+        hrs(duration);
       const dial = $("#v3DialFill");
       if (dial && a.phaseDuration) {
         const circ = 2 * Math.PI * 130;

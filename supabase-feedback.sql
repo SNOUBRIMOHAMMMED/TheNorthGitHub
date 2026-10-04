@@ -1,5 +1,6 @@
 -- Optional feedback inbox. Run once in Supabase SQL Editor.
 -- Additive: does not change user_sessions or existing customer data.
+begin;
 create table if not exists public.north_feedbacks (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users(id) on delete cascade,
@@ -15,3 +16,4 @@ drop policy if exists north_feedback_insert on public.north_feedbacks;
 create policy north_feedback_insert on public.north_feedbacks
   for insert to authenticated with check ((select auth.uid()) = user_id);
 -- Only administrators/service role can read the feedback inbox.
+commit;

@@ -1,6 +1,6 @@
 # THE NORTH / الشمال
 
-Complete application source with the final bridge landing page. The existing vanilla HTML/CSS/JavaScript application, timers, workspace and Supabase adapters are preserved. No framework migration is required.
+Complete application source with the bridge landing page and backend reliability corrections. The existing vanilla HTML/CSS/JavaScript application, timers, workspace and Supabase adapters are preserved. See `BACKEND-REVIEW.md` for fixes, tests, database work and remaining limits.
 
 ## Run locally
 
@@ -28,7 +28,7 @@ The existing Supabase project URL and **publishable** client key are in `auth.js
 
 ## Database
 
-For an already working Supabase project, keep its data and configuration. This landing-page release requires no live database migration.
+For an already working Supabase project, keep its data and configuration. This release does not change the workspace table. `supabase-feedback.sql` sets up the feedback form's separate RLS-protected table; it has already been applied to the current THE NORTH project.
 
 For a **new empty** Supabase project only, follow `SUPABASE-SETUP.md` and run `supabase-setup.sql`. It creates the versioned `user_sessions` workspace table, own-user row-level security and revision validation. The bootstrap file is deliberately not a destructive reset and is not intended to be rerun on an existing table.
 

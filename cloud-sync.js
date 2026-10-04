@@ -39,20 +39,29 @@
     if (e?.code === '42501' || e?.status === 403) return 'permission';
     if (e?.code === 'PGRST301' || e?.status === 401) return 'expired';
     if (e?.code === '23505') return 'conflict';
-    if (e?.message === 'shape') return 'invalidData';
+    if (['shape','invalidData'].includes(e?.message)) return 'invalidData';
     if (e?.name === 'QuotaExceededError') return 'storage';
     return 'offline';
   }
-  function create({client, read, apply, storage, email, status}) {
-    let busy = false, user = null, inFlight = null;
+  function create({client, read, apply, storage, email, ownerId, validate, status}) {
+    let user = null, inFlight = null, flightOwner = null, resumeVersion = 0;
+    const volatileMeta = new Map();
     const key = () => 'north_cloud_v1_' + user.id;
-    const valid = () => user && user.email?.toLowerCase() === email()?.toLowerCase();
+    const valid = () => user && user.email?.toLowerCase() === email()?.toLowerCase() && (!ownerId?.() || ownerId() === user.id);
     const meta = () => {
+      if (volatileMeta.has(key())) return volatileMeta.get(key());
       const raw = storage.getItem(key());
-      try { return JSON.parse(raw || 'null'); }
-      catch { storage.setItem(key() + '_recovery', raw); return null; }
+      try {
+        const value = JSON.parse(raw || 'null');
+        return value && Number.isSafeInteger(value.revision) && value.revision >= 0 && typeof value.base === 'string' ? value : null;
+      } catch { return null; } // Preserve corrupt metadata in place; it is not workspace data.
     };
-    const remember = (revision, payload) => storage.setItem(key(), JSON.stringify({revision, base:fingerprint(payload)}));
+    const remember = (revision, payload) => {
+      const value = {revision, base:fingerprint(payload)};
+      // A successful server save must not fail just because its local sync cache is full.
+      volatileMeta.set(key(), value);
+      try { storage.setItem(key(), JSON.stringify(value)); } catch {}
+    };
     const check = result => { if (result.error) throw result.error; return result.data; };
     const backup = remote => {
       const name = 'north_before_cloud_' + user.id;
@@ -66,18 +75,22 @@
     };
     const verify = payload => {
       if (!payload || ['tasks','sessions','projects','goals'].some(k => !Array.isArray(payload[k]))) throw Error('shape');
-      for (const k of fields) if (payload[k] && (!Array.isArray(payload[k]) || payload[k].some(x => !x || typeof x.id !== 'string'))) throw Error('shape');
+      for (const k of fields) if (payload[k] !== undefined) {
+        const list = payload[k];
+        if (!Array.isArray(list) || list.some(x => !x || typeof x.id !== 'string' || !x.id) || new Set(list.map(x=>x.id)).size !== list.length) throw Error('shape');
+      }
+      validate?.(payload);
       return payload;
     };
     async function syncOnce(choice) {
       if (!valid()) return false;
-      busy = true;
       const owner = user.id, localEmail = email();
       const stillCurrent = () => valid() && user.id === owner && email() === localEmail;
       try {
         status('syncing');
         const row = check(await client.from('user_sessions').select('payload,revision').eq('user_id',owner).maybeSingle());
         if (!stillCurrent()) return;
+        verify(read());
         const local = JSON.parse(fingerprint(read())), localPrint = fingerprint(local), m = meta();
         if (!row) {
           const inserted = check(await client.from('user_sessions').insert({user_id:owner,payload:local,revision:0}).select('revision').single());
@@ -99,33 +112,38 @@
             if (read().activeSession) {status('active');return;}
             backup(row.payload);
             // Changes made while the read was in flight must remain pending for upload.
-            apply(merge(local,JSON.parse(fingerprint(read())),row.payload));
+            apply(verify(merge(local,JSON.parse(fingerprint(read())),row.payload)));
             remember(row.revision,row.payload);
           } else if (choice === 'local' || localPrint !== remotePrint) {
-            backup(row.payload);
+            verify(outgoing);
+            // Keep recovery copies for reconciliation, not for every ordinary upload.
+            if (choice || remoteChanged) backup(row.payload);
             // Compare-and-swap prevents silent overwrite of another device's revision.
             const updated = check(await client.from('user_sessions').update({payload:outgoing,revision:row.revision+1}).eq('user_id',owner).eq('revision',row.revision).select('revision').maybeSingle());
             if (!stillCurrent()) return;
             if (!updated) return 'retry';
-            if (!equal(outgoing,local)) apply(merge(local,JSON.parse(fingerprint(read())),outgoing));
+            if (!equal(outgoing,local)) apply(verify(merge(local,JSON.parse(fingerprint(read())),outgoing)));
             remember(updated.revision,outgoing);
           } else remember(row.revision,local);
         }
         return true;
-      } catch(e) { const state=errorState(e); if(state==='conflict')return 'retry'; status(state); return false; }
-      finally {busy=false;}
+      } catch(e) { if (!stillCurrent()) return false; const state=errorState(e); if(state==='conflict')return 'retry'; status(state); return false; }
     }
     function sync(choice) {
       if (inFlight) {
-        if (choice) return inFlight.then(() => sync(choice));
+        if (choice || flightOwner !== user?.id) {
+          const requestedOwner = user?.id;
+          return inFlight.then(() => valid() && user.id === requestedOwner ? sync(choice) : false);
+        }
         return inFlight;
       }
       if (!valid()) return Promise.resolve(false);
       const owner = user.id;
+      flightOwner = owner;
       inFlight = (async () => {
         let nextChoice = choice;
         let races = 0;
-        while (true) {
+        for (let passes = 0; passes < 8; passes++) {
           const result = await syncOnce(nextChoice);
           if (result === 'retry') {
             if (++races >= 3) {status('pending');return false;}
@@ -134,41 +152,24 @@
           if (!result) return false;
           nextChoice = undefined;
           if (!valid() || user.id !== owner) return false;
-          if (fingerprint(read()) === meta()?.base) break;
+          if (fingerprint(read()) === meta()?.base) { status('saved'); return true; }
         }
-        status('saved');
-        return true;
-      })().finally(() => { inFlight = null; });
+        status('pending');
+        return false;
+      })().finally(() => { inFlight = null; flightOwner = null; });
       return inFlight;
     }
-    async function connect(password, signup=false) {
-      if (busy) return;
-      const address=email();
-      if (!address) return;
-      status('connecting');
-      try {
-        const result = signup ? await client.auth.signUp({email:address,password}) : await client.auth.signInWithPassword({email:address,password});
-        const data=check(result);
-        if (!data.session) {status('confirm');return;}
-        user=data.user;
-        if (!valid()) {status('identity');return;}
-        await sync();
-      } catch(e) {status(e?.code === 'invalid_credentials' ? 'auth' : errorState(e));}
-    }
     async function resume() {
+      const version = ++resumeVersion, address = email(), owner = ownerId?.();
       try {
         const {session}=check(await client.auth.getSession());
+        if (version !== resumeVersion || address !== email() || owner !== ownerId?.()) return false;
         user=session?.user || null;
         if (user && !valid()) {status('identity');return;}
         if (user) return await sync(); else status('disconnected');
-      } catch {status('offline');}
+      } catch {if (version === resumeVersion && address === email() && owner === ownerId?.()) status('offline'); return false;}
     }
-    async function disconnect() {
-      const result=await client.auth.signOut();
-      if(result.error){status('offline');return;}
-      user=null;status('disconnected');
-    }
-    return {connect,resume,disconnect,sync:()=>sync(),resolve:choice=>sync(choice)};
+    return {resume,sync:()=>sync(),resolve:choice=>sync(choice)};
   }
   const api={create,snapshot,fingerprint,errorState,merge};
   if(typeof module==='object' && module.exports) module.exports=api;
