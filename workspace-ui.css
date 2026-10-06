@@ -224,3 +224,22 @@ body.north-2026.life-workspace.v3-zen-mode-active .v3-zen-exit-btn { color:var(-
   body.north-2026.life-workspace *,body.north-2026.life-workspace *::before,body.north-2026.life-workspace *::after { animation:none!important; transition:none!important; scroll-behavior:auto!important; }
 }
 body.north-2026.life-workspace.v3-zen-mode-active :is(.content,.app-main) { padding:0!important; }
+/* Study checklists share the existing task controls and hide future days on demand. */
+.north-checklist-panel h2 { margin-block: 0 1rem; }
+.north-checklist-panel .lx-fields-two { align-items: center; }
+.north-checklist-group, .north-checklist-day { border-block-start: 1px solid var(--lx-line, #38383c); }
+.north-checklist-group summary, .north-checklist-day summary {
+  display: flex; align-items: center; justify-content: space-between; gap: .75rem;
+  padding-block: 1rem; cursor: pointer; min-height: 48px; font-weight: 600;
+}
+.north-checklist-group summary small { font-weight: 400; white-space: nowrap; }
+.north-checklist-group summary:focus-visible, .north-checklist-day summary:focus-visible {
+  outline: 2px solid #c9b4e9; outline-offset: 4px; border-radius: 6px;
+}
+.north-checklist-group .lx-task-title { min-width: 0; }
+.north-checklist-group .lx-task-title strong { white-space: normal; overflow-wrap: anywhere; }
+@media (max-width: 600px) {
+  .north-checklist-group .lx-priority { display: none; }
+  .north-checklist-panel .lx-fields-two { grid-template-columns: 1fr; }
+  .north-checklist-panel { overflow: hidden; }
+}

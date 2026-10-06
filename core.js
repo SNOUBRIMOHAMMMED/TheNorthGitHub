@@ -619,18 +619,18 @@
     if (g) {
       if (next) {
         t.appliedMomentum = Math.min(100 - g.momentum, num(t.impact, 0, 100));
-        t.appliedProgress = Math.min(
+        t.appliedProgress = g.progressMode === "checklist" ? 0 : Math.min(
           100 - g.progress,
           num(t.progressImpact, 0, 100),
         );
         g.momentum += t.appliedMomentum;
-        g.progress += t.appliedProgress;
+        if (g.progressMode !== "checklist") g.progress += t.appliedProgress;
       } else {
         g.momentum = Math.max(
           0,
           g.momentum - (t.appliedMomentum ?? t.impact ?? 0),
         );
-        g.progress = Math.max(
+        if (g.progressMode !== "checklist") g.progress = Math.max(
           0,
           g.progress - (t.appliedProgress ?? t.progressImpact ?? 0),
         );
@@ -759,8 +759,158 @@
     return debt;
   }
 
+  const checklistPercent = (done, total) => total > 0
+    ? Math.round(Math.max(0, Math.min(100, done / total * 100)) * 100) / 100 : 0;
+  function checklistReport(goal, data, date = day()) {
+    const plan = goal?.taskPlan;
+    const steps = Array.isArray(plan?.steps) ? plan.steps : [];
+    const tasks = new Map((data?.tasks || []).map(t => [t.id, t]));
+    let completedMinutes = 0, totalMinutes = 0, dailyCompletedMinutes = 0,
+      dailyTargetMinutes = 0, scheduledMinutes = 0;
+    for (const step of steps) {
+      const weight = Number(step.weightMinutes);
+      if (!(weight > 0) || !Number.isFinite(weight)) continue;
+      totalMinutes += weight;
+      if (step.date <= date) scheduledMinutes += weight;
+      if (step.date === date) dailyTargetMinutes += weight;
+      const task = tasks.get(step.id);
+      // The manifest fixes membership and weights; archiving never erases completed work.
+      if (task?.done && task.goalId === goal.id && task.planId === plan.id) {
+        completedMinutes += weight;
+        if (step.date === date) dailyCompletedMinutes += weight;
+      }
+    }
+    const baseline = num(plan?.baselineProgress, 0, 100);
+    const target = Number(plan?.targetMinutes);
+    const percentWithBaseline = value => Math.round(num(baseline +
+      (target > 0 && Number.isFinite(target) ? value / target * 100 : 0), 0, 100) * 100) / 100;
+    return {
+      dailyPercent: checklistPercent(dailyCompletedMinutes, dailyTargetMinutes),
+      phasePercent: checklistPercent(completedMinutes, totalMinutes),
+      completedMinutes, totalMinutes, dailyCompletedMinutes, dailyTargetMinutes,
+      goalPercent: percentWithBaseline(completedMinutes),
+      plannedPercent: percentWithBaseline(scheduledMinutes),
+    };
+  }
+
+  function applyChecklistPlan(data, input) {
+    const fail = () => { throw Error("invalidChecklistPlan"); };
+    const object = value => value && typeof value === "object" && !Array.isArray(value);
+    const only = (value, keys) => object(value) && Object.keys(value).every(k => keys.includes(k));
+    const validId = value => typeof value === "string" && /^[\w-]{1,160}$/.test(value)
+      && !["__proto__", "prototype", "constructor"].includes(value);
+    const validDate = value => typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value)
+      && Number.isFinite(Date.parse(value + "T00:00:00Z"))
+      && new Date(value + "T00:00:00Z").toISOString().slice(0, 10) === value;
+    const text = (value, max) => typeof value === "string" && value.trim().length > 0 && value.trim().length <= max;
+    const positive = value => typeof value === "number" && Number.isFinite(value) && value > 0;
+    const close = (a, b) => Math.abs(a - b) < 1e-6;
+    if (!object(data) || !Array.isArray(data.goals) || !Array.isArray(data.tasks)
+      || !only(input, ["type", "schemaVersion", "goalId", "goalName", "plan", "tasks"])
+      || input.type !== "north-checklist-plan" || input.schemaVersion !== 1 || !validId(input.goalId)) fail();
+    const matches = data.goals.filter(g => g.id === input.goalId && !g.archived);
+    if (matches.length !== 1) fail();
+    const goal = matches[0], plan = input.plan;
+    if (!only(plan, ["id", "name", "startDate", "endDate", "phaseEndDate", "targetMinutes", "baselineProgress", "steps"])
+      || !validId(plan.id) || !text(plan.name, 180)
+      || ![plan.startDate, plan.endDate, plan.phaseEndDate].every(validDate)
+      || plan.startDate > plan.phaseEndDate || plan.phaseEndDate > plan.endDate
+      || !positive(plan.targetMinutes) || typeof plan.baselineProgress !== "number"
+      || !Number.isFinite(plan.baselineProgress) || plan.baselineProgress < 0 || plan.baselineProgress > 100
+      || !Array.isArray(plan.steps) || !plan.steps.length || !Array.isArray(input.tasks)
+      || plan.steps.length !== input.tasks.length
+      || (input.goalName !== undefined && !text(input.goalName, 180))) fail();
+    const days = (Date.parse(plan.endDate + "T00:00:00Z") - Date.parse(plan.startDate + "T00:00:00Z")) / 86400000 + 1;
+    if (!close(plan.targetMinutes, days * 180)) fail();
+    const previous = goal.taskPlan;
+    if (previous && (previous.id !== plan.id || previous.startDate !== plan.startDate
+      || previous.baselineProgress !== plan.baselineProgress)) fail();
+    if (!previous && !close(plan.baselineProgress, num(goal.progress, 0, 100))) fail();
+    const existingTasks = new Map();
+    for (const task of data.tasks) {
+      if (!object(task) || !validId(task.id) || existingTasks.has(task.id)) fail();
+      existingTasks.set(task.id, task);
+    }
+    const reserved = new Set();
+    for (const [key, items] of Object.entries(data)) {
+      if (key !== "tasks" && Array.isArray(items)) for (const item of items) {
+        if (object(item) && typeof item.id === "string") reserved.add(item.id);
+      }
+    }
+    // Other manifests reserve their identifiers even when a task record is missing.
+    for (const other of data.goals) if (other !== goal && other.taskPlan) {
+      if (typeof other.taskPlan.id === "string") reserved.add(other.taskPlan.id);
+      for (const step of other.taskPlan.steps || []) if (typeof step?.id === "string") reserved.add(step.id);
+    }
+    if (existingTasks.has(plan.id) || reserved.has(plan.id)) fail();
+    reserved.add(plan.id);
+    const steps = new Map(), dailyWeights = new Map();
+    let totalMinutes = 0;
+    for (const step of plan.steps) {
+      if (!only(step, ["id", "date", "weightMinutes"]) || !validId(step.id) || reserved.has(step.id)
+        || steps.has(step.id) || !validDate(step.date) || step.date < plan.startDate
+        || step.date > plan.phaseEndDate || !positive(step.weightMinutes) || step.weightMinutes > 180) fail();
+      const fixed = {id: step.id, date: step.date, weightMinutes: step.weightMinutes};
+      steps.set(step.id, fixed);
+      dailyWeights.set(step.date, (dailyWeights.get(step.date) || 0) + step.weightMinutes);
+      totalMinutes += step.weightMinutes;
+    }
+    const phaseDays = (Date.parse(plan.phaseEndDate + "T00:00:00Z") - Date.parse(plan.startDate + "T00:00:00Z")) / 86400000 + 1;
+    if (dailyWeights.size !== phaseDays || [...dailyWeights.values()].some(weight => !close(weight, 180))
+      || totalMinutes > plan.targetMinutes + 1e-6) fail();
+    if (previous?.steps?.some(step => {
+      const next = steps.get(step.id);
+      return !next || next.date !== step.date || next.weightMinutes !== step.weightMinutes;
+    })) fail();
+    const added = [], skipped = [], taskIds = new Set();
+    const taskKeys = ["id", "title", "goalId", "projectId", "planId", "checklistGroup", "checklistOrder",
+      "weightMinutes", "date", "priority", "done", "status", "recurring", "subtasks", "body", "description", "tags",
+      "estimatedHours", "completedDate", "archived", "impact", "progressImpact"];
+    for (const task of input.tasks) {
+      if (!only(task, taskKeys) || !validId(task.id) || taskIds.has(task.id) || !text(task.title, 180)
+        || task.goalId !== goal.id || task.planId !== plan.id
+        || (task.projectId !== undefined && task.projectId !== (goal.projectId || ""))
+        || (task.priority !== undefined && !["low", "medium", "high"].includes(task.priority))
+        || (task.done !== undefined && task.done !== false) || (task.status !== undefined && task.status !== "todo")
+        || (task.completedDate !== undefined && task.completedDate !== "")
+        || (task.archived !== undefined && task.archived !== false)
+        || (task.impact !== undefined && task.impact !== 0)
+        || (task.progressImpact !== undefined && task.progressImpact !== 0)
+        || (task.recurring !== undefined && task.recurring !== "none")
+        || (task.subtasks !== undefined && (!Array.isArray(task.subtasks) || task.subtasks.length))
+        || (task.checklistGroup !== undefined && !text(task.checklistGroup, 180))
+        || (task.checklistOrder !== undefined && (!Number.isSafeInteger(task.checklistOrder) || task.checklistOrder < 0))
+        || (task.body !== undefined && (typeof task.body !== "string" || task.body.length > 10000))
+        || (task.description !== undefined && (typeof task.description !== "string" || task.description.length > 10000))
+        || (task.tags !== undefined && (!Array.isArray(task.tags)
+          || task.tags.some(tag => typeof tag !== "string" || tag.length > 180)))
+        || (task.estimatedHours !== undefined && (typeof task.estimatedHours !== "number"
+          || !Number.isFinite(task.estimatedHours) || task.estimatedHours < 0 || task.estimatedHours > 24))) fail();
+      taskIds.add(task.id);
+      const step = steps.get(task.id);
+      if (!step || task.date !== step.date || task.weightMinutes !== step.weightMinutes) fail();
+      const existing = existingTasks.get(task.id);
+      if (existing) {
+        if (existing.goalId !== goal.id || existing.planId !== plan.id
+          || existing.date !== step.date || existing.weightMinutes !== step.weightMinutes) fail();
+        skipped.push(task.id);
+      } else added.push({...task, ...(task.tags ? {tags: task.tags.slice()} : {}), title: task.title.trim(), projectId: goal.projectId || "",
+        priority: task.priority || "medium", done: false, status: "todo", completedDate: "",
+        recurring: "none", subtasks: [], impact: 0, progressImpact: 0});
+    }
+    const nextPlan = {...plan, name: plan.name.trim(), steps: [...steps.values()]};
+    // All validation precedes mutation. Existing records, history, and live clocks stay intact.
+    data.tasks.push(...added);
+    Object.assign(goal, {deadline: plan.endDate, startDate: plan.startDate, dailyMinutes: 180,
+      targetHours: plan.targetMinutes / 60, progressMode: "checklist", taskPlan: nextPlan});
+    if (input.goalName !== undefined) goal.name = input.goalName.trim();
+    return {goal, addedTaskIds: added.map(task => task.id), skippedTaskIds: skipped,
+      report: checklistReport(goal, data)};
+  }
+
   function goalProgress(goal, data) {
     if (!goal) return 0;
+    if (goal.progressMode === "checklist") return checklistReport(goal, data).goalPercent;
     if (goal.progressMode === "time") {
       const target = goalTargetHours(goal);
       if (!(target > 0) || !Number.isFinite(target)) return 0;
@@ -770,6 +920,7 @@
     return num(goal.progress, 0, 100);
   }
   function plannedGoalProgress(goal, now = Date.now()) {
+    if (goal?.progressMode === "checklist") return checklistReport(goal, {tasks: []}, day(now)).plannedPercent;
     if (!goal?.startDate || !goal.deadline) return null;
     const start = +new Date(goal.startDate + "T00:00:00");
     const end = +new Date(goal.deadline + "T23:59:59");
@@ -788,6 +939,10 @@
   }
 
   function goalPlannedHours(goal, now = Date.now()) {
+    if (goal?.progressMode === "checklist") {
+      return (goal.taskPlan?.steps || []).filter(step => step.date <= day(now))
+        .reduce((minutes, step) => minutes + num(step.weightMinutes), 0) / 60;
+    }
     if (!goal?.startDate || !goal.deadline) return null;
     const start = +new Date(goal.startDate + "T00:00:00");
     const end = +new Date(goal.deadline + "T23:59:59");
@@ -797,6 +952,8 @@
 
   return {
     recordDebtPayment,
+    applyChecklistPlan,
+    checklistReport,
     goalTargetHours,
     goalPlannedHours,
     goalProgress,

@@ -27,6 +27,8 @@
     busy = false,
     historyLimit = 50;
   const pendingSaves = new Map();
+  const checklistDates = new Map();
+  const expandedChecklists = new Set();
   const currentEmail = () => localStorage.getItem(C.SESSION_KEY) || "";
   // Only server-managed app_metadata represents an entitlement.
   const userTier = () => {
@@ -219,6 +221,7 @@
         "This backup is not compatible. Your data was not changed.",
         "النسخة الاحتياطية غير صالحة. لم تتغير بياناتك.",
       ),
+      invalidChecklistPlan: L("This study plan is invalid or conflicts with existing steps. Your data was not changed.", "خطة الدراسة غير صالحة أو تتعارض مع خطوات موجودة. لم تتغير بياناتك."),
       durationRequired: L(
         "Set a target duration first.",
         "حدد المدة المستهدفة أولًا.",
@@ -321,6 +324,7 @@
     document.addEventListener("submit", submit);
     document.addEventListener("input", onInput);
     document.addEventListener("change", onChange);
+    document.addEventListener("toggle", onChecklistToggle, true);
     window.addEventListener("storage", (e) => {
       if ([C.ACCOUNT_KEY, C.SESSION_KEY].includes(e.key)) {
         if (!db.read()) {
@@ -1127,7 +1131,10 @@
   }
   function home(d) {
     const tt = totals(d), today = C.day();
-    const goals = d.goals.filter(g => !g.archived).slice(0, 3);
+    const goals = d.goals.filter(g => !g.archived).sort((a,b) => Number(!!b.taskPlan) - Number(!!a.taskPlan)).slice(0, 3);
+    const studyGoal = goals.find(g => g.taskPlan && today >= g.taskPlan.startDate && today <= g.taskPlan.phaseEndDate);
+    const studyReport = studyGoal ? C.checklistReport(studyGoal, d, today) : null;
+    const studyCard = studyGoal ? `<section class="lx-card north-study-today"><h2>${L("Your study plan today", "خطة دراستك اليوم")}</h2><p>${esc(studyGoal.taskPlan.name)} · <strong>${studyReport.dailyPercent}%</strong></p>${progress(studyReport.dailyPercent)}${btn(L("Open today's checklist", "افتح قائمة إنجاز اليوم"), "navigate", `data-to="goals" data-id="${esc(studyGoal.id)}"`, true)}</section>` : "";
     const due = d.tasks.filter(t => !t.archived && !t.done && (!t.date || t.date <= today))
       .sort((a,b) => ["high","medium","low"].indexOf(a.priority) - ["high","medium","low"].indexOf(b.priority));
     const next = due.find(t => goals.some(g => g.id === t.goalId)) || due[0];
@@ -1140,7 +1147,7 @@
       return `<button class="north-goal" style="--goal-tone:${goalTone(d,g)}" data-route="goals" data-id="${esc(g.id)}"><div class="north-goal-title">${icon("goals")}<strong>${esc(g.name)}</strong></div><p>${esc(g.why || g.category || L("Your next destination", "وجهتك القادمة"))}</p><div class="north-goal-values" aria-label="${L("Actual", "الفعلي")} ${actual}%, ${L("Planned", "المخطط")} ${planned===null?L("not set", "غير محدد"):planned+'%'}"><span><b>${actual}%</b><small>${L("Actual", "الفعلي")}</small></span><span><b>${planned === null ? "—" : planned + "%"}</b><small>${L("Planned", "المخطط")}</small></span></div><div class="north-track" dir="ltr"><i style="width:${actual}%"></i>${planned === null ? "" : `<em style="left:${planned}%" title="${L("Planned", "المخطط")} ${planned}%"></em>`}</div><small>${planned === null ? L("Set a start date and deadline to compare your plan.", "حدّد تاريخ البداية والنهاية لمقارنة خطتك.") : dateText(g.deadline)}</small></button>`;
     }).join("");
     return `<div class="north-home"><header class="north-welcome"><p>${new Intl.DateTimeFormat(ar()?"ar-MA":"en-GB",{weekday:"long",day:"numeric",month:"long",year:"numeric"}).format(new Date())}</p><div>${L(new Date().getHours()<12?"Good morning":"Welcome back",new Date().getHours()<12?"صباح الخير":"مرحبًا بعودتك")} ${esc(d.profile.name || "")}</div><h1>${L("Your goals in sight.", "أهدافك أمامك.")}<span class="north-welcome-desktop"> ${L("Your next step clear.", "وخطوتك واضحة.")}</span></h1></header>` +
-      `<section class="north-goals" aria-label="${L("Priority goals", "أهدافك الرئيسية")}">${goalRows || empty(L("Define your first destination.", "حدّد وجهتك الأولى."),"goals")}</section><div class="north-home-grid"><section class="lx-card north-next"><div class="lx-eyebrow">${L("YOUR NEXT STEP", "خطوتك التالية")}</div>${linked ? `<p class="north-linked">${icon("goals")} ${esc(linked.name)}</p>` : ""}<h2>${esc(next?.title || L("Make room for meaningful work", "امنح عملك المهم وقتًا للتركيز"))}</h2><p>${L("One task. Your full attention. Progress you can measure.", "مهمة واحدة. انتباه كامل. وتقدم تستطيع قياسه.")}</p>${d.activeSession ? btn(L("Resume focus", "استأنف التركيز"),"navigate",'data-to="focus"',true) : next ? btn(icon("focus") + " " + L("Start focus", "ابدأ التركيز") + " · " + minutes + " " + L("min", "دقيقة"),"home-focus",`data-id="${esc(next.id)}"`,true) : btn(L("Choose your focus", "اختر عملك وابدأ"),"navigate",'data-to="focus"',true)}</section><section class="lx-card north-today"><h2>${L("Deep work today", "العمل العميق اليوم")}</h2><div class="north-time"><strong dir="auto">${hrs(tt.deep)}</strong><span> / ${d.settings.dailyHours} ${L("hours", "ساعات")}</span></div>${workGauge(tt.deep,d.settings.dailyHours*3600000)}<p>${L("Time measures effort, not goal completion.", "الوقت يقيس الجهد، وليس نسبة اكتمال الهدف.")}</p><div class="lx-task-list">${due.slice(0,2).map(t=>taskRow(t,d)).join("")}</div></section></div><section class="lx-card north-week"><div class="lx-card-head"><div><h2>${L("Focus time this week", "وقت التركيز هذا الأسبوع")}</h2><p>${L("Your actual sessions, day by day.", "جلساتك الفعلية، يومًا بيوم.")}</p></div>${btn(L("Details", "التفاصيل"),"navigate",'data-to="analytics"')}</div>${dayChart(tt.all,d)}</section><details class="lx-card north-details"><summary>${L("More about your goals and daily review", "تفاصيل أهدافك ومراجعة يومك")}</summary>${goalBoard(d)}${momentumMap(d)}${btn(L("Daily review", "مراجعة اليوم"),"shutdown")}</details></div>`;
+      `<section class="north-goals" aria-label="${L("Priority goals", "أهدافك الرئيسية")}">${goalRows || empty(L("Define your first destination.", "حدّد وجهتك الأولى."),"goals")}</section>${studyCard}<div class="north-home-grid"><section class="lx-card north-next"><div class="lx-eyebrow">${L("YOUR NEXT STEP", "خطوتك التالية")}</div>${linked ? `<p class="north-linked">${icon("goals")} ${esc(linked.name)}</p>` : ""}<h2>${esc(next?.title || L("Make room for meaningful work", "امنح عملك المهم وقتًا للتركيز"))}</h2><p>${L("One task. Your full attention. Progress you can measure.", "مهمة واحدة. انتباه كامل. وتقدم تستطيع قياسه.")}</p>${d.activeSession ? btn(L("Resume focus", "استأنف التركيز"),"navigate",'data-to="focus"',true) : next ? btn(icon("focus") + " " + L("Start focus", "ابدأ التركيز") + " · " + minutes + " " + L("min", "دقيقة"),"home-focus",`data-id="${esc(next.id)}"`,true) : btn(L("Choose your focus", "اختر عملك وابدأ"),"navigate",'data-to="focus"',true)}</section><section class="lx-card north-today"><h2>${L("Deep work today", "العمل العميق اليوم")}</h2><div class="north-time"><strong dir="auto">${hrs(tt.deep)}</strong><span> / ${d.settings.dailyHours} ${L("hours", "ساعات")}</span></div>${workGauge(tt.deep,d.settings.dailyHours*3600000)}<p>${L("Time measures effort, not goal completion.", "الوقت يقيس الجهد، وليس نسبة اكتمال الهدف.")}</p><div class="lx-task-list">${due.slice(0,2).map(t=>taskRow(t,d)).join("")}</div></section></div><section class="lx-card north-week"><div class="lx-card-head"><div><h2>${L("Focus time this week", "وقت التركيز هذا الأسبوع")}</h2><p>${L("Your actual sessions, day by day.", "جلساتك الفعلية، يومًا بيوم.")}</p></div>${btn(L("Details", "التفاصيل"),"navigate",'data-to="analytics"')}</div>${dayChart(tt.all,d)}</section><details class="lx-card north-details"><summary>${L("More about your goals and daily review", "تفاصيل أهدافك ومراجعة يومك")}</summary>${goalBoard(d)}${momentumMap(d)}${btn(L("Daily review", "مراجعة اليوم"),"shutdown")}</details></div>`;
   }
   function linkFields(d, obj = {}) {
     return `<div class="lx-fields-three">${select(name("projects"), "projectId", options(d.projects), obj.projectId)}${select(name("goals"), "goalId", options(d.goals), obj.goalId)}${select(name("tasks"), "taskId", options(d.tasks, "title"), obj.taskId)}</div>`;
@@ -1354,7 +1361,7 @@
       <button class="lx-check" data-action="task-toggle" data-id="${t.id}" role="checkbox" aria-checked="${!!t.done}" aria-label="${esc(t.title)}">${t.done ? "✓" : ""}</button>
       <button class="lx-task-title" data-action="edit" data-kind="tasks" data-id="${t.id}">
         <strong>${esc(t.title)}</strong>
-        <small>${esc(d.goals.find((g) => g.id === t.goalId)?.name || d.projects.find((p) => p.id === t.projectId)?.name || L("Independent task", "مهمة مستقلة"))} · ${dateText(t.date)} ${actual || t.estimatedHours ? " · " + hrs(actual) + (t.estimatedHours ? " / " + t.estimatedHours + L("h", "س") : " " + L("worked", "منجز")) : ""}</small>
+        <small>${esc(t.planId ? t.checklistGroup : d.goals.find((g) => g.id === t.goalId)?.name || d.projects.find((p) => p.id === t.projectId)?.name || L("Independent task", "مهمة مستقلة"))} · ${dateText(t.date)} ${actual || t.estimatedHours ? " · " + hrs(actual) + (t.estimatedHours ? " / " + hrs(t.estimatedHours * 3600000) + " " + L("estimated", "مقدّرة") : " " + L("worked", "منجز")) : ""}</small>
       </button>
       <span class="lx-priority ${t.priority}">${L(t.priority || "medium", { high: "عالية", medium: "متوسطة", low: "منخفضة" }[t.priority] || "متوسطة")}</span>
       <button type="button" class="lx-task-focus-pill" data-action="task-focus" data-id="${t.id}" title="${L("Start Focus Session", "ابدأ جلسة تركيز")}">
@@ -1387,8 +1394,44 @@
         ),
         L("Actionable execution items linked to your goals. Launch the focus timer on any task to track real effort.", "المهام التنفيذية المرتبطة بأهدافك. اضغط على زر الساعة في المهمة لبدء جلسة بومودورو أو عد تنازلي وتوثيق إنجازك."),
       ) +
-      `<div class="lx-toolbar"><div class="lx-segmented">${["all", "open", "done", "deleted"].map((k) => btn(L(k === "all" ? "All" : k === "open" ? "Open" : k === "deleted" ? "Deleted" : "Completed", k === "all" ? "الكل" : k === "open" ? "مفتوحة" : k === "deleted" ? "المحذوفة" : "مكتملة"), "filter", `data-filter="${k}" aria-pressed="${taskFilter === k}"`)).join("")}</div></div><div class="lx-card">${list.length ? list.map((t) => taskRow(t, d)).join("") : taskFilter === "deleted" ? `<p class="lx-muted">${L("No deleted tasks.", "لا توجد مهام محذوفة.")}</p>` : empty(L("Give your next action a name.", "سمِّ خطوتك التالية."), "tasks")}</div>`
+      `<div class="lx-toolbar"><div class="lx-segmented">${["all", "open", "done", "deleted"].map((k) => btn(L(k === "all" ? "All" : k === "open" ? "Open" : k === "deleted" ? "Deleted" : "Completed", k === "all" ? "الكل" : k === "open" ? "مفتوحة" : k === "deleted" ? "المحذوفة" : "مكتملة"), "filter", `data-filter="${k}" aria-pressed="${taskFilter === k}"`)).join("")}</div></div><div class="lx-card">${list.length ? checklistTaskList(list, d) : taskFilter === "deleted" ? `<p class="lx-muted">${L("No deleted tasks.", "لا توجد مهام محذوفة.")}</p>` : empty(L("Give your next action a name.", "سمِّ خطوتك التالية."), "tasks")}</div>`
     );
+  }
+  function checklistTaskList(list, d) {
+    const regular = list.filter(t => !t.planId);
+    const planned = list.filter(t => t.planId);
+    const dates = [...new Set(planned.map(t => t.date))].sort();
+    return regular.map(t => taskRow(t, d)).join("") + dates.map(date => {
+      const items = planned.filter(t => t.date === date).sort((a,b) => (a.checklistOrder || 0) - (b.checklistOrder || 0));
+      const key = "tasks:" + date, open = expandedChecklists.has(key) || date === C.day() || !!search;
+      return `<details class="north-checklist-day" data-checklist-key="${esc(key)}" data-checklist-day="${esc(date)}" ${open ? "open" : ""}><summary>${esc(dateText(date))} · ${items.filter(t=>t.done).length}/${items.length} ${L("steps", "خطوة")}</summary><div data-checklist-rows ${open ? 'data-loaded="true"' : ''}>${open ? items.map(t => taskRow(t, d)).join("") : ""}</div></details>`;
+    }).join("");
+  }
+  function checklistPanel(g, d) {
+    const plan = g.taskPlan;
+    if (!plan) return "";
+    const date = checklistDates.get(g.id) || (C.day() < plan.startDate ? plan.startDate : C.day() > plan.phaseEndDate ? plan.phaseEndDate : C.day());
+    const report = C.checklistReport(g, d, date);
+    const ids = new Set(plan.steps.filter(step => step.date === date).map(step => step.id));
+    const items = d.tasks.filter(t => ids.has(t.id) && t.planId === plan.id && t.goalId === g.id)
+      .sort((a,b) => (a.checklistOrder || 0) - (b.checklistOrder || 0));
+    const groups = [...new Set(items.map(t => t.checklistGroup || L("Checklist", "قائمة الإنجاز")))];
+    return `<section class="lx-card north-checklist-panel">
+      <h2>${esc(plan.name)}</h2>
+      <div class="lx-fields-two">
+        ${field(L("Study day", "يوم الدراسة"), "checklistDate", date, "date", `min="${esc(plan.startDate)}" max="${esc(plan.phaseEndDate)}" data-checklist-goal="${esc(g.id)}"`)}
+        <div><strong>${report.dailyPercent}%</strong> ${L("of this day's checklist", "من قائمة هذا اليوم")}${progress(report.dailyPercent)}<small>${report.dailyCompletedMinutes} / ${report.dailyTargetMinutes} ${L("planned minutes completed", "دقيقة من الأنشطة المخططة أُنجزت")}</small></div>
+      </div>
+      <p>${L("This phase", "هذه المرحلة")}: <strong>${report.phasePercent}%</strong> · ${L("Full goal plan", "خطة الهدف كاملة")}: <strong>${report.goalPercent}%</strong></p>
+      <p class="lx-muted">${esc(plan.startDate)} → ${esc(plan.phaseEndDate)} · ${L("This four-week phase contributes", "تساهم مرحلة الأسابيع الأربعة بنسبة")} ${Math.round(report.totalMinutes / plan.targetMinutes * 10000) / 100}% ${L("of the plan through", "من الخطة حتى")} ${esc(plan.endDate)}. ${L("Plan the next phase after reviewing these weeks.", "خطّط المرحلة التالية بعد مراجعة هذه الأسابيع.")}</p>
+      <p class="lx-muted">${L("Checks measure completion of planned activities, not language proficiency or tracked time. Use Focus on a step to record actual study time.", "علامات الإنجاز تقيس تنفيذ أنشطة الخطة، ولا تثبت المستوى اللغوي أو تسجّل وقتًا وهميًا. ابدأ التركيز من الخطوة لتسجيل وقت الدراسة الفعلي.")}</p>
+      ${groups.map(group => {
+        const steps = items.filter(t => (t.checklistGroup || L("Checklist", "قائمة الإنجاز")) === group);
+        const key = `${g.id}:${date}:${group}`;
+        return `<details class="north-checklist-group" data-checklist-key="${esc(key)}" ${expandedChecklists.has(key) ? "open" : ""}><summary>${esc(group)} <small>${steps.filter(t=>t.done).length}/${steps.length} · ${steps.reduce((sum,t)=>sum+t.weightMinutes,0)} ${L("min", "دقيقة")}</small></summary>${steps.map(t=>taskRow(t,d)).join("")}</details>`;
+      }).join("")}
+      ${items.length < ids.size ? `<p class="lx-muted">${L("Some scheduled steps are missing. Import the same plan again to restore missing steps; completed work is preserved.", "بعض الخطوات المخططة غير موجودة. استورد الخطة نفسها لإعادتها؛ سيُحفظ الإنجاز السابق.")}</p>` : ""}
+    </section>`;
   }
   function entityTime(d, key, id) {
     const all = C.reportSessions(d),
@@ -1469,7 +1512,7 @@
     );
   }
   function v3GoalDetail(g, d) {
-    const ts = d.tasks.filter((t) => t.goalId === g.id && !t.archived);
+    const ts = d.tasks.filter((t) => t.goalId === g.id && !t.archived && (!g.taskPlan || t.planId !== g.taskPlan.id));
     const hs = (d.habits || []).filter((h) => h.goalId === g.id && !h.archived);
     const actual = calcGoalProgress(g, d);
     const planned = plannedProgress(g);
@@ -1520,8 +1563,10 @@
             <div class="v3-gd-track outline"><div class="v3-gd-fill planned" style="width:${planned ?? 0}%;"></div></div>
           </div>
         </div>
-        <small class="v3-gd-note">${g.progressMode === "time" ? L("Time invested / target hours. Breaks are excluded.", "الوقت المستثمر ÷ الساعات المستهدفة. لا تُحتسب الراحة.") : L("Outcome progress you record. Time and completed tasks are tracked separately.", "تقدم النتيجة الذي تسجله. يُعرض الوقت والمهام المنجزة بشكل منفصل.")}</small>
+        <small class="v3-gd-note">${g.progressMode === "checklist" ? L("Completed plan activities / the full goal work plan. Study time is tracked separately.", "الأنشطة المخططة المنجزة ÷ خطة العمل الكاملة للهدف. يُسجّل وقت الدراسة الفعلي بشكل منفصل.") : g.progressMode === "time" ? L("Time invested / target hours. Breaks are excluded.", "الوقت المستثمر ÷ الساعات المستهدفة. لا تُحتسب الراحة.") : L("Outcome progress you record. Time and completed tasks are tracked separately.", "تقدم النتيجة الذي تسجله. يُعرض الوقت والمهام المنجزة بشكل منفصل.")}</small>
       </section>
+
+      ${checklistPanel(g, d)}
 
       <section class="lx-card">
         <h3>${L("Work invested in this goal", "العمل المنجز في هذا الهدف")}</h3>
@@ -2027,9 +2072,10 @@
     if (kind === "tasks") {
       body +=
         `<div class="lx-fields-two">
-          ${select(name("goals"), "goalId", options(d.goals), o.goalId)}
-          ${field(L("Due date", "تاريخ الاستحقاق"), "date", o.date || C.day(), "date", "required")}
+          ${select(name("goals"), "goalId", options(d.goals), o.goalId, o.planId ? "disabled" : "")}
+          ${field(L("Due date", "تاريخ الاستحقاق"), "date", o.date || C.day(), "date", o.planId ? "readonly" : "required")}
         </div>
+        ${o.planId ? `<p class="lx-muted">${L("This step belongs to a dated study plan. Its day and goal stay linked so daily and overall progress remain accurate.", "هذه الخطوة ضمن خطة دراسة مؤرخة. يبقى اليوم والهدف مرتبطين بها ليكون حساب الإنجاز اليومي والكلي دقيقًا.")}</p>` : ""}
         <div class="lx-fields-one">
           ${select(
             L("Priority", "الأولوية"),
@@ -2082,7 +2128,7 @@
           o.why || "",
           'rows="2"',
         ) +
-        field(L("Plan start date", "تاريخ بداية الخطة"), "startDate", o.startDate || (o.id ? "" : C.day()), "date") +
+        field(L("Plan start date", "تاريخ بداية الخطة"), "startDate", o.startDate || (o.id ? "" : C.day()), "date", o.taskPlan ? "readonly" : "") +
         `<div class="lx-fields-two">${field(L("Deadline", "الموعد النهائي"), "deadline", o.deadline || "", "date")}${select(
           L("Horizon", "الأفق الزمني"),
           "horizon",
@@ -2094,10 +2140,10 @@
           ],
           o.horizon || "annual",
         )}</div>` +
-        select(L("Progress measurement", "طريقة قياس التقدم"), "progressMode", [["outcome", L("Outcome · recorded percentage", "النتيجة · نسبة تسجلها")], ["time", L("Time invested / target hours", "الوقت المستثمر ÷ الساعات المستهدفة")]], o.progressMode || (o.id ? "outcome" : "time")) +
+        select(L("Progress measurement", "طريقة قياس التقدم"), "progressMode", [["outcome", L("Outcome · recorded percentage", "النتيجة · نسبة تسجلها")], ["time", L("Time invested / target hours", "الوقت المستثمر ÷ الساعات المستهدفة")], ...(o.taskPlan ? [["checklist", L("Study plan · completed activities", "خطة الدراسة · الأنشطة المنجزة")]] : [])], o.progressMode || (o.id ? "outcome" : "time")) +
         `<p class="lx-muted">${L("For automatic progress, enter total hours OR daily minutes with start and end dates. Outcome mode keeps a percentage you record yourself.", "للتقدم التلقائي: حدد إجمالي الساعات، أو دقائق يومية مع تاريخ البداية والنهاية. قياس النتيجة يحتفظ بنسبة تسجلها بنفسك.")}</p>` +
-        field(L("Target hours (estimated total)", "الساعات المستهدفة (إجمالي)"), "targetHours", o.targetHours || 0, "number", 'min="0" max="100000" step="0.5"') +
-        field(L("Daily minutes (used when total hours is zero)", "دقائق يومية (لحساب الإجمالي عندما تكون الساعات صفرًا)"), "dailyMinutes", o.dailyMinutes || 0, "number", 'min="0" max="1440" step="1"') +
+        field(L("Target hours (estimated total)", "الساعات المستهدفة (إجمالي)"), "targetHours", o.targetHours || 0, "number", 'min="0" max="100000" step="0.5"' + (o.taskPlan ? " readonly" : "")) +
+        field(L("Daily minutes (used when total hours is zero)", "دقائق يومية (لحساب الإجمالي عندما تكون الساعات صفرًا)"), "dailyMinutes", o.dailyMinutes || 0, "number", 'min="0" max="1440" step="1"' + (o.taskPlan ? " readonly" : "")) +
         `<details class="lx-details" style="margin-top:12px"><summary>${L("Advanced options · optional", "خيارات إضافية · اختياري")}</summary><div style="margin-top:10px">` +
         `<div class="lx-fields-two">${select(L("Domain", "المجال"), "category", d.categories.map((c) => [c, catName(c)]), o.category || "Personal")}${field(L("Outcome progress (%)", "تقدم النتيجة (%)"), "progress", o.progress || 0, "number", 'min="0" max="100" step="0.5"')}</div>` +
         select(name("projects"), "projectId", options(d.projects), o.projectId) +
@@ -3421,9 +3467,19 @@
           notice(L("Set total hours, or daily minutes with both plan dates.", "حدد إجمالي الساعات، أو الدقائق اليومية مع تاريخ البداية والنهاية."), true);
           return;
         }
+        const fixedPlan = kind === "goals" ? db.read().goals.find(g => g.id === id)?.taskPlan : null;
+        if (fixedPlan && (!data.deadline || data.deadline < fixedPlan.phaseEndDate)) {
+          notice(L("The deadline must include all scheduled study days.", "يجب أن يشمل موعد الهدف جميع أيام الدراسة المخططة."), true);
+          return;
+        }
         result = await mutate((d) => {
           const old = d[kind].find((x) => x.id === id),
             item = old || { id: C.id(), createdAt: Date.now() };
+          if (kind === "tasks" && item.planId) {
+            data.goalId = item.goalId;
+            data.date = item.date;
+            data.projectId = item.projectId;
+          }
           const wasDone = !!item.done;
           if (
             kind === "tasks" &&
@@ -3438,6 +3494,14 @@
             item.attachments = [...(item.attachments || []), attachment];
           }
           if (kind === "goals") {
+            if (item.taskPlan) {
+              item.startDate = item.taskPlan.startDate;
+              item.dailyMinutes = 180;
+              const days = (Date.parse(item.deadline + "T00:00:00Z") - Date.parse(item.startDate + "T00:00:00Z")) / 86400000 + 1;
+              item.taskPlan.endDate = item.deadline;
+              item.taskPlan.targetMinutes = days * 180;
+              item.targetHours = days * 3;
+            }
             item.plan = {
               m6: data.m6,
               m3: data.m3,
@@ -3627,6 +3691,11 @@
     }
   }
   function onChange(e) {
+    if (e.target.name === "checklistDate" && e.target.dataset.checklistGoal) {
+      checklistDates.set(e.target.dataset.checklistGoal, e.target.value);
+      render();
+      return;
+    }
     if (e.target.form?.id === "lxQuickTxForm" && e.target.name === "type") {
       const select = e.target.form.querySelector('[name="category"]');
       select.innerHTML = `<option value="">${L("Choose a category", "اختر الفئة")}</option>` + financeCategories.filter(c => c.type === e.target.value)
@@ -3641,6 +3710,23 @@
       e.target.form
     )
       syncLinks(e.target.form, e.target.name);
+  }
+  function onChecklistToggle(e) {
+    const el = e.target;
+    const key = el?.dataset?.checklistKey;
+    if (!key) return;
+    if (el.open) expandedChecklists.add(key);
+    else expandedChecklists.delete(key);
+    const rows = el.querySelector("[data-checklist-rows]");
+    if (!el.open || !rows || rows.dataset.loaded) return;
+    const d = db.read();
+    const items = d.tasks.filter(t => t.planId && t.date === el.dataset.checklistDay &&
+      (taskFilter === "deleted" ? t.archived : !t.archived) &&
+      (taskFilter === "deleted" || taskFilter === "all" || (taskFilter === "done" ? t.done : !t.done)) &&
+      (!search || t.title.toLowerCase().includes(search)))
+      .sort((a,b) => (a.checklistOrder || 0) - (b.checklistOrder || 0));
+    rows.innerHTML = items.map(t => taskRow(t, d)).join("");
+    rows.dataset.loaded = "true";
   }
   function flushSaves() {
     for (const [key, job] of pendingSaves) {
@@ -3899,6 +3985,25 @@
     error,
     importData: async (input) => {
       try {
+        if (input?.type === "north-checklist-plan") {
+          const preview = C.applyChecklistPlan(C.validateImport(db.read()), input);
+          modal(L("Add this study plan?", "إضافة خطة الدراسة؟"),
+            `<p>${esc(preview.goal.name)}</p><p>${preview.addedTaskIds.length} ${L("new steps", "خطوة جديدة")} · ${preview.skippedTaskIds.length} ${L("already present", "موجودة مسبقًا")}</p><p>${L("This adds linked tasks and updates this goal's work plan. Your other goals, tasks, notes and recorded sessions are preserved. A recovery copy is kept first.", "تضيف الخطة مهام مرتبطة وتحدّث مخطط هذا الهدف. تبقى الأهداف الأخرى والمهام والملاحظات والجلسات السابقة محفوظة، مع حفظ نسخة استعادة أولًا.")}</p><p>${esc(input.plan.startDate)} → ${esc(input.plan.phaseEndDate)} · ${L("Goal deadline", "موعد الهدف")}: ${esc(input.plan.endDate)}</p><div class="lx-actions">${btn(L("Cancel", "إلغاء"), "close")}<button id="lxConfirmChecklistImport" class="lx-btn lx-primary">${L("Add plan", "إضافة الخطة")}</button></div>`);
+          $("#lxConfirmChecklistImport").onclick = async () => {
+            const previous = db.read();
+            try {
+              localStorage.setItem("lifeos_recovery_" + currentEmail(), JSON.stringify(previous));
+              const saved = await mutate(d => C.applyChecklistPlan(d, input));
+              if (saved) {
+                $("#lxDialog").close();
+                navigate("goals", input.goalId);
+                notice(L("Study plan added · saving to your account", "أضيفت خطة الدراسة · جارٍ الحفظ في حسابك"));
+                window.NorthBoot?.flush?.();
+              }
+            } catch (e) { error(e); }
+          };
+          return;
+        }
         const data = C.validateImport(input);
         if (db.read().activeSession) {
           notice(
