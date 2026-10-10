@@ -1202,7 +1202,7 @@
           ${field(L("Custom minutes", "دقائق مخصصة"), "customMinutes", "", "number", 'min="1" max="1440" step="1" placeholder="90"')}
         </div>
         <div class="v3-qf-actions">
-          <button type="button" class="v3-apple-start-btn full-width" data-action="qf-launch" data-task-id="${task.id}" data-goal-id="${task.goalId || ''}" data-project-id="${task.projectId || ''}">
+          <button type="button" class="v3-apple-start-btn full-width" data-action="qf-launch" data-task-id="${esc(task.id)}" data-goal-id="${esc(task.goalId || '')}" data-project-id="${esc(task.projectId || '')}">
             <span class="v3-btn-icon">▶</span>
             <span>${L("Launch Focus Now", "انطلق في التركيز الآن")}</span>
           </button>
@@ -1370,7 +1370,7 @@
         <strong>${esc(t.title)}</strong>
         <small>${esc(t.planId ? t.checklistGroup : d.goals.find((g) => g.id === t.goalId)?.name || d.projects.find((p) => p.id === t.projectId)?.name || L("Independent task", "مهمة مستقلة"))} · ${dateText(t.date)} ${actual || t.estimatedHours ? " · " + hrs(actual) + (t.estimatedHours ? " / " + hrs(t.estimatedHours * 3600000) + " " + L("estimated", "مقدّرة") : " " + L("worked", "منجز")) : ""}</small>
       </button>
-      <span class="lx-priority ${t.priority}">${L(t.priority || "medium", { high: "عالية", medium: "متوسطة", low: "منخفضة" }[t.priority] || "متوسطة")}</span>
+      <span class="lx-priority ${["high", "medium", "low"].includes(t.priority) ? t.priority : "medium"}">${esc(L(t.priority || "medium", { high: "عالية", medium: "متوسطة", low: "منخفضة" }[t.priority] || "متوسطة"))}</span>
       <button type="button" class="lx-task-focus-pill" data-action="task-focus" data-id="${t.id}" title="${L("Start Focus Session", "ابدأ جلسة تركيز")}">
         <span class="v3-btn-icon">▶</span>
         <span>${L("Focus", "تركيز")}</span>

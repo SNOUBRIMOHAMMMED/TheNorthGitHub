@@ -676,7 +676,7 @@ function renderPlanner(){
 }
 function step(label,text){return `<div class="cascade-step"><b>${label.toUpperCase()}</b><span>${esc(text||t("noPlan"))}</span></div>`}
 function renderInsights(){
-  const d=data(),visible=d.notifications.filter(n=>!d.dismissed[n.id]).slice(0,2);$("#insightPopups").innerHTML=visible.map(n=>`<div class="insight ${n.type}"><button class="dismiss" data-dismiss="${n.id}">✕</button><strong>${n.type==="success"?"🟢":n.type==="risk"?"🔴":"🔵"} ${esc(n.title)}</strong><p>${esc(n.body)}</p></div>`).join("");$$("[data-dismiss]").forEach(b=>b.onclick=()=>{saveData(d=>d.dismissed[b.dataset.dismiss]=true);renderInsights()})
+  const d=data(),visible=d.notifications.filter(n=>!d.dismissed[n.id]).slice(0,2);$("#insightPopups").innerHTML=visible.map(n=>`<div class="insight ${esc(n.type)}"><button class="dismiss" data-dismiss="${n.id}">✕</button><strong>${n.type==="success"?"🟢":n.type==="risk"?"🔴":"🔵"} ${esc(n.title)}</strong><p>${esc(n.body)}</p></div>`).join("");$$("[data-dismiss]").forEach(b=>b.onclick=()=>{saveData(d=>d.dismissed[b.dataset.dismiss]=true);renderInsights()})
 }
 function renderNotifications(){const d=data();$("#notificationsPage").innerHTML=d.notifications.length?d.notifications.map(n=>`<div class="notice-row"><div><strong>${n.type==="success"?"🟢":n.type==="risk"?"🔴":"🔵"} ${esc(n.title)}</strong><p>${esc(n.body)}</p></div><time>${new Date(n.ts).toLocaleTimeString(currentLang()==="ar"?"ar-MA":"en-GB",{hour:"2-digit",minute:"2-digit"})}</time></div>`).join(""):`<div class="empty-block">${t("noNotifications")}</div>`}
 

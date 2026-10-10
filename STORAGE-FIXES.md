@@ -9,3 +9,11 @@
 - Updated offline asset caching and the production build so `storage.js` is included everywhere.
 
 The public export excludes local QA pages and scripts, private account backups and English-plan manifests. No database reset, SQL migration or authentication-account recreation was performed.
+
+## Focused security source review
+
+- Escape imported task linkage values before placing them in HTML attributes.
+- Restrict priority styling to known classes and escape the displayed priority text.
+- Escape notification type values in the legacy renderer. Preserve imported data; rendering never treats these values as markup.
+
+These final rendering changes received syntax checks and source tracing. No attack fixture was run against production accounts. The earlier 126-test functional run covers the storage update before this rendering patch. Live RLS policy deployment remains an administrative verification requirement; this review is not a complete penetration test.
