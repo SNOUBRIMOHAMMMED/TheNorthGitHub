@@ -63,15 +63,19 @@
       try { storage.setItem(key(), JSON.stringify(value)); } catch {}
     };
     const check = result => { if (result.error) throw result.error; return result.data; };
-    const backup = remote => {
+    const backup = async remote => {
       const name = 'north_before_cloud_' + user.id;
       // Keep the first recovery point as well as the latest. Never rotate it away silently.
-      if (!storage.getItem(name + '_first')) storage.setItem(name + '_first', JSON.stringify(read()));
-      storage.setItem(name, JSON.stringify(read()));
-      if (remote) {
-        if (!storage.getItem(name + '_remote_first')) storage.setItem(name + '_remote_first', JSON.stringify(remote));
-        storage.setItem(name + '_remote', JSON.stringify(remote));
-      }
+      // Recovery/cache space must not block saving already-valid work to the server.
+      // Durable storage archives these copies; legacy copies are never discarded on failure.
+      try {
+        if (!storage.getItem(name + '_first')) storage.setItem(name + '_first', JSON.stringify(read()));
+        storage.setItem(name, JSON.stringify(read()));
+        if (remote) {
+          if (!storage.getItem(name + '_remote_first')) storage.setItem(name + '_remote_first', JSON.stringify(remote));
+          storage.setItem(name + '_remote', JSON.stringify(remote));
+        }
+      } catch {} 
     };
     const verify = payload => {
       if (!payload || ['tasks','sessions','projects','goals'].some(k => !Array.isArray(payload[k]))) throw Error('shape');
@@ -88,6 +92,7 @@
       const stillCurrent = () => valid() && user.id === owner && email() === localEmail;
       try {
         status('syncing');
+        await storage.flush?.('lifeos_v11_accounts');
         const row = check(await client.from('user_sessions').select('payload,revision').eq('user_id',owner).maybeSingle());
         if (!stillCurrent()) return;
         verify(read());
@@ -110,19 +115,23 @@
           }
           if (choice === 'remote' || (!choice && !localChanged && remoteChanged && localPrint !== remotePrint)) {
             if (read().activeSession) {status('active');return;}
-            backup(row.payload);
+            await backup(row.payload);
+            if (!stillCurrent()) return false;
             // Changes made while the read was in flight must remain pending for upload.
-            apply(verify(merge(local,JSON.parse(fingerprint(read())),row.payload)));
+            await apply(verify(merge(local,JSON.parse(fingerprint(read())),row.payload)));
+            if (!stillCurrent()) return false;
             remember(row.revision,row.payload);
           } else if (choice === 'local' || localPrint !== remotePrint) {
             verify(outgoing);
             // Keep recovery copies for reconciliation, not for every ordinary upload.
-            if (choice || remoteChanged) backup(row.payload);
+            if (choice || remoteChanged) await backup(row.payload);
+            if (!stillCurrent()) return false;
             // Compare-and-swap prevents silent overwrite of another device's revision.
             const updated = check(await client.from('user_sessions').update({payload:outgoing,revision:row.revision+1}).eq('user_id',owner).eq('revision',row.revision).select('revision').maybeSingle());
             if (!stillCurrent()) return;
             if (!updated) return 'retry';
-            if (!equal(outgoing,local)) apply(verify(merge(local,JSON.parse(fingerprint(read())),outgoing)));
+            if (!equal(outgoing,local)) await apply(verify(merge(local,JSON.parse(fingerprint(read())),outgoing)));
+            if (!stillCurrent()) return false;
             remember(updated.revision,outgoing);
           } else remember(row.revision,local);
         }
@@ -162,6 +171,7 @@
     async function resume() {
       const version = ++resumeVersion, address = email(), owner = ownerId?.();
       try {
+        if (storage.ready) await storage.ready;
         const {session}=check(await client.auth.getSession());
         if (version !== resumeVersion || address !== email() || owner !== ownerId?.()) return false;
         user=session?.user || null;

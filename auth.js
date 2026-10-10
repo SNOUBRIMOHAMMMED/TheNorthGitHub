@@ -85,6 +85,8 @@ window.NorthAuth.errorMessage = (error, lang, signup) => {
     unexpected_failure: ['تعذر إتمام الطلب لدى خدمة الحسابات. على مسؤول التطبيق مراجعة سجلات Supabase Auth.', 'The account service could not complete this request. The administrator should check Supabase Auth logs.']
   };
   const code = error?.code;
+  if (['QuotaExceededError','SecurityError'].includes(error?.name))
+    return lang === 'ar' ? 'تعذر حفظ نسخة الجهاز. احتفظ ببياناتك وصدّر نسخة احتياطية؛ هذه ليست مشكلة في كلمة المرور.' : 'Device saving is unavailable. Keep your data and export a backup; this is not a password error.';
   if (messages[code]) return messages[code][lang === 'ar' ? 0 : 1];
   if (error?.message === 'network' || ['AuthRetryableFetchError','AbortError'].includes(error?.name) || /fetch|network|load failed/i.test(error?.message || ''))
     return lang === 'ar' ? 'تعذر الاتصال بخدمة الحسابات. تحقق من الإنترنت وأعد تحميل الصفحة.' : 'Cannot reach the account service. Check your connection and reload.';

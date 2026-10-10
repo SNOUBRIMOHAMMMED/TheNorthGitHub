@@ -1,7 +1,8 @@
 (() => {
+const storage=window.NorthStorage || localStorage;
 const APP_KEY="lifeos_v11_accounts", SESSION_KEY="lifeos_v11_session";
 // NOTE: We intentionally do NOT wipe SESSION_KEY here anymore.
-// The previous localStorage.removeItem(SESSION_KEY) caused an offline lockout:
+// The previous storage.removeItem(SESSION_KEY) caused an offline lockout:
 // if Supabase can't reach the network, the local session was already gone and the
 // user was thrown back to the landing screen even though their data was intact.
 // Instead, the session is only cleared on an explicit SIGNED_OUT event from Supabase
@@ -379,9 +380,9 @@ Object.assign(dict.ar, {
   "giveFeedback": "شاركنا اقتراحك / طلب ميزة"
 });
 function t(k){return dict[currentLang()][k]||k}
-function getAccounts(){try{const value=JSON.parse(localStorage.getItem(APP_KEY)||"{}");return value && typeof value==="object" && !Array.isArray(value) ? value : {}}catch{return {}}}
-function setAccounts(v){try{const raw=localStorage.getItem(APP_KEY); if(raw){const previous=JSON.parse(raw);if(!previous||typeof previous!=="object"||Array.isArray(previous))throw Error("invalidData")} const next=JSON.stringify(v);if(raw===next)return;localStorage.setItem(APP_KEY,next);window.dispatchEvent(new Event("north:local-change"))}catch(e){toast(currentLang()==="ar"?"تعذر الحفظ. تحقق من مساحة التخزين وصدّر نسخة احتياطية.":"Could not save. Check storage and export a backup.");throw e}}
-function currentEmail(){return localStorage.getItem(SESSION_KEY)||""}
+function getAccounts(){try{const value=JSON.parse(storage.getItem(APP_KEY)||"{}");return value && typeof value==="object" && !Array.isArray(value) ? value : {}}catch{return {}}}
+function setAccounts(v){try{const raw=storage.getItem(APP_KEY); if(raw){const previous=JSON.parse(raw);if(!previous||typeof previous!=="object"||Array.isArray(previous))throw Error("invalidData")} const next=JSON.stringify(v);if(raw===next)return;storage.setItem(APP_KEY,next);window.dispatchEvent(new Event("north:local-change"))}catch(e){toast(currentLang()==="ar"?"تعذر الحفظ. تحقق من مساحة التخزين وصدّر نسخة احتياطية.":"Could not save. Check storage and export a backup.");throw e}}
+function currentEmail(){return storage.getItem(SESSION_KEY)||""}
 function account(){return getAccounts()[currentEmail()]||null}
 function currentLang(){return account()?.data?.profile?.lang === "ar" ? "ar" : account()?.data?.profile?.lang === "en" ? "en" : document.documentElement.lang === "ar" ? "ar" : "en"}
 function freshData(name,email,lang="en"){return {profile:{name,email,lang,avatar:"",threshold:60},goals:[],tasks:[],notifications:[],dismissed:{},range:7,lastOpened:iso(),lastActivityByGoal:{}}}
@@ -509,16 +510,18 @@ $("#recoveryForm").addEventListener("submit",async e=>{
 
 let authBusy=false;
 async function enterCloud(user) {
+  await storage.ready;
   if(window.NorthAuth?.recoveryPending){openAuth("recovery");return;}
   const email=user.email.toLowerCase(), all=getAccounts();
   if(all[email]?.cloudUserId && all[email].cloudUserId!==user.id){
-    localStorage.setItem("north_identity_recovery_"+Date.now(),JSON.stringify(all[email]));
+    storage.setItem("north_identity_recovery_"+Date.now(),JSON.stringify(all[email]));
     throw Object.assign(new Error("identity_changed"), {code:"identity_changed"});
   }
   if(!all[email])all[email]={data:freshData(user.user_metadata?.name||email.split("@")[0],email,user.user_metadata?.lang||document.documentElement.lang)};
   all[email].cloudUserId=user.id;
   delete all[email].passwordHash;
-  setAccounts(all);localStorage.setItem(SESSION_KEY,email);
+  setAccounts(all); await storage.flush?.(APP_KEY);
+  storage.setItem(SESSION_KEY,email); await storage.flush?.(SESSION_KEY);
   if(window.NorthAuth)window.NorthAuth.cachedUser=user;
   if(window.NorthBoot)await window.NorthBoot.prepare();
   showApp();
@@ -742,7 +745,7 @@ $("#logoutBtn").onclick=async()=>{
   try {
     const saved = await window.NorthBoot?.flush();
     if (saved !== true && !confirm(currentLang()==="ar" ? "لم يكتمل الحفظ السحابي. تبقى التغييرات على هذا الجهاز فقط. تسجيل الخروج رغم ذلك؟" : "Cloud saving is incomplete. Changes remain on this device only. Sign out anyway?")) return;
-    await window.NorthAuth.logout(); localStorage.removeItem(SESSION_KEY); window.NorthAuth.cachedUser=null; showLanding();
+    await window.NorthAuth.logout(); storage.removeItem(SESSION_KEY); window.NorthAuth.cachedUser=null; showLanding();
   } catch {toast(currentLang()==="ar"?"تعذر تسجيل الخروج. أعد المحاولة.":"Could not sign out. Please retry.");}
 };
 $("#exportBtn").onclick=()=>{const blob=new Blob([JSON.stringify({schemaVersion:4,exportedAt:Date.now(),data:data()},null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=`lifeos-backup-${iso()}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),400)};
@@ -759,18 +762,19 @@ window.LifeLegacy={renderAll,applyLang,toggleLang};
 showLanding();
 
 window.addEventListener("load", async () => {
+  await storage.ready;
   try {
     const session = await window.NorthAuth.session();
     if (window.NorthAuth.recoveryPending) { openAuth("recovery"); return; }
     if (session) { await enterCloud(session.user); return; }
-    localStorage.removeItem(SESSION_KEY);
+    storage.removeItem(SESSION_KEY);
     return;
   } catch (error) {
     if (error?.code === "identity_changed") { toast(window.NorthAuth.errorMessage(error,currentLang(),false)); return; }
     /* Supabase unreachable: preserve the local workspace. */
   }
 
-  const cachedEmail = localStorage.getItem(SESSION_KEY);
+  const cachedEmail = storage.getItem(SESSION_KEY);
   if (cachedEmail) {
     const all = getAccounts();
     if (all[cachedEmail]?.data) {
@@ -787,7 +791,7 @@ window.addEventListener("load", async () => {
 let authEventVersion=0;
 window.NorthAuth?.client?.auth.onAuthStateChange((event, session) => {
   const version=++authEventVersion;
-  if (event === "SIGNED_OUT") { localStorage.removeItem(SESSION_KEY); if(window.NorthAuth)window.NorthAuth.cachedUser=null; showLanding(); }
+  if (event === "SIGNED_OUT") { storage.removeItem(SESSION_KEY); if(window.NorthAuth)window.NorthAuth.cachedUser=null; showLanding(); }
   else if ((event === "SIGNED_IN" || event === "TOKEN_REFRESHED" || event === "USER_UPDATED") && session?.user) {
     // Supabase auth callbacks hold an auth lock. Restore outside that callback.
     setTimeout(() => {

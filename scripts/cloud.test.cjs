@@ -1,6 +1,6 @@
 const {test}=require('node:test');const assert=require('node:assert/strict');
 const {create}=require('../cloud-sync.js');
-function harness({row=null,local=null,fail=false,mismatch=false,race=false}={}){
+function harness({row=null,local=null,fail=false,mismatch=false,race=false,recoveryQuota=false,applyWait=()=>{}}={}){
  let data=local||{tasks:[],sessions:[],projects:[],goals:[]};let state;let writes=0;const mem=new Map();
  const user={id:'user-a',email:mismatch?'other@example.test':'qa@example.test'};
  const client={auth:{getSession:async()=>({data:{session:{user}}}),signOut:async()=>({error:null})},from(){
@@ -11,12 +11,22 @@ function harness({row=null,local=null,fail=false,mismatch=false,race=false}={}){
    if(race || expected!==row.revision)return {data:null};writes++;row={...row,...structuredClone(payload)};return {data:{revision:row.revision}};
   },async single(){if(fail)return {error:{}};writes++;row=structuredClone(payload);return {data:{revision:row.revision}};}};return q;
  }};
- const cloud=create({client,read:()=>data,apply:p=>{data={...data,...structuredClone(p)}},storage:{getItem:k=>mem.get(k)||null,setItem:(k,v)=>mem.set(k,v)},email:()=> 'qa@example.test',status:s=>state=s});
+ const cloud=create({client,read:()=>data,apply:async p=>{await applyWait();data={...data,...structuredClone(p)}},storage:{getItem:k=>mem.get(k)||null,setItem:(k,v)=>{if(recoveryQuota&&k.startsWith('north_before_cloud_'))throw Object.assign(Error('quota'),{name:'QuotaExceededError'});mem.set(k,v);}},email:()=> 'qa@example.test',status:s=>state=s});
  return {cloud,mem,get state(){return state},get writes(){return writes},get data(){return data},get row(){return row},setFail:v=>fail=v,edit:()=>data.tasks.push({id:'new'}),remote:()=>{row.revision++;row.payload.tasks.push({id:'remote'})}};
 }
 const payload={tasks:[{id:'t'}],sessions:[],projects:[],goals:[]};
 test('cloud first save initializes row and subsequent task changes update revision',async()=>{const h=harness();await h.cloud.resume();h.edit();await h.cloud.sync();assert.equal(h.row.revision,1);assert.equal(h.row.payload.tasks[0].id,'new');});
 test('cloud restores remote on empty device',async()=>{const h=harness({row:{payload,revision:4}});await h.cloud.resume();assert.equal(h.data.tasks[0].id,'t');assert.equal(h.writes,0);});
+test('recovery copy quota cannot block uploading or restoring the actual workspace',async()=>{
+ const h=harness({row:{payload,revision:4},local:{...payload,tasks:[{id:'local'}]},recoveryQuota:true});
+ assert.equal(await h.cloud.resume(),true);assert.equal(h.state,'saved');assert.deepEqual(h.row.payload.tasks.map(t=>t.id).sort(),['local','t']);
+ const empty=harness({row:h.row,recoveryQuota:true});assert.equal(await empty.cloud.resume(),true);assert.equal(empty.data.tasks.length,2);
+});
+test('remote restoration reports saved only after durable apply completes',async()=>{
+ let release;const gate=new Promise(r=>release=r),h=harness({row:{payload,revision:4},applyWait:()=>gate});
+ const restoring=h.cloud.resume();await new Promise(r=>setImmediate(r));assert.equal(h.state,'syncing');assert.equal(h.data.tasks.length,0);
+ release();await restoring;assert.equal(h.state,'saved');assert.equal(h.data.tasks[0].id,'t');
+});
 test('first device combines existing records without replacing either workspace',async()=>{const h=harness({row:{payload,revision:2},local:{...payload,tasks:[{id:'local'}]}});await h.cloud.resume();assert.equal(h.state,'saved');assert.deepEqual(h.row.payload.tasks.map(x=>x.id).sort(),['local','t']);});
 test('phone goals upload automatically over an empty cloud copy and remain recoverable',async()=>{
  const local={tasks:[],sessions:[],projects:[{id:'project-phone'}],goals:[{id:'goal-phone'}]};

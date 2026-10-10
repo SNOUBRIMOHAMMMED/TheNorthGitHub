@@ -11,7 +11,7 @@ test('account restoration runs after the Supabase auth callback releases its loc
  let callback,restores=0; const timers=[];
  const context={window:{NorthAuth:{client:{auth:{onAuthStateChange(fn){callback=fn;}}},errorMessage:()=>''}},
  setTimeout:fn=>timers.push(fn),authBusy:false,enterCloud:async()=>{restores++;},toast(){},currentLang:()=> 'en',
- localStorage:{removeItem(){}},SESSION_KEY:'session',showLanding(){}};
+ storage:{removeItem(){}},SESSION_KEY:'session',showLanding(){}};
  vm.runInNewContext(source.slice(start,end),context);
  assert.equal(callback('SIGNED_IN',{user:{id:'u'}}),undefined);
  assert.equal(restores,0); assert.equal(timers.length,1);

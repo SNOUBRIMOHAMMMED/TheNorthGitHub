@@ -14,7 +14,7 @@ for (const f of [
   "landing.css",
   "north-2026.css",
   "north-workspace.jpg",
-  "auth.js", "cloud-sync.js", "core.js",
+  "storage.js", "auth.js", "cloud-sync.js", "core.js",
   "app.js",
   "workspace.js",
   "sw.js",

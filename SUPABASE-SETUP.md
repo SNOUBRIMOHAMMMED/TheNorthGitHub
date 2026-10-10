@@ -17,7 +17,13 @@ The bootstrap SQL includes the `revision` column used by the existing adapter an
 
 ## Behavior
 
-One versioned JSON document stores each authenticated user's workspace, including tasks and completed focus sessions. Local edits schedule synchronization; periodic polling retrieves remote changes. Concurrent changes produce a recovery choice rather than a silent overwrite. An active timer remains local to its browser. Network failures retain local edits; check the synchronization status before leaving.
+One versioned JSON document stores each authenticated user's workspace, including tasks and completed focus sessions. Local edits schedule synchronization; periodic polling retrieves remote changes. Independent changes from devices are merged with revision-based compare-and-swap. An active timer remains local to its browser. Network failures retain local edits; check the synchronization status before leaving.
+
+## Device storage reliability — 2026-10-10
+
+`storage.js` archives workspace recovery copies and cloud merge metadata into IndexedDB. Legacy local copies are removed only after their IndexedDB transaction commits; account records and Supabase authentication tokens are not deleted by this migration. If the main workspace hits the native localStorage quota, it falls back to IndexedDB and is loaded from there after restart. Saving and cloud restoration wait for the durable account transaction before reporting completion. If both browser storage systems fail, the UI reports the failure and preserves pending work for export/retry.
+
+This update does not alter live database rows, RLS policies, authentication users, or table schema. The Supabase dashboard was not available for a new administrative schema inspection during this update. Existing authenticated cloud loading/saving was verified through the application; automated isolation/concurrency checks use test doubles.
 
 Live authentication, email delivery, RLS and synchronization must be checked against the actual Supabase project; the automated test suite uses mocked responses.
 

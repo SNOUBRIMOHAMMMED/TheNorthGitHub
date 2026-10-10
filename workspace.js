@@ -1,8 +1,9 @@
 /* Product UI: progressively extends the original LifeOS application. */
 (() => {
   "use strict";
+  const storage = window.NorthStorage || localStorage;
   const C = window.LifeCore,
-    db = C.store(localStorage),
+    db = C.store(storage),
     $ = (s, p = document) => p.querySelector(s),
     esc = (v) =>
       String(v ?? "").replace(
@@ -29,7 +30,7 @@
   const pendingSaves = new Map();
   const checklistDates = new Map();
   const expandedChecklists = new Set();
-  const currentEmail = () => localStorage.getItem(C.SESSION_KEY) || "";
+  const currentEmail = () => storage.getItem(C.SESSION_KEY) || "";
   // Only server-managed app_metadata represents an entitlement.
   const userTier = () => {
     return "pro"; // All features unlocked for everyone
@@ -257,15 +258,18 @@
   }
   async function mutate(fn, refresh = true) {
     try {
-      const email = localStorage.getItem(C.SESSION_KEY);
-      const job = () => {
-        if (email !== localStorage.getItem(C.SESSION_KEY))
+      const email = storage.getItem(C.SESSION_KEY);
+      const job = async () => {
+        await storage.refresh?.(C.ACCOUNT_KEY);
+        if (email !== storage.getItem(C.SESSION_KEY))
           throw Error("signedOut");
-        return db.update(fn);
+        const result = db.update(fn);
+        await storage.flush?.(C.ACCOUNT_KEY);
+        return result;
       };
       const r = navigator.locks
         ? await navigator.locks.request("lifeos-write-" + email, job)
-        : job();
+        : await job();
       if (refresh) render();
       return r;
     } catch (e) {
@@ -325,15 +329,18 @@
     document.addEventListener("input", onInput);
     document.addEventListener("change", onChange);
     document.addEventListener("toggle", onChecklistToggle, true);
-    window.addEventListener("storage", (e) => {
-      if ([C.ACCOUNT_KEY, C.SESSION_KEY].includes(e.key)) {
+    const externalStorageChange = (e) => {
+      if ([C.ACCOUNT_KEY, C.SESSION_KEY].includes(e.key || e.detail?.key)) {
         if (!db.read()) {
           location.reload();
           return;
         }
         render();
       }
-    });
+    };
+    window.addEventListener("storage", externalStorageChange);
+    window.addEventListener("north:storage-change", externalStorageChange);
+    window.addEventListener("north:storage-error", e => error(e.detail.error));
     window.addEventListener("hashchange", () => {
       const [r, i] = location.hash.slice(1).split("/");
       navigate(labels[r] ? r : "home", i || "", false);
@@ -2377,13 +2384,14 @@
     active:L("Finish the active session before downloading cloud changes.", "أنهِ الجلسة النشطة قبل استرجاع التغييرات السحابية.")
   });
   const cloud = supabase && window.NorthCloud ? window.NorthCloud.create({
-    client:supabase, read:()=>db.read(), storage:localStorage,
-    email:()=>localStorage.getItem(C.SESSION_KEY),
-    ownerId:()=>JSON.parse(localStorage.getItem(C.ACCOUNT_KEY)||"{}")[localStorage.getItem(C.SESSION_KEY)]?.cloudUserId,
+    client:supabase, read:()=>db.read(), storage:storage,
+    email:()=>storage.getItem(C.SESSION_KEY),
+    ownerId:()=>JSON.parse(storage.getItem(C.ACCOUNT_KEY)||"{}")[storage.getItem(C.SESSION_KEY)]?.cloudUserId,
     validate:payload=>C.validateImport({...db.read(),...payload,activeSession:null}),
-    apply:payload=>{
+    apply:async payload=>{
       const validated=C.validateImport({...db.read(),...payload,activeSession:null});
       db.update(d=>{for(const k of Object.keys(payload)) if(k!=="activeSession") d[k]=validated[k];});
+      await storage.flush?.(C.ACCOUNT_KEY);
       window.LifeLegacy?.renderAll?.(); render();
     },
     status:state=>{cloudState=state; updateCloudPanel();}
@@ -3139,8 +3147,8 @@
       }
     }
     if (a === "restore-import") {
-      const raw = localStorage.getItem(
-        "lifeos_recovery_" + localStorage.getItem(C.SESSION_KEY),
+      const raw = storage.getItem(
+        "lifeos_recovery_" + storage.getItem(C.SESSION_KEY),
       );
       if (!raw) {
         notice(L("No recovery copy available.", "لا توجد نسخة استعادة."));
@@ -3153,8 +3161,8 @@
     }
     if (a === "confirm-restore") {
       try {
-        const raw = localStorage.getItem(
-          "lifeos_recovery_" + localStorage.getItem(C.SESSION_KEY),
+        const raw = storage.getItem(
+          "lifeos_recovery_" + storage.getItem(C.SESSION_KEY),
         );
         if (!raw) throw Error("noBackup");
         const restored = JSON.parse(raw);
@@ -3731,11 +3739,12 @@
   function flushSaves() {
     for (const [key, job] of pendingSaves) {
       clearTimeout(job.timer);
-      if (job.email === localStorage.getItem(C.SESSION_KEY)) {
+      if (job.email === storage.getItem(C.SESSION_KEY)) {
         try {
           db.update(job.save);
-          if (job.status?.isConnected)
-            job.status.textContent = L("Saved", "محفوظ");
+          Promise.resolve(storage.flush?.(C.ACCOUNT_KEY)).then(() => {
+            if (job.status?.isConnected && !pendingSaves.has(key)) job.status.textContent = L("Saved", "محفوظ");
+          }).catch(error);
         } catch (e) {
           error(e);
           continue;
@@ -3753,7 +3762,7 @@
       note = e.target.dataset.note,
       session = e.target.dataset.autosave === "session";
     if (!form && !note && !session) return;
-    const email = localStorage.getItem(C.SESSION_KEY),
+    const email = storage.getItem(C.SESSION_KEY),
       value = e.target.value,
       key = form?.dataset.key,
       values = form ? Object.fromEntries(new FormData(form)) : null,
@@ -3992,7 +4001,8 @@
           $("#lxConfirmChecklistImport").onclick = async () => {
             const previous = db.read();
             try {
-              localStorage.setItem("lifeos_recovery_" + currentEmail(), JSON.stringify(previous));
+              storage.setItem("lifeos_recovery_" + currentEmail(), JSON.stringify(previous));
+              await storage.flush?.("lifeos_recovery_" + currentEmail());
               const saved = await mutate(d => C.applyChecklistPlan(d, input));
               if (saved) {
                 $("#lxDialog").close();
@@ -4022,10 +4032,11 @@
         $("#lxConfirmImport").onclick = async () => {
           const previous = db.read();
           try {
-            localStorage.setItem(
-              "lifeos_recovery_" + localStorage.getItem(C.SESSION_KEY),
+            storage.setItem(
+              "lifeos_recovery_" + storage.getItem(C.SESSION_KEY),
               JSON.stringify(previous),
             );
+            await storage.flush?.("lifeos_recovery_" + storage.getItem(C.SESSION_KEY));
             const r = await mutate((d) => {
               data.profile.email = d.profile.email;
               for (const k of Object.keys(d)) delete d[k];
